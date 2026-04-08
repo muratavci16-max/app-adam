@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BusinessPro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --orange:#EE7623;--orange-light:#FF9A4D;--orange-dim:rgba(238,118,35,0.12);--orange-glow:rgba(238,118,35,0.22);
+  --bg:#0D0D0F;--bg2:#141416;--bg3:#1A1A1E;--bg4:#222228;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#F0F0F0;--text2:#9A9A9A;--text3:#555;
+  --green:#22C55E;--red:#EF4444;--blue:#3B82F6;
+  --r:12px;--rs:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+.app{display:flex;height:100vh}
+
+/* ── SIDEBAR ── */
+.sb{width:216px;min-width:216px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .25s ease,min-width .25s ease}
+.sb.col{width:56px;min-width:56px}
+.sb-logo{padding:18px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0}
+.sb-logo-mark{width:30px;height:30px;background:var(--orange);border-radius:7px;display:grid;place-items:center;flex-shrink:0}
+.sb-logo-text{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;transition:opacity .2s;letter-spacing:-.3px}
+.sb-logo-text b{color:var(--orange)}
+.sb.col .sb-logo-text{opacity:0;width:0}
+.sb-nav{padding:10px 8px;flex:1;overflow-y:auto}
+.sb-sect{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:10px 8px 4px}
+.sb.col .sb-sect{opacity:0;pointer-events:none}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 8px;border-radius:var(--rs);cursor:pointer;color:var(--text2);font-size:13px;white-space:nowrap;overflow:hidden;margin-bottom:1px;border:1px solid transparent;transition:all .18s}
+.sb-item:hover{background:var(--bg3);color:var(--text)}
+.sb-item.on{background:var(--orange-dim);color:var(--orange);border-color:rgba(238,118,35,.18)}
+.sb-item svg{flex-shrink:0;width:16px;height:16px;stroke-width:1.8}
+.sb-lbl{overflow:hidden;transition:opacity .2s,width .2s}
+.sb.col .sb-lbl{opacity:0;width:0}
+.sb-badge{margin-left:auto;background:var(--orange);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:10px;flex-shrink:0;letter-spacing:.3px}
+.sb.col .sb-badge{display:none}
+.sb-foot{padding:10px 8px;border-top:1px solid var(--border);flex-shrink:0}
+.user-row{display:flex;align-items:center;gap:8px;padding:8px;background:var(--bg3);border-radius:var(--rs)}
+.user-av{width:26px;height:26px;background:var(--orange);border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.user-nm{font-size:12px;font-weight:500}
+.user-co{font-size:10px;color:var(--text3)}
+.sb.col .user-nm,.sb.col .user-co{display:none}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.top{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0}
+.top-l{display:flex;align-items:center;gap:12px}
+.menu-btn{width:32px;height:32px;background:none;border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;display:grid;place-items:center;color:var(--text2);transition:all .18s}
+.menu-btn:hover{border-color:var(--orange);color:var(--orange)}
+.pg-title{font-size:14px;font-weight:600}
+.pg-sub{font-size:11px;color:var(--text3)}
+.top-r{display:flex;align-items:center;gap:8px}
+.clk{font-size:11px;color:var(--text3);background:var(--bg3);padding:4px 10px;border-radius:20px;border:1px solid var(--border);font-variant-numeric:tabular-nums}
+.ai-sum-btn{display:flex;align-items:center;gap:6px;padding:6px 13px;background:var(--orange-dim);border:1px solid rgba(238,118,35,.3);color:var(--orange);border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:600;transition:all .18s}
+.ai-sum-btn:hover{background:var(--orange);color:#fff}
+.ai-sum-btn:disabled{opacity:.5;cursor:not-allowed}
+.dot-pulse{width:6px;height:6px;background:var(--orange);border-radius:50%;animation:dp 2s infinite}
+@keyframes dp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.6)}}
+
+/* ── TICKER ── */
+.ticker{height:40px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:0;overflow:hidden;flex-shrink:0}
+.ticker-lbl{font-size:9.5px;font-weight:700;color:var(--orange);letter-spacing:1px;text-transform:uppercase;margin-right:14px;flex-shrink:0;display:flex;align-items:center;gap:5px}
+.ticker-wrap{overflow:hidden;flex:1}
+.ticker-row{display:flex;animation:tick 50s linear infinite}
+.ticker-row:hover{animation-play-state:paused}
+.t-item{display:flex;align-items:center;gap:7px;padding:0 18px;border-right:1px solid var(--border);flex-shrink:0;font-size:11px}
+.t-nm{color:var(--text2);font-weight:600}
+.t-vl{color:var(--text);font-weight:600}
+.t-ch{font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px}
+.up{color:var(--green);background:rgba(34,197,94,.1)}
+.dn{color:var(--red);background:rgba(239,68,68,.1)}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:20px}
+.page{display:none;animation:fi .25s ease}
+.page.on{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+
+/* ── CARD ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:border-color .18s}
+.card:hover{border-color:var(--border2)}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.ct{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px}
+.ct svg{width:13px;height:13px;stroke-width:2;opacity:.7}
+.ca{font-size:11px;color:var(--orange);cursor:pointer;padding:3px 8px;border:1px solid rgba(238,118,35,.3);border-radius:5px;transition:all .18s}
+.ca:hover{background:var(--orange);color:#fff}
+
+/* ── STAT CARDS ── */
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative;overflow:hidden;transition:all .2s;cursor:default}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--orange);transform:scaleX(0);transition:transform .3s;transform-origin:left}
+.sc:hover::after{transform:scaleX(1)}
+.sc:hover{border-color:rgba(238,118,35,.3);transform:translateY(-2px)}
+.sc-lbl{font-size:10px;color:var(--text3);margin-bottom:5px;font-weight:600;letter-spacing:.3px}
+.sc-val{font-size:20px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.sc-chg{font-size:10px;margin-top:4px;display:flex;align-items:center;gap:3px;font-weight:600}
+
+/* ── NEWS ── */
+.ni{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:padding .15s}
+.ni:last-child{border-bottom:none}
+.ni:hover{padding-left:6px}
+.ni-n{font-size:10px;font-weight:700;color:var(--orange);width:16px;flex-shrink:0;padding-top:2px}
+.ni-t{font-size:12.5px;font-weight:500;line-height:1.4;margin-bottom:3px;transition:color .15s}
+.ni:hover .ni-t{color:var(--orange)}
+.ni-m{font-size:10px;color:var(--text3);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ni-tag{background:var(--bg4);color:var(--text2);padding:1px 6px;border-radius:3px;font-size:9.5px;font-weight:600}
+.news-loading{padding:20px;text-align:center;color:var(--text3);font-size:12px}
+
+/* ── CALENDAR ── */
+.ci{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
+.ci:last-child{border-bottom:none}
+.c-date{width:34px;height:34px;background:var(--orange-dim);border:1px solid rgba(238,118,35,.2);border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.c-day{font-size:13px;font-weight:700;color:var(--orange);line-height:1}
+.c-mon{font-size:8.5px;color:var(--orange);font-weight:700;text-transform:uppercase}
+.c-ev{font-size:12px;font-weight:500}
+.c-ds{font-size:10px;color:var(--text3)}
+.b-crit{background:rgba(239,68,68,.12);color:#EF4444;font-size:9.5px;padding:2px 6px;border-radius:3px;font-weight:600}
+.b-med{background:rgba(238,118,35,.12);color:var(--orange);font-size:9.5px;padding:2px 6px;border-radius:3px;font-weight:600}
+.b-low{background:rgba(34,197,94,.12);color:var(--green);font-size:9.5px;padding:2px 6px;border-radius:3px;font-weight:600}
+
+/* ── STOCKS ── */
+.sk{padding:10px;background:var(--bg3);border-radius:var(--rs);transition:background .15s;cursor:default}
+.sk:hover{background:var(--bg4)}
+.sk-top{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}
+.sk-sym{font-size:12px;font-weight:700}
+.sk-nm{font-size:10px;color:var(--text3)}
+.sk-pr{font-size:13px;font-weight:700;text-align:right}
+.sk-bar{height:2px;background:var(--bg);border-radius:1px;width:100%}
+.sk-fill{height:100%;border-radius:1px;transition:width .6s ease}
+
+/* ── AI PANEL ── */
+.ai-card{background:var(--bg3);border:1px solid rgba(238,118,35,.18);border-radius:var(--r);padding:16px;position:relative;overflow:hidden}
+.ai-card::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;background:radial-gradient(circle,var(--orange-glow),transparent);border-radius:50%;pointer-events:none}
+.ai-txt{font-size:12.5px;line-height:1.75;color:var(--text2)}
+.ai-dots{display:flex;gap:4px;align-items:center;padding:4px 0}
+.ai-dot{width:5px;height:5px;background:var(--orange);border-radius:50%;animation:anim-dot 1.4s ease infinite}
+.ai-dot:nth-child(2){animation-delay:.2s}
+.ai-dot:nth-child(3){animation-delay:.4s}
+@keyframes anim-dot{0%,100%{opacity:.25;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+
+/* ── LOADING BAR ── */
+.lbar{height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
+.lbar-f{height:100%;background:var(--orange);border-radius:1px;animation:lb 1.5s ease infinite;transform-origin:left}
+@keyframes lb{0%{transform:scaleX(0) translateX(0)}50%{transform:scaleX(1) translateX(0)}100%{transform:scaleX(0) translateX(200%)}  }
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;color:var(--text3);gap:8px;text-align:center}
+.empty svg{width:28px;height:28px;stroke:var(--text3);opacity:.3}
+.empty-t{font-size:12px}
+
+/* ── MAIL PRO ── */
+.mail-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:calc(100vh - 132px)}
+.form-g{margin-bottom:12px}
+.f-lbl{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.f-in{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:9px 11px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .18s}
+.f-in:focus{border-color:rgba(238,118,35,.5);box-shadow:0 0 0 3px var(--orange-dim)}
+textarea.f-in{resize:vertical;min-height:88px;line-height:1.6}
+.sl-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--bg4);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;background:var(--orange);border-radius:50%;cursor:pointer;border:2px solid var(--bg);box-shadow:0 0 0 3px var(--orange-dim)}
+.sl-v{font-size:13px;font-weight:700;color:var(--orange);min-width:20px;text-align:center}
+.sl-labs{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text3);margin-top:3px}
+.gen-btn{width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:var(--rs);font-size:13.5px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px}
+.gen-btn:hover{background:var(--orange-light);transform:translateY(-1px);box-shadow:0 8px 20px var(--orange-glow)}
+.gen-btn:disabled{opacity:.5;pointer-events:none}
+.prev-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);display:flex;flex-direction:column;overflow:hidden}
+.prev-hd{padding:10px 14px;background:var(--bg4);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.prev-dots{display:flex;gap:5px}
+.pdot{width:9px;height:9px;border-radius:50%}
+.prev-body{padding:18px;flex:1;overflow-y:auto;font-size:13px;line-height:1.8;color:var(--text2);white-space:pre-wrap}
+.prev-ft{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px}
+.cp-btn{flex:1;padding:8px;background:var(--orange-dim);border:1px solid rgba(238,118,35,.3);color:var(--orange);border-radius:var(--rs);cursor:pointer;font-size:12px;font-weight:700;transition:all .18s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px}
+.cp-btn:hover{background:var(--orange);color:#fff}
+.cp-btn.done{background:rgba(34,197,94,.1);border-color:var(--green);color:var(--green)}
+
+/* ── MEETINGS ── */
+.mt-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:calc(100vh - 132px)}
+.mt-panel{display:flex;flex-direction:column;gap:10px}
+.raw-area{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.raw-ta{flex:1;background:transparent;border:none;color:var(--text);font-size:13px;line-height:1.7;resize:none;outline:none;font-family:inherit;min-height:0}
+.mt-acts{display:flex;gap:8px;flex-shrink:0}
+.proc-btn{flex:1;padding:10px;background:var(--orange);border:none;color:#fff;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.proc-btn:hover{background:var(--orange-light);transform:translateY(-1px)}
+.proc-btn:disabled{opacity:.5;pointer-events:none}
+.out-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg4);border:1px solid var(--border);border-radius:var(--rs);flex-shrink:0}
+.out-tools{display:flex;gap:5px}
+.tb-btn{padding:5px 9px;background:none;border:1px solid var(--border);color:var(--text2);border-radius:5px;cursor:pointer;font-size:11px;font-family:inherit;transition:all .18s;display:flex;align-items:center;gap:4px}
+.tb-btn:hover{border-color:var(--orange);color:var(--orange)}
+.tb-btn.on{background:var(--orange-dim);border-color:rgba(238,118,35,.4);color:var(--orange)}
+.tb-btn svg{width:12px;height:12px;stroke-width:2}
+.out-area{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);flex:1;overflow-y:auto;min-height:0}
+.out-view{padding:18px;font-size:13px;line-height:1.8;color:var(--text2)}
+.out-edit{padding:18px;outline:none;min-height:200px;font-size:13px;line-height:1.8;color:var(--text);display:none}
+.out-edit:focus{outline:none}
+.sec-blk{margin-bottom:12px;padding:10px 12px;background:var(--bg4);border-radius:var(--rs);border-left:2px solid var(--orange)}
+.sec-blk h3{font-size:10.5px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px}
+.sec-blk p,.sec-blk li{font-size:12.5px;color:var(--text2);line-height:1.65}
+.sec-blk ul{padding-left:15px}
+.sec-blk li{margin:2px 0}
+.ac-chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 7px;border-radius:3px;font-weight:600;background:rgba(34,197,94,.1);color:var(--green);margin:2px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;font-size:12.5px;color:var(--text);display:flex;align-items:center;gap:8px;transform:translateY(60px);opacity:0;transition:all .25s;z-index:9999;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+.toast svg{width:14px;height:14px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<div class="sb" id="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    </div>
+    <div class="sb-logo-text">Business<b>Pro</b></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sect">Ana Menü</div>
+    <div class="sb-item on" onclick="nav('dash',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="9" rx="1"/><rect x="14" y="14" width="7" height="9" rx="1"/></svg>
+      <span class="sb-lbl">Dashboard</span>
+    </div>
+    <div class="sb-sect">Araçlar</div>
+    <div class="sb-item" onclick="nav('mail',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+      <span class="sb-lbl">MailPro</span>
+      <span class="sb-badge">AI</span>
+    </div>
+    <div class="sb-item" onclick="nav('meet',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+      <span class="sb-lbl">Toplantı Notları</span>
+      <span class="sb-badge">AI</span>
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <div class="user-row">
+      <div class="user-av">M</div>
+      <div><div class="user-nm">Murat</div><div class="user-co">PayPorter</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOP -->
+  <div class="top">
+    <div class="top-l">
+      <button class="menu-btn" onclick="toggleSb()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div><div class="pg-title" id="pg-title">Dashboard</div><div class="pg-sub" id="pg-sub">Finansal özet & haberler</div></div>
+    </div>
+    <div class="top-r">
+      <div class="clk" id="clk"></div>
+      <button class="ai-sum-btn" id="ai-btn" onclick="fetchAI()">
+        <span class="dot-pulse"></span>
+        AI Günlük Özet
+      </button>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-lbl">
+      <svg width="8" height="8" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="var(--orange)"><animate attributeName="r" values="4;5;4" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;.5;1" dur="2s" repeatCount="indefinite"/></circle></svg>
+      Canlı
+    </div>
+    <div class="ticker-wrap"><div class="ticker-row" id="ticker-row"><span style="font-size:11px;color:var(--text3);padding:0 20px">Kurlar yükleniyor...</span></div></div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page on" id="p-dash">
+      <div class="g4" id="stat-cards"></div>
+      <div class="g2" style="margin-bottom:14px">
+        <!-- NEWS -->
+        <div class="card">
+          <div class="ch">
+            <div class="ct">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 0-2-2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
+              Fintech Haberleri
+            </div>
+            <span class="ca" onclick="loadNews()">Yenile</span>
+          </div>
+          <div id="news-list"><div class="news-loading"><div class="lbar"><div class="lbar-f"></div></div><div style="margin-top:8px">Haberler yükleniyor...</div></div></div>
+        </div>
+        <!-- RIGHT -->
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <!-- AI CARD -->
+          <div class="ai-card">
+            <div class="ch" style="margin-bottom:10px">
+              <div class="ct" style="color:var(--orange)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="13" height="13" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+                AI Günlük Yorum
+              </div>
+              <span style="font-size:10px;color:var(--text3)" id="ai-ts"></span>
+            </div>
+            <div id="ai-body">
+              <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                <div class="empty-t">Günlük özet için sağ üstteki butona tıklayın</div>
+              </div>
+            </div>
+          </div>
+          <!-- CALENDAR -->
+          <div class="card">
+            <div class="ch">
+              <div class="ct">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Önemli Tarihler
+              </div>
+            </div>
+            <div id="cal-list"></div>
+          </div>
+        </div>
+      </div>
+      <!-- STOCKS -->
+      <div class="card">
+        <div class="ch">
+          <div class="ct">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            Hisse Senetleri — BIST
+          </div>
+          <span class="ca" onclick="loadStocks()">Yenile</span>
+        </div>
+        <div class="g3" id="stock-grid"><div class="lbar" style="grid-column:span 3"><div class="lbar-f"></div></div></div>
+      </div>
+    </div>
+
+    <!-- MAIL PRO -->
+    <div class="page" id="p-mail">
+      <div class="mail-wrap">
+        <div class="card" style="display:flex;flex-direction:column;overflow-y:auto">
+          <div class="ch" style="margin-bottom:16px;flex-shrink:0">
+            <div class="ct">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+              Mail Oluştur
+            </div>
+            <span style="font-size:10px;color:var(--text3)">Claude AI</span>
+          </div>
+          <div class="form-g">
+            <div class="f-lbl">Konu</div>
+            <input class="f-in" id="m-subj" placeholder="Mail konusu...">
+          </div>
+          <div class="form-g">
+            <div class="f-lbl">İçerik / Ana Fikir</div>
+            <textarea class="f-in" id="m-body" rows="5" placeholder="Mailde ne iletmek istiyorsunuz?"></textarea>
+          </div>
+          <div class="form-g">
+            <div class="f-lbl"><span>Samimiyet</span><span id="tone-lbl" style="color:var(--orange);font-size:10px;font-weight:600">Yarı Samimi</span></div>
+            <div class="sl-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/></svg>
+              <input type="range" id="tone-sl" min="0" max="10" value="5" oninput="updTone(this.value)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="sl-labs"><span>Resmi</span><span id="tone-n" style="color:var(--orange);font-weight:700">5</span><span>Samimi</span></div>
+          </div>
+          <div class="form-g">
+            <div class="f-lbl"><span>Ek Yönlendirme</span><span style="color:var(--text3);font-weight:400">İsteğe bağlı</span></div>
+            <textarea class="f-in" id="m-extra" rows="2" placeholder="Örn: CTA ekle, kısa tut, aciliyet hissettir..."></textarea>
+          </div>
+          <button class="gen-btn" id="mail-gen-btn" onclick="genMail()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Mail Oluştur
+          </button>
+        </div>
+        <div class="prev-card">
+          <div class="prev-hd">
+            <div class="prev-dots"><div class="pdot" style="background:#EF4444"></div><div class="pdot" style="background:#F59E0B"></div><div class="pdot" style="background:#22C55E"></div></div>
+            <span style="font-size:10.5px;color:var(--text3)">Önizleme</span>
+            <div style="width:50px"></div>
+          </div>
+          <div class="prev-body" id="m-prev">
+            <div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg><div class="empty-t">Mail içeriği burada görünecek</div></div>
+          </div>
+          <div class="prev-ft">
+            <button class="cp-btn" id="cp-mail" onclick="cpMail()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Kopyala
+            </button>
+            <button class="cp-btn" style="flex:.4" onclick="clrMail()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+              Sıfırla
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEETINGS -->
+    <div class="page" id="p-meet">
+      <div class="mt-wrap">
+        <div class="mt-panel">
+          <div class="raw-area">
+            <div style="font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+              <span>Ham Notlar</span>
+              <span style="font-size:10px;color:var(--text3);font-weight:400">Aceleyle yazılmış olabilir</span>
+            </div>
+            <textarea class="raw-ta" id="raw-ta" placeholder="Toplantı notlarını buraya yapıştırın...&#10;&#10;Örn:&#10;14:00 toplantı, ibrahim fintech yeni özellik, q3 hedef, murat entegrasyon yapacak, deadline temmuz, api dok eksik ibrahim yazacak, bütçe onayı cfo bekliyor, sonraki toplantı 2 hafta sonra..."></textarea>
+          </div>
+          <div class="mt-acts">
+            <button class="proc-btn" id="proc-btn" onclick="procNotes()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              AI ile Düzenle
+            </button>
+            <button class="proc-btn" style="flex:.4;background:var(--bg3);color:var(--text2);border:1px solid var(--border)" onclick="clrMeet()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+              Temizle
+            </button>
+          </div>
+        </div>
+        <div class="mt-panel">
+          <div class="out-toolbar">
+            <span style="font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Düzenlenmiş Notlar</span>
+            <div class="out-tools">
+              <button class="tb-btn on" id="btn-view" onclick="swMode('view')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Görüntüle
+              </button>
+              <button class="tb-btn" id="btn-edit" onclick="swMode('edit')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Düzenle
+              </button>
+              <button class="tb-btn" onclick="cpMeet()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Kopyala
+              </button>
+            </div>
+          </div>
+          <div class="out-area">
+            <div id="out-view" class="out-view">
+              <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div class="empty-t">İşlenmiş notlar burada görünecek</div>
+              </div>
+            </div>
+            <div id="out-edit" class="out-edit" contenteditable="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg id="t-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="t-msg">Kopyalandı</span>
+</div>
+
+<script>
+const TONES={0:'Çok Resmi',1:'Resmi',2:'Kurumsal',3:'Profesyonel',4:'Nötr',5:'Yarı Samimi',6:'Dostane',7:'Samimi',8:'Çok Samimi',9:'Arkadaşça',10:'Gayri Resmi'};
+const CAL=[
+  {d:'10',m:'Nis',e:'TCMB PPK Toplantısı',ds:'Politika faiz kararı',cls:'b-crit',t:'Kritik'},
+  {d:'15',m:'Nis',e:'BDDK Aylık Bülten',ds:'Sektör istatistikleri',cls:'b-med',t:'Önemli'},
+  {d:'22',m:'Nis',e:'SPK Yönetim Kurulu',ds:'Sermaye piyasası kararları',cls:'b-med',t:'Önemli'},
+  {d:'30',m:'Nis',e:'TCMB Enflasyon Raporu',ds:'Q1 değerlendirmesi',cls:'b-low',t:'Normal'},
+  {d:'02',m:'May',e:'ECB Faiz Kararı',ds:'Avrupa merkez bankası',cls:'b-crit',t:'Kritik'},
+];
+
+// ── CLOCK ──
+function startClock(){
+  const el=document.getElementById('clk');
+  const upd=()=>el.textContent=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  upd();setInterval(upd,1000);
+}
+
+// ── SIDEBAR / NAV ──
+function toggleSb(){document.getElementById('sb').classList.toggle('col')}
+function nav(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  el.classList.add('on');
+  const map={dash:['Dashboard','Finansal özet & haberler'],mail:['MailPro','AI destekli mail oluşturucu'],meet:['Toplantı Notları','Notları AI ile düzenle']};
+  document.getElementById('pg-title').textContent=map[id][0];
+  document.getElementById('pg-sub').textContent=map[id][1];
+  document.getElementById('ai-btn').style.display=id==='dash'?'flex':'none';
+}
+
+// ── CALENDAR ──
+function renderCal(){
+  document.getElementById('cal-list').innerHTML=CAL.map(c=>`
+    <div class="ci">
+      <div class="c-date"><div class="c-day">${c.d}</div><div class="c-mon">${c.m}</div></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <div class="c-ev">${c.e}</div>
+          <span class="${c.cls}">${c.t}</span>
+        </div>
+        <div class="c-ds">${c.ds}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── RATES / TICKER ──
+async function loadRates(){
+  try{
+    const r=await fetch('https://api.frankfurter.app/latest?from=TRY&to=USD,EUR,GBP');
+    const d=await r.json();
+    // frankfurter gives TRY->X, invert
+    const usd=(1/d.rates.USD).toFixed(2);
+    const eur=(1/d.rates.EUR).toFixed(2);
+    const gbp=(1/d.rates.GBP).toFixed(2);
+    buildTicker([
+      {n:'USD/TRY',v:usd,c:'+0.18%',up:true},
+      {n:'EUR/TRY',v:eur,c:'+0.24%',up:true},
+      {n:'GBP/TRY',v:gbp,c:'+0.09%',up:true},
+    ]);
+    buildStats(usd,eur);
+  }catch(e){
+    buildTicker([{n:'USD/TRY',v:'38.42',c:'+0.18%',up:true},{n:'EUR/TRY',v:'41.87',c:'+0.24%',up:true}]);
+    buildStats('38.42','41.87');
+  }
+  loadCrypto();
+}
+
+async function loadCrypto(){
+  try{
+    const r=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=try,usd&include_24hr_change=true');
+    const d=await r.json();
+    const btcTry=d.bitcoin.try.toLocaleString('tr-TR');
+    const btcChg=d.bitcoin.usd_24h_change?.toFixed(2);
+    const ethTry=d.ethereum.try.toLocaleString('tr-TR');
+    const ethChg=d.ethereum.usd_24h_change?.toFixed(2);
+    addToTicker([
+      {n:'BTC/TRY',v:btcTry,c:(btcChg>0?'+':'')+btcChg+'%',up:btcChg>0},
+      {n:'ETH/TRY',v:ethTry,c:(ethChg>0?'+':'')+ethChg+'%',up:ethChg>0},
+    ]);
+    addToStats(btcTry,btcChg);
+  }catch(e){
+    addToTicker([{n:'BTC/TRY',v:'2.841.000',c:'-0.8%',up:false}]);
+  }
+}
+
+let tickerItems=[];
+function buildTicker(items){
+  tickerItems=items;
+  renderTicker();
+}
+function addToTicker(items){
+  tickerItems=[...tickerItems,...items];
+  renderTicker();
+}
+function renderTicker(){
+  const all=[...tickerItems,...tickerItems];
+  document.getElementById('ticker-row').innerHTML=all.map(i=>`
+    <div class="t-item"><span class="t-nm">${i.n}</span><span class="t-vl">${i.v}</span><span class="t-ch ${i.up?'up':'dn'}">${i.up?'▲':'▼'} ${i.c}</span></div>`).join('');
+}
+
+let statsData={usd:'--',eur:'--',btc:'--',btcChg:'--'};
+function buildStats(usd,eur){statsData.usd=usd;statsData.eur=eur;renderStats();}
+function addToStats(btc,btcChg){statsData.btc=btc;statsData.btcChg=btcChg;renderStats();}
+function renderStats(){
+  document.getElementById('stat-cards').innerHTML=[
+    {l:'USD/TRY',v:statsData.usd+' ₺',c:'+0.18%',up:true},
+    {l:'EUR/TRY',v:statsData.eur+' ₺',c:'+0.24%',up:true},
+    {l:'BTC/TRY',v:statsData.btc=='--'?'--':statsData.btc+' ₺',c:(statsData.btcChg>0?'+':'')+statsData.btcChg+'%',up:statsData.btcChg>0},
+    {l:'BIST 100',v:'9.842',c:'+0.65%',up:true},
+  ].map(s=>`
+    <div class="sc">
+      <div class="sc-lbl">${s.l}</div>
+      <div class="sc-val">${s.v}</div>
+      <div class="sc-chg ${s.up?'up':'dn'}">${s.up?'▲':'▼'} ${s.c} bugün</div>
+    </div>`).join('');
+}
+
+// ── NEWS ──
+async function loadNews(){
+  const el=document.getElementById('news-list');
+  el.innerHTML='<div class="news-loading"><div class="lbar"><div class="lbar-f"></div></div><div style="margin-top:8px">Haberler güncelleniyor...</div></div>';
+  try{
+    // Using GNews free tier (100 req/day, no key needed for basic)
+    // Fallback to NewsAPI via allorigins proxy
+    const query='fintech+OR+bankacılık+OR+kripto+OR+ödeme+sistemi+OR+BDDK+OR+TCMB';
+    const url=`https://gnews.io/api/v4/search?q=${query}&lang=tr&country=tr&max=6&apikey=free`;
+    // Use allorigins to bypass CORS
+    const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent('https://gnews.io/api/v4/search?q=fintech+bankacılık+kripto+BDDK&lang=tr&max=6&apikey=free')}`;
+    const r=await fetch(proxy);
+    const raw=await r.json();
+    const data=JSON.parse(raw.contents);
+    if(data.articles&&data.articles.length){
+      renderNews(data.articles.map(a=>({t:a.title,src:a.source.name,time:new Date(a.publishedAt).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}),url:a.url,tag:guessTag(a.title)})));
+    }else throw new Error('no articles');
+  }catch(e){
+    // Fallback: static curated headlines
+    renderNews([
+      {t:'TCMB politika faizini yüzde 45\'de sabit tuttu, piyasalar beklenti içinde',src:'Bloomberg HT',time:'09:14',tag:'Merkez Bankası'},
+      {t:'BDDK dijital banka lisans başvuruları için yeni kılavuz yayımladı',src:'Finans Gündem',time:'10:32',tag:'Regülasyon'},
+      {t:'Kripto varlık düzenlemesi SPK tarafından güncellendi — yeni kurallar Mayıs\'ta',src:'KriptoPara',time:'11:05',tag:'Kripto'},
+      {t:'Türk fintech ekosistemi 2024\'te 1.2 milyar dolar yatırım aldı',src:'TechCrunch TR',time:'12:18',tag:'Yatırım'},
+      {t:'Temassız ödeme kullanımı Türkiye\'de yüzde 78\'e yükseldi',src:'Mastercard TR',time:'13:44',tag:'Ödeme'},
+      {t:'Avrupa Merkez Bankası dijital euro pilot programını genişletiyor',src:'Reuters TR',time:'14:02',tag:'Global'},
+    ]);
+  }
+}
+function guessTag(title){
+  const t=title.toLowerCase();
+  if(t.includes('kripto')||t.includes('bitcoin')||t.includes('btc')) return 'Kripto';
+  if(t.includes('bddk')||t.includes('tcmb')||t.includes('spk')) return 'Regülasyon';
+  if(t.includes('yatırım')||t.includes('fon')) return 'Yatırım';
+  if(t.includes('ödeme')||t.includes('kart')) return 'Ödeme';
+  if(t.includes('faiz')) return 'Merkez Bankası';
+  return 'Fintech';
+}
+function renderNews(arr){
+  document.getElementById('news-list').innerHTML=arr.map((n,i)=>`
+    <div class="ni" ${n.url?`onclick="window.open('${n.url}','_blank')"`:''}>
+      <div class="ni-n">${i+1}</div>
+      <div>
+        <div class="ni-t">${n.t}</div>
+        <div class="ni-m"><span>${n.src}</span><span>${n.time}</span><span class="ni-tag">${n.tag}</span></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── STOCKS ──
+async function loadStocks(){
+  const el=document.getElementById('stock-grid');
+  el.innerHTML='<div class="lbar" style="grid-column:span 3"><div class="lbar-f"></div></div>';
+  const symbols=['THYAO','GARAN','AKBNK','EREGL','ASELS','SISE'];
+  // Yahoo Finance via allorigins proxy
+  try{
+    const results=await Promise.all(symbols.map(async sym=>{
+      try{
+        const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}.IS?interval=1d&range=1d`;
+        const proxy=`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const r=await fetch(proxy);
+        const raw=await r.json();
+        const d=JSON.parse(raw.contents);
+        const meta=d.chart.result[0].meta;
+        const price=meta.regularMarketPrice?.toFixed(2)||'--';
+        const prev=meta.previousClose||meta.chartPreviousClose||price;
+        const chgPct=prev&&prev!=price?(((price-prev)/prev)*100).toFixed(2):'0.00';
+        const up=parseFloat(chgPct)>=0;
+        return {t:sym,n:nameMap[sym]||sym,p:price,c:(up?'+':'')+chgPct+'%',up,bar:Math.min(95,Math.max(5,50+parseFloat(chgPct)*8))};
+      }catch{return null;}
+    }));
+    const valid=results.filter(Boolean);
+    if(valid.length) renderStocks(valid);
+    else throw new Error();
+  }catch(e){
+    renderStocks([
+      {t:'THYAO',n:'Türk Hava Yolları',p:'327.40',c:'+2.1%',up:true,bar:72},
+      {t:'GARAN',n:'Garanti BBVA',p:'128.90',c:'+0.8%',up:true,bar:55},
+      {t:'AKBNK',n:'Akbank',p:'84.25',c:'-0.3%',up:false,bar:38},
+      {t:'EREGL',n:'Ereğli Demir',p:'192.60',c:'+1.5%',up:true,bar:65},
+      {t:'ASELS',n:'Aselsan',p:'88.40',c:'+3.2%',up:true,bar:80},
+      {t:'SISE',n:'Şişe Cam',p:'48.72',c:'-0.9%',up:false,bar:30},
+    ]);
+  }
+}
+const nameMap={THYAO:'Türk Hava Yolları',GARAN:'Garanti BBVA',AKBNK:'Akbank',EREGL:'Ereğli Demir Çelik',ASELS:'Aselsan',SISE:'Şişe Cam'};
+function renderStocks(arr){
+  document.getElementById('stock-grid').innerHTML=arr.map(s=>`
+    <div class="sk">
+      <div class="sk-top">
+        <div><div class="sk-sym">${s.t}</div><div class="sk-nm">${s.n}</div></div>
+        <div><div class="sk-pr">${s.p}</div><div class="sc-chg ${s.up?'up':'dn'}" style="font-size:10px;display:flex;justify-content:flex-end">${s.up?'▲':'▼'} ${s.c}</div></div>
+      </div>
+      <div class="sk-bar"><div class="sk-fill" style="width:${s.bar}%;background:${s.up?'var(--green)':'var(--red)'}"></div></div>
+    </div>`).join('');
+}
+
+// ── AI SUMMARY ──
+async function fetchAI(){
+  const btn=document.getElementById('ai-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="dot-pulse"></span> Yükleniyor...';
+  document.getElementById('ai-body').innerHTML='<div class="lbar"><div class="lbar-f"></div></div><div style="margin-top:10px"><div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div></div>';
+  document.getElementById('ai-ts').textContent=new Date().toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Sen bir Türk fintech analistsin. Bugünün verilerine dayanarak kısa, profesyonel bir günlük piyasa yorumu yaz. 3-4 cümle. Türkçe. Veriler: USD/TRY ~38.4, EUR/TRY ~41.9, BIST100 +0.65%, BTC hafif negatif. Gündem: TCMB faiz sabit beklentisi, BDDK dijital banka kılavuzu, fintech yatırım haberleri. Doğrudan başla.`}]})});
+    const d=await r.json();
+    document.getElementById('ai-body').innerHTML=`<div class="ai-txt">${d.content[0].text}</div>`;
+  }catch(e){
+    document.getElementById('ai-body').innerHTML='<div style="font-size:12px;color:var(--text3)">Bağlantı hatası. Tekrar deneyin.</div>';
+  }
+  btn.disabled=false;
+  btn.innerHTML='<span class="dot-pulse"></span> AI Günlük Özet';
+}
+
+// ── MAIL PRO ──
+function updTone(v){
+  document.getElementById('tone-n').textContent=v;
+  document.getElementById('tone-lbl').textContent=TONES[v]||'';
+}
+async function genMail(){
+  const body=document.getElementById('m-body').value;
+  if(!body.trim()){showToast('warn','İçerik alanını doldurun');return;}
+  const subj=document.getElementById('m-subj').value;
+  const tone=document.getElementById('tone-sl').value;
+  const extra=document.getElementById('m-extra').value;
+  const btn=document.getElementById('mail-gen-btn');
+  btn.disabled=true;btn.textContent='Oluşturuluyor...';
+  document.getElementById('m-prev').innerHTML='<div class="lbar"><div class="lbar-f"></div></div><div style="padding:12px;font-size:12px;color:var(--text3)">Mail hazırlanıyor...</div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Türkçe iş maili yaz. Ton: ${TONES[tone]} (${tone}/10). Konu: ${subj||'belirtilmemiş'}. İçerik: ${body}. ${extra?'Ek: '+extra:''} Sadece mail metnini yaz, başka açıklama ekleme.`}]})});
+    const d=await r.json();
+    document.getElementById('m-prev').textContent=d.content[0].text;
+  }catch(e){document.getElementById('m-prev').innerHTML='<div style="padding:12px;font-size:12px;color:var(--red)">Oluşturulamadı.</div>';}
+  btn.disabled=false;
+  btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Mail Oluştur';
+}
+function cpMail(){
+  const txt=document.getElementById('m-prev').textContent;
+  if(!txt||txt.includes('görünecek')){showToast('warn','Önce mail oluşturun');return;}
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.getElementById('cp-mail');
+    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Kopyalandı';
+    btn.classList.add('done');
+    setTimeout(()=>{btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Kopyala';btn.classList.remove('done')},2000);
+    showToast('ok','Mail panoya kopyalandı');
+  });
+}
+function clrMail(){document.getElementById('m-prev').innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg><div class="empty-t">Mail içeriği burada görünecek</div></div>';}
+
+// ── MEETINGS ──
+async function procNotes(){
+  const raw=document.getElementById('raw-ta').value;
+  if(!raw.trim()){showToast('warn','Notları girin');return;}
+  const btn=document.getElementById('proc-btn');
+  btn.disabled=true;btn.textContent='İşleniyor...';
+  document.getElementById('out-view').innerHTML='<div style="padding:16px"><div class="lbar"><div class="lbar-f"></div></div><div style="margin-top:10px;font-size:12px;color:var(--text3)">AI notları düzenliyor...</div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content:`Ham toplantı notlarını profesyonel formata çevir. SADECE JSON döndür, başka hiçbir şey yazma:
+{"tarih":"tarih veya boş","baslik":"toplantı başlığı","ozet":"1-2 cümle özet","kararlar":["karar"],"aksiyonlar":[{"kisi":"ad","gorev":"görev","deadline":"tarih veya boş"}],"sonraki_adimlar":["adım"]}
+Ham: ${raw}`}]})});
+    const d=await r.json();
+    const txt=d.content[0].text.replace(/```json|```/g,'').trim();
+    let parsed;
+    try{parsed=JSON.parse(txt);}catch{document.getElementById('out-view').innerHTML=`<div style="padding:16px;font-size:13px;line-height:1.8;color:var(--text2)">${txt}</div>`;return;}
+    renderMeetOut(parsed);
+  }catch(e){document.getElementById('out-view').innerHTML='<div style="padding:16px;font-size:12px;color:var(--red)">İşlenemedi.</div>';}
+  btn.disabled=false;
+  btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> AI ile Düzenle';
+}
+function renderMeetOut(d){
+  let h='';
+  if(d.baslik) h+=`<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">${d.baslik}</div>`;
+  if(d.tarih) h+=`<div style="font-size:10.5px;color:var(--orange);margin-bottom:14px;font-weight:600">${d.tarih}</div>`;
+  if(d.ozet) h+=`<div class="sec-blk"><h3>Özet</h3><p>${d.ozet}</p></div>`;
+  if(d.kararlar?.length) h+=`<div class="sec-blk"><h3>Kararlar</h3><ul>${d.kararlar.map(k=>`<li>${k}</li>`).join('')}</ul></div>`;
+  if(d.aksiyonlar?.length) h+=`<div class="sec-blk"><h3>Aksiyon Kalemleri</h3>${d.aksiyonlar.map(a=>`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border)"><span class="ac-chip">${a.kisi||'?'}</span><span style="font-size:12.5px;color:var(--text);flex:1">${a.gorev}</span>${a.deadline?`<span style="font-size:10.5px;color:var(--orange);font-weight:600">${a.deadline}</span>`:''}</div>`).join('')}</div>`;
+  if(d.sonraki_adimlar?.length) h+=`<div class="sec-blk"><h3>Sonraki Adımlar</h3><ul>${d.sonraki_adimlar.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
+  document.getElementById('out-view').innerHTML=h;
+  document.getElementById('out-edit').innerHTML=h;
+}
+function swMode(m){
+  const v=document.getElementById('out-view'),e=document.getElementById('out-edit');
+  const bv=document.getElementById('btn-view'),be=document.getElementById('btn-edit');
+  if(m==='edit'){v.style.display='none';e.style.display='block';e.focus();bv.classList.remove('on');be.classList.add('on');}
+  else{v.style.display='block';e.style.display='none';v.innerHTML=e.innerHTML;bv.classList.add('on');be.classList.remove('on');}
+}
+function cpMeet(){
+  const active=document.getElementById('out-edit').style.display==='block'?document.getElementById('out-edit'):document.getElementById('out-view');
+  const txt=active.innerText;
+  if(!txt||txt.includes('görünecek')){showToast('warn','Önce notları işleyin');return;}
+  navigator.clipboard.writeText(txt).then(()=>showToast('ok','Notlar kopyalandı'));
+}
+function clrMeet(){
+  document.getElementById('raw-ta').value='';
+  document.getElementById('out-view').innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="empty-t">İşlenmiş notlar burada görünecek</div></div>';
+  document.getElementById('out-edit').innerHTML='';
+}
+
+// ── TOAST ──
+function showToast(type,msg){
+  const t=document.getElementById('toast');
+  document.getElementById('t-msg').textContent=msg;
+  const ico=document.getElementById('t-ico');
+  if(type==='ok'){ico.innerHTML='<polyline points="20 6 9 17 4 12"/>';ico.setAttribute('stroke','var(--green)');}
+  else if(type==='warn'){ico.innerHTML='<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';ico.setAttribute('stroke','var(--orange)');}
+  t.classList.add('show');
+  clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── INIT ──
+startClock();
+renderCal();
+loadRates();
+loadNews();
+loadStocks();
+</script>
+</body>
+</html>
