@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kredi Hesapla | Ucuz Finansman</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --g900: #064e3b; --g700: #047857; --g600: #059669;
+  --g400: #34d399; --g100: #d1fae5; --g50: #ecfdf5;
+  --white: #ffffff;
+  --s50: #f8fafc; --s100: #f1f5f9; --s200: #e2e8f0;
+  --s300: #cbd5e1; --s400: #94a3b8; --s500: #64748b;
+  --s600: #475569; --s700: #334155; --s800: #1e293b; --s900: #0f172a;
+  --red: #ef4444; --amber: #f59e0b; --blue: #3b82f6; --purple: #7c3aed;
+  --r: 14px; --rs: 10px;
+  --sh: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --sh2: 0 4px 20px rgba(0,0,0,.08);
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--s50); color: var(--s900);
+  min-height: 100vh; line-height: 1.55; font-size: 14px;
+}
+
+/* HEADER */
+header {
+  background: var(--white); border-bottom: 1px solid var(--s200);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 8px rgba(0,0,0,.05);
+}
+.hdr {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 28px; height: 60px;
+  display: flex; align-items: center; gap: 32px;
+}
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+.logo {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--g600), var(--g400));
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; box-shadow: 0 2px 8px rgba(5,150,105,.3);
+}
+.logo svg { width: 18px; height: 18px; fill: white; }
+.brand-name { font-size: 1.05rem; font-weight: 700; color: var(--g900); letter-spacing: -.01em; }
+.nav { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.nav-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  font-size: .8rem; font-weight: 500; color: var(--s500);
+  text-decoration: none; transition: all .18s; white-space: nowrap;
+}
+.nav-link svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
+.nav-link:hover { background: var(--s100); color: var(--s800); }
+.nav-link.active { background: var(--g50); color: var(--g700); font-weight: 600; }
+.nav-link.active svg { fill: var(--g600); }
+@media (max-width: 640px) {
+  .nav-link { padding: 7px 10px; }
+  .brand-name { font-size: .9rem; }
+}
+
+/* BANNER */
+.banner {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 60%, #3b82f6 100%);
+  padding: 32px 28px; text-align: center; color: white;
+  position: relative; overflow: hidden;
+}
+.banner::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.banner h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 7px; position: relative; }
+.banner p  { font-size: .85rem; opacity: .88; max-width: 580px; margin: 0 auto; position: relative; font-weight: 300; }
+
+/* MAIN */
+.main { max-width: 1200px; margin: 0 auto; padding: 28px 28px 72px; }
+.top-row {
+  display: grid; grid-template-columns: 1fr 310px;
+  gap: 20px; align-items: start; margin-bottom: 20px;
+}
+@media (max-width: 900px) { .top-row { grid-template-columns: 1fr; } }
+
+/* CARD */
+.card {
+  background: var(--white); border: 1px solid var(--s200);
+  border-radius: var(--r); box-shadow: var(--sh); overflow: hidden;
+}
+.card-hdr {
+  padding: 16px 22px; border-bottom: 1px solid var(--s100);
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(90deg, #eff6ff 0%, var(--white) 60%);
+}
+.card-icon {
+  width: 30px; height: 30px; background: #dbeafe;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.card-icon svg { width: 15px; height: 15px; fill: #1d4ed8; }
+.card-hdr h2 { font-size: .88rem; font-weight: 600; color: var(--s800); }
+.card-body { padding: 22px; }
+
+/* KREDİ TÜRÜ */
+.kt-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; margin-bottom: 22px;
+}
+@media (max-width: 600px) { .kt-grid { grid-template-columns: 1fr 1fr; } }
+.kt-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px 8px; border-radius: var(--rs);
+  border: 2px solid var(--s200); background: var(--white);
+  cursor: pointer; transition: all .18s; font-family: 'Poppins', sans-serif;
+}
+.kt-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--s100);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s;
+}
+.kt-icon svg { width: 20px; height: 20px; fill: var(--s500); transition: fill .18s; }
+.kt-label { font-size: .72rem; font-weight: 600; color: var(--s600); }
+.kt-btn:hover { border-color: var(--s300); background: var(--s50); }
+.kt-btn:hover .kt-icon { background: #dbeafe; }
+.kt-btn:hover .kt-icon svg { fill: #1d4ed8; }
+.kt-btn:hover .kt-label { color: var(--s800); }
+.kt-btn.active { border-color: var(--blue); background: #eff6ff; }
+.kt-btn.active .kt-icon { background: #bfdbfe; }
+.kt-btn.active .kt-icon svg { fill: #1d4ed8; }
+.kt-btn.active .kt-label { color: #1d4ed8; }
+
+/* FORM */
+.fg { display: grid; gap: 14px; }
+.fg2 { grid-template-columns: 1fr 1fr; }
+.fg3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 600px) { .fg2, .fg3 { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: .72rem; font-weight: 500; color: var(--s600); letter-spacing: .01em; }
+.req { color: var(--red); margin-left: 2px; }
+
+/* Input with suffix */
+.input-wrap { position: relative; }
+.input-wrap input { padding-right: 42px; }
+.input-suffix {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: .75rem; font-weight: 600; color: var(--s400);
+  pointer-events: none;
+}
+/* Faiz girişinde yıllık göstergesi */
+.faiz-hint {
+  font-size: .68rem; color: var(--s400); margin-top: 3px;
+  display: flex; align-items: center; gap: 4px;
+}
+.faiz-hint strong { color: #1d4ed8; font-weight: 600; }
+
+input[type=text], input[type=number], select {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--s200); border-radius: var(--rs);
+  font-size: .85rem; font-family: 'Poppins', sans-serif;
+  color: var(--s900); background: var(--white);
+  transition: border-color .18s, box-shadow .18s; outline: none;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+}
+input::placeholder { color: var(--s300); }
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; padding-right: 32px;
+}
+
+/* INFO BOX */
+.ibox {
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: var(--rs); padding: 12px 15px;
+  font-size: .76rem; color: #1e3a8a; margin-top: 14px;
+}
+.ibox .ir {
+  display: flex; justify-content: space-between;
+  padding: 3px 0; border-bottom: 1px dashed #bfdbfe;
+}
+.ibox .ir:last-child { border-bottom: none; }
+.ibox .ir span:last-child { font-weight: 600; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--s100); margin: 18px 0; }
+
+/* BUTTONS */
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; font-size: .8rem; font-weight: 600;
+  border: none; border-radius: var(--rs); cursor: pointer;
+  font-family: 'Poppins', sans-serif; transition: all .18s;
+}
+.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn-primary {
+  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  color: white; box-shadow: 0 2px 8px rgba(59,130,246,.28);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(59,130,246,.38); }
+.btn-danger  { background: #fef2f2; color: var(--red); border: 1.5px solid #fecaca; }
+.btn-danger:hover  { background: #fee2e2; }
+.btn-pdf     { background: #f5f3ff; color: var(--purple); border: 1.5px solid #ddd6fe; }
+.btn-pdf:hover     { background: #ede9fe; }
+.btn-save    { background: #eff6ff; color: #1d4ed8; border: 1.5px solid #bfdbfe; }
+.btn-save:hover    { background: #dbeafe; }
+
+/* RESULTS */
+#results-section { display: none; }
+#results-section.visible { display: block; }
+
+/* SUMMARY CARDS */
+.sum-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 700px) { .sum-grid { grid-template-columns: 1fr 1fr; } }
+.sc { padding: 14px 16px; border-radius: var(--rs); border: 1px solid transparent; }
+.sc .sc-l { font-size: .66rem; font-weight: 500; color: var(--s500); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+.sc .sc-v { font-size: 1rem; font-weight: 700; }
+.sc .sc-s { font-size: .67rem; color: var(--s400); margin-top: 3px; }
+.sc-blue  { background: #eff6ff; border-color: #bfdbfe; }
+.sc-blue .sc-v  { color: #1d4ed8; }
+.sc-amber { background: #fffbeb; border-color: #fde68a; }
+.sc-amber .sc-v { color: #b45309; }
+.sc-green { background: var(--g50); border-color: var(--g100); }
+.sc-green .sc-v { color: var(--g700); }
+.sc-red   { background: #fff1f2; border-color: #fecdd3; }
+.sc-red .sc-v   { color: #be123c; }
+
+/* TABLE */
+.tw { overflow: auto; border-radius: var(--rs); border: 1px solid var(--s200); max-height: 540px; }
+.pt { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.pt thead { position: sticky; top: 0; z-index: 5; }
+.pt thead tr { background: var(--s800); }
+.pt th {
+  padding: 10px 14px; font-weight: 600; text-align: right;
+  color: rgba(255,255,255,.8); font-size: .68rem;
+  text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+}
+.pt th:first-child { text-align: left; }
+.pt td { padding: 9px 14px; border-bottom: 1px solid var(--s100); text-align: right; color: var(--s700); }
+.pt td:first-child { text-align: left; color: var(--s400); font-size: .7rem; }
+.pt tbody tr:hover { background: #eff6ff; }
+.pt tbody tr:last-child td { border-bottom: none; }
+.pt tr.row-son { background: var(--g50) !important; }
+.pt tr.row-son td { color: var(--g800); font-weight: 600; }
+.faiz-td { color: #b45309 !important; }
+
+.tbl-note {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .7rem; color: var(--s600);
+  background: var(--s100); border-radius: 8px;
+  padding: 6px 12px; margin-bottom: 14px;
+}
+.tbl-note svg { width: 13px; height: 13px; fill: var(--s500); flex-shrink: 0; }
+
+/* HISTORY */
+#history-empty { text-align: center; padding: 28px 16px; color: var(--s400); font-size: .78rem; }
+#history-empty svg { width: 34px; height: 34px; fill: var(--s200); display: block; margin: 0 auto 10px; }
+.hi { padding: 11px 16px; border-bottom: 1px solid var(--s100); cursor: pointer; transition: background .14s; }
+.hi:last-child { border-bottom: none; }
+.hi:hover { background: #eff6ff; }
+.hi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.hi-name { font-size: .8rem; font-weight: 600; color: var(--s800); }
+.hi-meta { font-size: .68rem; color: var(--s400); margin-top: 1px; }
+.hi-amount { font-size: .74rem; color: #1d4ed8; font-weight: 600; margin-top: 3px; }
+.hi-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--s300); padding: 3px; flex-shrink: 0;
+  transition: all .14s; border-radius: 4px;
+}
+.hi-del:hover { color: var(--red); background: #fef2f2; }
+.hi-del svg { width: 13px; height: 13px; fill: currentColor; display: block; }
+#clear-all-wrap { padding: 0 16px 16px; }
+.clear-btn {
+  width: 100%; padding: 7px; background: none;
+  border: 1.5px solid var(--s200); border-radius: var(--rs);
+  font-size: .74rem; color: var(--s500); cursor: pointer;
+  font-family: 'Poppins', sans-serif; transition: all .14s;
+}
+.clear-btn:hover { border-color: var(--red); color: var(--red); background: #fef2f2; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 22px; right: 22px; z-index: 9999;
+  padding: 11px 18px; border-radius: var(--rs);
+  font-size: .8rem; font-weight: 500;
+  opacity: 0; transform: translateY(6px);
+  transition: all .22s; pointer-events: none;
+  font-family: 'Poppins', sans-serif; box-shadow: var(--sh2);
+}
+#toast.show    { opacity: 1; transform: none; background: var(--s900); color: white; }
+#toast.success { background: var(--g700) !important; color: white; }
+#toast.error   { background: var(--red) !important; color: white; }
+
+@media print {
+  header, .banner, #clear-all-wrap, .btn-row, #toast { display: none !important; }
+  .top-row { grid-template-columns: 1fr !important; }
+  #results-section { display: block !important; }
+  .card { box-shadow: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <a href="tasarruf-finansman-hesaplama.html" class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
+      </div>
+      <span class="brand-name">Ucuz Finansman</span>
+    </a>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Anasayfa
+      </a>
+      <a href="tasarruf-finansman-hesaplama.html" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Tasarruf Finansmanı
+      </a>
+      <a href="kredi-hesaplama.html" class="nav-link active">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        Kredi Hesapla
+      </a>
+      <a href="karsilastirma.html" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
+        Karşılaştır
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="banner">
+  <h1>Kredi Ödeme Planı Hesaplayıcı</h1>
+  <p>Kredi tutarı, vade ve aylık faiz oranını girerek taksit planınızı anında hesaplayın.</p>
+</div>
+
+<main class="main">
+  <div class="top-row">
+
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        </div>
+        <h2>Kredi Bilgileri</h2>
+      </div>
+      <div class="card-body">
+
+        <!-- Kredi Türü -->
+        <div style="margin-bottom:20px">
+          <label style="display:block;margin-bottom:10px">Kredi Türü</label>
+          <div class="kt-grid">
+
+            <button class="kt-btn active" onclick="setKrediTuru('konut',this)" data-tur="konut">
+              <div class="kt-icon">
+                <!-- Ev / Konut ikonu -->
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              </div>
+              <span class="kt-label">Konut</span>
+            </button>
+
+            <button class="kt-btn" onclick="setKrediTuru('tasit',this)" data-tur="tasit">
+              <div class="kt-icon">
+                <!-- Araba / Taşıt ikonu -->
+                <svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+              </div>
+              <span class="kt-label">Taşıt</span>
+            </button>
+
+            <button class="kt-btn" onclick="setKrediTuru('tuketici',this)" data-tur="tuketici">
+              <div class="kt-icon">
+                <!-- Kredi kartı / Tüketici ikonu -->
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+              </div>
+              <span class="kt-label">Tüketici</span>
+            </button>
+
+            <button class="kt-btn" onclick="setKrediTuru('ticari',this)" data-tur="ticari">
+              <div class="kt-icon">
+                <!-- Ofis / Ticari ikonu -->
+                <svg viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+              </div>
+              <span class="kt-label">Ticari</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- Ana Alanlar -->
+        <div class="fg fg3">
+          <div class="field">
+            <label>Kredi Tutarı (₺) <span class="req">*</span></label>
+            <input type="text" id="krediTutari" placeholder="Ör: 500.000"
+              oninput="formatInput(this); updateInfoBox()">
+          </div>
+
+          <div class="field">
+            <label>Vade (Ay) <span class="req">*</span></label>
+            <input type="number" id="vadeAy" placeholder="Ör: 120" min="1" max="360"
+              oninput="updateInfoBox()">
+          </div>
+
+          <div class="field">
+            <label>Aylık Faiz Oranı (%) <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="number" id="faizOrani" placeholder="Ör: 3.00" step="0.01" min="0"
+                oninput="updateInfoBox()">
+              <span class="input-suffix">%</span>
+            </div>
+            <div class="faiz-hint" id="faiz-hint" style="display:none">
+              Yıllık:&nbsp;<strong id="yillik-faiz-goster">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canlı Bilgi Kutusu -->
+        <div class="ibox" id="info-box" style="display:none">
+          <div class="ir"><span>Yıllık Faiz Oranı</span><span id="ib-yillik">—</span></div>
+          <div class="ir"><span>Tahmini Aylık Taksit</span><span id="ib-taksit">—</span></div>
+          <div class="ir"><span>Toplam Geri Ödeme</span><span id="ib-toplam">—</span></div>
+          <div class="ir"><span>Toplam Faiz Maliyeti</span><span id="ib-faiz-mal">—</span></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="hesapla()">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Hesapla
+          </button>
+          <button class="btn btn-danger" onclick="temizle()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Temizle
+          </button>
+          <button class="btn btn-pdf" onclick="pdfIndir()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+            PDF İndir
+          </button>
+          <button class="btn btn-save" onclick="kaydet()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+            Kaydet
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GEÇMİŞ -->
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+          </div>
+          <h2>Hesaplama Geçmişi</h2>
+        </div>
+        <div id="history-container">
+          <div id="history-empty">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+            <p>Henüz kayıtlı hesaplama yok.<br>Hesapla → Kaydet adımını izleyin.</p>
+          </div>
+          <div id="history-list" style="display:none"></div>
+        </div>
+        <div id="clear-all-wrap" style="display:none">
+          <button class="clear-btn" onclick="tumunuTemizle()">Tümünü Sil</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /top-row -->
+
+  <!-- ÖDEME PLANI — tam genişlik -->
+  <div id="results-section">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18v-2H5V3H3zm4 12l3-4 3 3 3-5 3 4H7z"/></svg>
+        </div>
+        <h2>Ödeme Planı</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="sum-grid">
+          <div class="sc sc-blue">
+            <div class="sc-l">Aylık Taksit</div>
+            <div class="sc-v" id="res-taksit">—</div>
+            <div class="sc-s">Eşit taksit (annüite)</div>
+          </div>
+          <div class="sc sc-amber">
+            <div class="sc-l">Toplam Faiz</div>
+            <div class="sc-v" id="res-faiz">—</div>
+            <div class="sc-s" id="res-faiz-oran">—</div>
+          </div>
+          <div class="sc sc-green">
+            <div class="sc-l">Toplam Geri Ödeme</div>
+            <div class="sc-v" id="res-toplam">—</div>
+          </div>
+          <div class="sc sc-red">
+            <div class="sc-l">Vade / Kredi Türü</div>
+            <div class="sc-v" id="res-vade">—</div>
+            <div class="sc-s" id="res-tur">—</div>
+          </div>
+        </div>
+
+        <div class="tbl-note">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          Her taksit: anapara + faiz payından oluşur. KKDF ve BSMV dahil değildir.
+        </div>
+
+        <div class="tw">
+          <table class="pt">
+            <thead>
+              <tr>
+                <th style="text-align:left;width:52px">No</th>
+                <th style="text-align:right">Taksit (₺)</th>
+                <th style="text-align:right">Anapara (₺)</th>
+                <th style="text-align:right">Faiz (₺)</th>
+                <th style="text-align:right">Kalan Anapara (₺)</th>
+              </tr>
+            </thead>
+            <tbody id="plan-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ── UTILS ── */
+const fmtP  = n => isNaN(n) ? '—' : Math.round(n).toLocaleString('tr-TR') + ' ₺';
+const fmtP2 = n => isNaN(n) ? '—' : n.toLocaleString('tr-TR', {minimumFractionDigits:2,maximumFractionDigits:2}) + ' ₺';
+
+function formatInput(el) {
+  const raw = el.value.replace(/\D/g,'');
+  el.value  = raw ? parseInt(raw,10).toLocaleString('tr-TR') : '';
+}
+
+function rn(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  if (el.type === 'number') return parseFloat(el.value) || 0;
+  const v = el.value.replace(/\./g,'').replace(',','.');
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className=''; }, 3000);
+}
+
+/* ── KREDİ TÜRÜ ── */
+let krediTuru = 'konut';
+const TUR_LABEL = { konut:'Konut', tasit:'Taşıt', tuketici:'Tüketici', ticari:'Ticari' };
+
+function setKrediTuru(tur, btn) {
+  krediTuru = tur;
+  document.querySelectorAll('.kt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ── ANNÜITE FORMÜLÜ ── */
+// Aylık taksit = P * r / (1 - (1+r)^-n)
+// r = aylık faiz oranı (ondalık), n = vade ay
+function aylikTaksit(P, r, n) {
+  if (r === 0) return P / n;
+  return P * r / (1 - Math.pow(1 + r, -n));
+}
+
+/* ── CANLI BİLGİ KUTUSU ── */
+function updateInfoBox() {
+  const P        = rn('krediTutari');
+  const n        = parseInt(document.getElementById('vadeAy').value) || 0;
+  const aylikFaiz = parseFloat(document.getElementById('faizOrani').value) || 0;
+  const box      = document.getElementById('info-box');
+  const hint     = document.getElementById('faiz-hint');
+  const yillikGoster = document.getElementById('yillik-faiz-goster');
+
+  // Yıllık faiz göstergesi
+  if (aylikFaiz > 0) {
+    hint.style.display = 'flex';
+    yillikGoster.textContent = '%' + (aylikFaiz * 12).toFixed(2);
+  } else {
+    hint.style.display = 'none';
+  }
+
+  if (!P || !n) { box.style.display = 'none'; return; }
+  box.style.display = '';
+
+  const r      = aylikFaiz / 100;
+  const taksit = aylikTaksit(P, r, n);
+  const toplam = taksit * n;
+  const faizMal = toplam - P;
+
+  document.getElementById('ib-yillik').textContent    = '%' + (aylikFaiz * 12).toFixed(2);
+  document.getElementById('ib-taksit').textContent    = fmtP2(taksit);
+  document.getElementById('ib-toplam').textContent    = fmtP(toplam);
+  document.getElementById('ib-faiz-mal').textContent  = fmtP(faizMal);
+}
+
+/* ── ANA HESAPLAMA ── */
+let lastCalc = null;
+
+function hesapla() {
+  const P         = rn('krediTutari');
+  const n         = parseInt(document.getElementById('vadeAy').value) || 0;
+  const aylikFaiz = parseFloat(document.getElementById('faizOrani').value) || 0;
+
+  if (!P || P <= 0)  { toast('Geçerli bir kredi tutarı girin.', 'error'); return; }
+  if (!n || n <= 0)  { toast('Vade ayını girin.', 'error'); return; }
+  if (n > 360)       { toast('Maksimum vade 360 ay (30 yıl).', 'error'); return; }
+  if (aylikFaiz < 0) { toast('Faiz oranı negatif olamaz.', 'error'); return; }
+
+  const r       = aylikFaiz / 100;
+  const taksit  = aylikTaksit(P, r, n);
+  const toplam  = taksit * n;
+  const faizMal = toplam - P;
+
+  const rows = [];
+  let kalan = P;
+
+  for (let i = 1; i <= n; i++) {
+    const faizPay    = kalan * r;
+    const anapayPay  = taksit - faizPay;
+    kalan           -= anapayPay;
+
+    rows.push({
+      no: i,
+      taksit,
+      anapara: anapayPay,
+      faiz: faizPay,
+      kalan: Math.max(0, kalan),
+      isSon: i === n,
+    });
+  }
+
+  const sonRow = rows[rows.length - 1];
+  lastCalc = { rows, P, n, aylikFaiz, taksit, toplam, faizMal, sonRow };
+
+  // Özet kartlar
+  document.getElementById('res-taksit').textContent    = fmtP2(taksit);
+  document.getElementById('res-faiz').textContent      = fmtP(faizMal);
+  document.getElementById('res-faiz-oran').textContent = 'Toplam maliyet %' + ((faizMal/P)*100).toFixed(1);
+  document.getElementById('res-toplam').textContent    = fmtP(toplam);
+  document.getElementById('res-vade').textContent      = n + ' Ay';
+  document.getElementById('res-tur').textContent       = TUR_LABEL[krediTuru] + ' Kredisi';
+
+  // Tablo
+  const tbody = document.getElementById('plan-tbody');
+  tbody.innerHTML = '';
+
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.isSon) tr.classList.add('row-son');
+    tr.innerHTML = `
+      <td>${r.no}</td>
+      <td>${r.taksit.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td>${r.anapara.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="faiz-td">${r.faiz.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td>${r.kalan.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('results-section').classList.add('visible');
+  setTimeout(() =>
+    document.getElementById('results-section').scrollIntoView({ behavior:'smooth', block:'start' })
+  , 80);
+  toast('Ödeme planı oluşturuldu!', 'success');
+}
+
+/* ── KAYDET / GEÇMİŞ ── */
+function kaydet() {
+  if (!lastCalc) { toast('Önce hesaplama yapın.', 'error'); return; }
+  const list = JSON.parse(localStorage.getItem('kredi_history') || '[]');
+  const ad   = TUR_LABEL[krediTuru] + ' Kredisi — ' + new Date().toLocaleDateString('tr-TR');
+  list.unshift({
+    id: Date.now(), ad,
+    tutar: rn('krediTutari'),
+    taksit: lastCalc.taksit,
+    toplam: lastCalc.toplam,
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    params: {
+      krediTutari: document.getElementById('krediTutari').value,
+      vadeAy:      document.getElementById('vadeAy').value,
+      faizOrani:   document.getElementById('faizOrani').value,
+      krediTuru,
+    }
+  });
+  localStorage.setItem('kredi_history', JSON.stringify(list.slice(0,50)));
+  renderHistory();
+  toast('Hesaplama kaydedildi!', 'success');
+}
+
+function renderHistory() {
+  const list  = JSON.parse(localStorage.getItem('kredi_history') || '[]');
+  const empty = document.getElementById('history-empty');
+  const hlist = document.getElementById('history-list');
+  const cWrap = document.getElementById('clear-all-wrap');
+  if (!list.length) {
+    empty.style.display=''; hlist.style.display='none'; cWrap.style.display='none'; return;
+  }
+  empty.style.display='none'; hlist.style.display=''; cWrap.style.display='';
+  hlist.innerHTML = list.map(item => `
+    <div class="hi" onclick="yukle(${item.id})">
+      <div class="hi-top">
+        <div>
+          <div class="hi-name">${item.ad}</div>
+          <div class="hi-meta">${item.tarih}</div>
+          <div class="hi-amount">${Math.round(item.tutar).toLocaleString('tr-TR')} ₺ &middot; Taksit: ${Math.round(item.taksit).toLocaleString('tr-TR')} ₺</div>
+        </div>
+        <button class="hi-del" onclick="event.stopPropagation();sil(${item.id})" title="Sil">
+          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function sil(id) {
+  let list = JSON.parse(localStorage.getItem('kredi_history') || '[]');
+  list = list.filter(i => i.id !== id);
+  localStorage.setItem('kredi_history', JSON.stringify(list));
+  renderHistory();
+}
+
+function tumunuTemizle() {
+  if (!confirm('Tüm geçmiş silinsin mi?')) return;
+  localStorage.removeItem('kredi_history');
+  renderHistory();
+}
+
+function yukle(id) {
+  const list = JSON.parse(localStorage.getItem('kredi_history') || '[]');
+  const item = list.find(i => i.id === id);
+  if (!item?.params) return;
+  const p = item.params;
+  document.getElementById('krediTutari').value = p.krediTutari;
+  document.getElementById('vadeAy').value      = p.vadeAy;
+  document.getElementById('faizOrani').value   = p.faizOrani;
+  krediTuru = p.krediTuru || 'konut';
+  document.querySelectorAll('.kt-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.tur === krediTuru)
+  );
+  updateInfoBox();
+  hesapla();
+  toast('Hesaplama yüklendi.', 'success');
+}
+
+/* ── TEMİZLE / PDF ── */
+function temizle() {
+  ['krediTutari','vadeAy','faizOrani'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('info-box').style.display   = 'none';
+  document.getElementById('faiz-hint').style.display  = 'none';
+  document.getElementById('results-section').classList.remove('visible');
+  document.querySelectorAll('.kt-btn').forEach((b,i) => b.classList.toggle('active', i===0));
+  krediTuru = 'konut';
+  lastCalc = null;
+  toast('Form temizlendi.');
+}
+
+function pdfIndir() {
+  if (!lastCalc) { toast('Önce hesaplama yapın.', 'error'); return; }
+  window.print();
+}
+
+/* ── INIT ── */
+renderHistory();
+</script>
+
+<footer style="background:#0f172a;color:rgba(255,255,255,.6);margin-top:64px">
+  <div style="max-width:1200px;margin:0 auto;padding:36px 28px 20px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px">
+    <div>
+      <div style="font-size:.95rem;font-weight:800;color:white;margin-bottom:8px">Ucuz Finansman</div>
+      <p style="font-size:.74rem;line-height:1.65;color:rgba(255,255,255,.4)">Tasarruf finansmanı ve banka kredisi karşılaştırması için bağımsız analiz platformu.</p>
+    </div>
+    <div>
+      <div style="font-size:.7rem;font-weight:700;color:white;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Araçlar</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="index.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Anasayfa</a>
+        <a href="tasarruf-finansman-hesaplama.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Tasarruf Finansmanı</a>
+        <a href="kredi-hesaplama.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Kredi Hesapla</a>
+        <a href="karsilastirma.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Karşılaştırma</a>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:.7rem;font-weight:700;color:white;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">İletişim</div>
+      <a href="mailto:info@ucuzfinansman.com" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">info@ucuzfinansman.com</a>
+    </div>
+  </div>
+  <div style="border-top:1px solid rgba(255,255,255,.08);padding:16px 28px">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 16px;font-size:.69rem;line-height:1.7;color:rgba(255,255,255,.35);margin-bottom:12px">
+        <strong style="color:rgba(255,255,255,.5)">Yasal Uyarı:</strong> Bu sitedeki hesaplamalar yalnızca bilgilendirme amaçlıdır; finansal tavsiye değildir. Sonuçlar tahmini olup gerçek koşullardan farklılık gösterebilir. Ucuz Finansman, bu bilgilere dayanılarak alınan kararlardan sorumlu tutulamaz.
+      </div>
+      <div style="font-size:.7rem;color:rgba(255,255,255,.28)">&copy; 2025 Ucuz Finansman. Tüm hakları saklıdır.</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

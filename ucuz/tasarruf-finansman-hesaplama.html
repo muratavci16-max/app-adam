@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasarruf Finansmanı Hesaplayıcı</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --g900: #064e3b;
+  --g800: #065f46;
+  --g700: #047857;
+  --g600: #059669;
+  --g500: #10b981;
+  --g400: #34d399;
+  --g200: #a7f3d0;
+  --g100: #d1fae5;
+  --g50:  #ecfdf5;
+  --white: #ffffff;
+  --s50:  #f8fafc;
+  --s100: #f1f5f9;
+  --s200: #e2e8f0;
+  --s300: #cbd5e1;
+  --s400: #94a3b8;
+  --s500: #64748b;
+  --s600: #475569;
+  --s700: #334155;
+  --s800: #1e293b;
+  --s900: #0f172a;
+  --red:   #ef4444;
+  --amber: #f59e0b;
+  --blue:  #3b82f6;
+  --purple:#7c3aed;
+  --r:  14px;
+  --rs: 10px;
+  --sh: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --sh2: 0 4px 20px rgba(0,0,0,.08);
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--s50);
+  color: var(--s900);
+  min-height: 100vh;
+  line-height: 1.55;
+  font-size: 14px;
+}
+
+/* HEADER */
+header {
+  background: var(--white);
+  border-bottom: 1px solid var(--s200);
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 8px rgba(0,0,0,.05);
+}
+.hdr {
+  max-width: 1200px; margin: 0 auto;
+  padding: 0 28px; height: 60px;
+  display: flex; align-items: center; gap: 32px;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
+}
+.logo {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--g600), var(--g400));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; box-shadow: 0 2px 8px rgba(5,150,105,.3);
+}
+.logo svg { width: 18px; height: 18px; fill: white; }
+.brand-name {
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--g900); letter-spacing: -.01em;
+}
+.nav {
+  display: flex; align-items: center; gap: 4px;
+  margin-left: auto;
+}
+.nav-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  font-size: .8rem; font-weight: 500; color: var(--s500);
+  text-decoration: none; transition: all .18s;
+  white-space: nowrap;
+}
+.nav-link svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
+.nav-link:hover { background: var(--s100); color: var(--s800); }
+.nav-link.active {
+  background: var(--g50); color: var(--g700);
+  font-weight: 600;
+}
+.nav-link.active svg { fill: var(--g600); }
+@media (max-width: 600px) {
+  .nav-link span { display: none; }
+  .brand-name { font-size: .9rem; }
+  .nav-link { padding: 7px 10px; }
+}
+
+/* BANNER */
+.banner {
+  background: linear-gradient(135deg, var(--g800) 0%, var(--g600) 60%, var(--g400) 100%);
+  padding: 32px 28px; text-align: center; color: white;
+  position: relative; overflow: hidden;
+}
+.banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.banner h1 { font-size: 1.35rem; font-weight: 700; margin-bottom: 7px; position: relative; }
+.banner p  { font-size: .85rem; opacity: .88; max-width: 580px; margin: 0 auto; position: relative; font-weight: 300; }
+
+/* MAIN */
+.main { max-width: 1200px; margin: 0 auto; padding: 28px 28px 72px; }
+
+/* TOP ROW */
+.top-row {
+  display: grid;
+  grid-template-columns: 1fr 310px;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+@media (max-width: 900px) { .top-row { grid-template-columns: 1fr; } }
+
+/* CARD */
+.card {
+  background: var(--white);
+  border: 1px solid var(--s200);
+  border-radius: var(--r);
+  box-shadow: var(--sh);
+  overflow: hidden;
+}
+.card-hdr {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--s100);
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(90deg, var(--g50) 0%, var(--white) 60%);
+}
+.card-icon {
+  width: 30px; height: 30px;
+  background: var(--g100);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.card-icon svg { width: 15px; height: 15px; fill: var(--g700); }
+.card-hdr h2 { font-size: .88rem; font-weight: 600; color: var(--s800); }
+.card-body { padding: 22px; }
+
+/* TABS */
+.tabs {
+  display: flex; gap: 3px;
+  background: var(--s100); padding: 3px; border-radius: 10px;
+  margin-bottom: 20px;
+}
+.tab-btn {
+  flex: 1; padding: 7px 5px;
+  font-size: .72rem; font-weight: 500;
+  background: transparent; border: none; border-radius: 8px;
+  cursor: pointer; color: var(--s500); transition: all .18s;
+  font-family: 'Poppins', sans-serif; white-space: nowrap;
+}
+.tab-btn.active {
+  background: var(--white); color: var(--g700);
+  box-shadow: var(--sh); font-weight: 600;
+}
+.tab-panel { display: none; }
+.tab-panel.active { display: block; animation: fi .15s ease; }
+@keyframes fi { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+/* FORM */
+.fg  { display: grid; gap: 14px; }
+.fg2 { grid-template-columns: 1fr 1fr; }
+.fg3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 600px) { .fg2, .fg3 { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: .72rem; font-weight: 500; color: var(--s600); letter-spacing: .01em; }
+.req { color: var(--red); margin-left: 2px; }
+input[type=text], input[type=number], select {
+  width: 100%; padding: 9px 12px;
+  border: 1.5px solid var(--s200); border-radius: var(--rs);
+  font-size: .85rem; font-family: 'Poppins', sans-serif;
+  color: var(--s900); background: var(--white);
+  transition: border-color .18s, box-shadow .18s; outline: none;
+}
+input[type=text]:focus, input[type=number]:focus, select:focus {
+  border-color: var(--g500);
+  box-shadow: 0 0 0 3px rgba(16,185,129,.1);
+}
+input::placeholder { color: var(--s300); }
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; padding-right: 32px;
+}
+.hint { font-size: .68rem; color: var(--s400); }
+
+/* INFO BOX */
+.ibox {
+  background: var(--g50); border: 1px solid var(--g100);
+  border-radius: var(--rs); padding: 11px 14px;
+  font-size: .76rem; color: var(--g900); margin-top: 12px;
+}
+.ibox .ir {
+  display: flex; justify-content: space-between;
+  padding: 3px 0; border-bottom: 1px dashed var(--g100);
+}
+.ibox .ir:last-child { border-bottom: none; }
+.ibox .ir span:last-child { font-weight: 600; }
+.ibox-info {
+  background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: var(--rs); padding: 11px 14px;
+  font-size: .76rem; color: #1e40af; margin-top: 12px; line-height: 1.6;
+}
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--s100); margin: 18px 0; }
+
+/* BUTTONS */
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; font-size: .8rem; font-weight: 600;
+  border: none; border-radius: var(--rs); cursor: pointer;
+  font-family: 'Poppins', sans-serif; transition: all .18s;
+}
+.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--g700), var(--g500));
+  color: white; box-shadow: 0 2px 8px rgba(5,150,105,.25);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(5,150,105,.35); }
+.btn-danger { background: #fef2f2; color: var(--red); border: 1.5px solid #fecaca; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-pdf    { background: #f5f3ff; color: var(--purple); border: 1.5px solid #ddd6fe; }
+.btn-pdf:hover    { background: #ede9fe; }
+.btn-save   { background: var(--g50); color: var(--g700); border: 1.5px solid var(--g200); }
+.btn-save:hover   { background: var(--g100); }
+
+/* RESULTS */
+#results-section { display: none; }
+#results-section.visible { display: block; }
+
+/* SUMMARY CARDS */
+.sum-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 700px) { .sum-grid { grid-template-columns: 1fr 1fr; } }
+.sc { padding: 14px 16px; border-radius: var(--rs); border: 1px solid transparent; }
+.sc .sc-l { font-size: .66rem; font-weight: 500; color: var(--s500); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+.sc .sc-v { font-size: 1rem; font-weight: 700; }
+.sc .sc-s { font-size: .67rem; color: var(--s400); margin-top: 3px; }
+.sc-blue   { background: #eff6ff; border-color: #bfdbfe; }
+.sc-blue .sc-v  { color: #1d4ed8; }
+.sc-amber  { background: #fffbeb; border-color: #fde68a; }
+.sc-amber .sc-v { color: #b45309; }
+.sc-green  { background: var(--g50); border-color: var(--g100); }
+.sc-green .sc-v { color: var(--g700); }
+.sc-red    { background: #fff1f2; border-color: #fecdd3; }
+.sc-red .sc-v   { color: #be123c; font-size: .9rem; }
+
+/* TABLE */
+.tw { overflow: auto; border-radius: var(--rs); border: 1px solid var(--s200); max-height: 540px; }
+.pt { width: 100%; border-collapse: collapse; font-size: .77rem; }
+.pt thead { position: sticky; top: 0; z-index: 5; }
+.pt thead tr { background: var(--s800); }
+.pt th {
+  padding: 10px 13px; text-align: right; font-weight: 600;
+  color: rgba(255,255,255,.8); font-size: .68rem;
+  text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+}
+.pt th:first-child, .pt th:nth-child(2) { text-align: left; }
+.pt th:last-child { text-align: center; }
+.pt td { padding: 8px 13px; border-bottom: 1px solid var(--s100); color: var(--s700); text-align: right; }
+.pt td:first-child { text-align: left; color: var(--s400); font-size: .7rem; }
+.pt td:nth-child(2) { text-align: left; font-weight: 500; color: var(--s800); }
+.pt td:last-child { text-align: center; }
+.pt tbody tr:hover { background: var(--g50); }
+.pt tbody tr:last-child td { border-bottom: none; }
+.pt tr.row-teslim { background: #d1fae5 !important; }
+.pt tr.row-teslim td { color: var(--g800); font-weight: 600; }
+.pt tr.row-artis { background: #fef9c3 !important; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 8px; border-radius: 20px;
+  font-size: .66rem; font-weight: 600; white-space: nowrap;
+  font-family: 'Poppins', sans-serif;
+}
+.b-green  { background: var(--g100); color: var(--g800); }
+.b-amber  { background: #fef3c7; color: #78350f; }
+.b-blue   { background: #dbeafe; color: #1e40af; }
+.b-orange { background: #ffedd5; color: #9a3412; }
+
+.tbl-note {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .7rem; color: var(--s600);
+  background: var(--s100); border-radius: 8px;
+  padding: 6px 12px; margin-bottom: 14px;
+}
+
+/* HISTORY */
+#history-empty { text-align: center; padding: 28px 16px; color: var(--s400); font-size: .78rem; }
+#history-empty svg { width: 34px; height: 34px; fill: var(--s200); display: block; margin: 0 auto 10px; }
+.hi { padding: 11px 16px; border-bottom: 1px solid var(--s100); cursor: pointer; transition: background .14s; }
+.hi:last-child { border-bottom: none; }
+.hi:hover { background: var(--g50); }
+.hi-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; }
+.hi-name { font-size: .8rem; font-weight: 600; color: var(--s800); }
+.hi-meta { font-size: .68rem; color: var(--s400); margin-top: 1px; }
+.hi-amount { font-size: .74rem; color: var(--g600); font-weight: 600; margin-top: 3px; }
+.hi-del {
+  background: none; border: none; cursor: pointer;
+  color: var(--s300); padding: 3px; flex-shrink: 0;
+  transition: all .14s; border-radius: 4px;
+}
+.hi-del:hover { color: var(--red); background: #fef2f2; }
+.hi-del svg { width: 13px; height: 13px; fill: currentColor; display: block; }
+#clear-all-wrap { padding: 0 16px 16px; }
+.clear-btn {
+  width: 100%; padding: 7px; background: none;
+  border: 1.5px solid var(--s200); border-radius: var(--rs);
+  font-size: .74rem; color: var(--s500); cursor: pointer;
+  font-family: 'Poppins', sans-serif; transition: all .14s;
+}
+.clear-btn:hover { border-color: var(--red); color: var(--red); background: #fef2f2; }
+
+/* TOAST */
+#toast {
+  position: fixed; bottom: 22px; right: 22px; z-index: 9999;
+  padding: 11px 18px; border-radius: var(--rs);
+  font-size: .8rem; font-weight: 500;
+  opacity: 0; transform: translateY(6px);
+  transition: all .22s; pointer-events: none;
+  font-family: 'Poppins', sans-serif; box-shadow: var(--sh2);
+}
+#toast.show    { opacity: 1; transform: none; background: var(--s900); color: white; }
+#toast.success { background: var(--g700) !important; color: white; }
+#toast.error   { background: var(--red) !important; color: white; }
+
+@media print {
+  header, .banner, #clear-all-wrap, .btn-row, #toast { display: none !important; }
+  .top-row { grid-template-columns: 1fr !important; }
+  #results-section { display: block !important; }
+  .card { box-shadow: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <!-- Marka -->
+    <a href="tasarruf-finansman-hesaplama.html" class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
+      </div>
+      <span class="brand-name">Ucuz Finansman</span>
+    </a>
+    <!-- Nav -->
+    <nav class="nav">
+      <a href="index.html" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Anasayfa
+      </a>
+      <a href="tasarruf-finansman-hesaplama.html" class="nav-link active">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Tasarruf Finansmanı
+      </a>
+      <a href="kredi-hesaplama.html" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        Kredi Hesapla
+      </a>
+      <a href="karsilastirma.html" class="nav-link">
+        <svg viewBox="0 0 24 24"><path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/></svg>
+        Karşılaştır
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="banner">
+  <h1>Tasarruf Finansmanı Ödeme Planı</h1>
+  <p>Finansman tutarı, aylık taksit ve hizmet bedeli bilgilerini girerek kişisel ödeme planınızı oluşturun.</p>
+</div>
+
+<main class="main">
+
+  <!-- Üst satır: Form + Geçmiş -->
+  <div class="top-row">
+
+    <!-- FORM -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        </div>
+        <h2>Finansman Bilgileri</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('temel')">Temel Bilgiler</button>
+          <button class="tab-btn" onclick="switchTab('hizmet')">Hizmet Bedeli</button>
+          <button class="tab-btn" onclick="switchTab('taksit')">Taksit Türü</button>
+          <button class="tab-btn" onclick="switchTab('kaydet')">Kayıt</button>
+        </div>
+
+        <!-- Temel Bilgiler -->
+        <div class="tab-panel active" id="tab-temel">
+          <div class="fg fg3">
+            <div class="field">
+              <label>Ürün Tipi</label>
+              <select id="urunTipi">
+                <option value="ev">Ev</option>
+                <option value="araba">Araba</option>
+                <option value="arsa">Arsa</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Finansman Tutarı (₺) <span class="req">*</span></label>
+              <input type="text" id="finansmanTutari" placeholder="Ör: 1.000.000" oninput="formatInput(this); updateInfoBox()">
+            </div>
+            <div class="field">
+              <label>Aylık Taksit (₺) <span class="req">*</span></label>
+              <input type="text" id="aylikTaksit" placeholder="Ör: 25.000" oninput="formatInput(this); updateInfoBox()">
+            </div>
+            <div class="field">
+              <label>Peşinat (₺)</label>
+              <input type="text" id="pesinat" placeholder="0" oninput="formatInput(this); updateInfoBox()">
+            </div>
+            <div class="field">
+              <label>Teslimat Eşiği (%)</label>
+              <input type="number" id="teslimatYuzdesi" value="40" min="1" max="100" oninput="updateInfoBox()">
+              <span class="hint">Bu yüzdeye ulaşınca tahmini teslim.</span>
+            </div>
+            <div class="field">
+              <label>İlk Taksit Tarihi</label>
+              <div style="display:grid;grid-template-columns:1fr 84px;gap:6px">
+                <select id="baslangicAy">
+                  <option value="1">Ocak</option><option value="2">Şubat</option>
+                  <option value="3">Mart</option><option value="4">Nisan</option>
+                  <option value="5">Mayıs</option><option value="6">Haziran</option>
+                  <option value="7">Temmuz</option><option value="8">Ağustos</option>
+                  <option value="9">Eylül</option><option value="10">Ekim</option>
+                  <option value="11">Kasım</option><option value="12">Aralık</option>
+                </select>
+                <select id="baslangicYil">
+                  <option>2024</option><option selected>2025</option>
+                  <option>2026</option><option>2027</option>
+                  <option>2028</option><option>2029</option><option>2030</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="ibox" id="info-box" style="display:none">
+            <div class="ir"><span>Kalan Finansman (peşinat sonrası)</span><span id="ib-kalan">—</span></div>
+            <div class="ir"><span>Taksitlerle ödenecek teslim tutarı (%)</span><span id="ib-teslimat">—</span></div>
+            <div class="ir"><span>Tahmini teslimat vade no</span><span id="ib-taksit-sayi">—</span></div>
+          </div>
+        </div>
+
+        <!-- Hizmet Bedeli -->
+        <div class="tab-panel" id="tab-hizmet">
+          <div class="fg fg2">
+            <div class="field">
+              <label>Hizmet Bedeli Oranı (%)</label>
+              <input type="number" id="hizmetOrani" value="8.5" step="0.5" min="0" max="100" oninput="updateHizmetBox()">
+            </div>
+            <div class="field">
+              <label>Hizmet Bedeli Ödeme Şekli</label>
+              <select id="hizmetOdeme" onchange="updateHizmetBox()">
+                <option value="0">Peşin Ödeme</option>
+                <option value="2">2 Aylık Taksit</option>
+                <option value="3">3 Aylık Taksit</option>
+                <option value="4">4 Aylık Taksit</option>
+                <option value="5">5 Aylık Taksit</option>
+                <option value="6">6 Aylık Taksit</option>
+              </select>
+              <span class="hint">Vadelendirilen sayı kadar teslim dönemi ötelenir.</span>
+            </div>
+          </div>
+          <div class="ibox" id="hizmet-box" style="display:none">
+            <div class="ir"><span>Toplam Hizmet Bedeli</span><span id="hb-toplam">—</span></div>
+            <div class="ir"><span id="hb-odeme-label">Ödeme Tutarı</span><span id="hb-odeme">—</span></div>
+            <div class="ir"><span>Vadelendirme Etkisi</span><span id="hb-vade">—</span></div>
+          </div>
+        </div>
+
+        <!-- Taksit Türü -->
+        <div class="tab-panel" id="tab-taksit">
+          <div class="fg fg2">
+            <div class="field">
+              <label>Ödeme Türü</label>
+              <select id="odemeTuru" onchange="toggleArtis()">
+                <option value="esit">Eşit Taksit</option>
+                <option value="artisli">Artışlı Taksit</option>
+              </select>
+            </div>
+            <div class="field" id="artis-sik-f" style="display:none">
+              <label>Artış Sıklığı</label>
+              <select id="artisSikligi">
+                <option value="1">Aylık</option>
+                <option value="3">3 Aylık</option>
+                <option value="4">4 Aylık</option>
+                <option value="6">6 Aylık</option>
+                <option value="9">9 Aylık</option>
+                <option value="12">12 Aylık</option>
+              </select>
+            </div>
+            <div class="field" id="artis-oran-f" style="display:none">
+              <label>Artış Oranı (%)</label>
+              <input type="number" id="artisOrani" value="5" step="0.5" min="0.1" placeholder="5">
+            </div>
+          </div>
+          <div class="ibox-info">
+            <strong>Eşit Taksit:</strong> Her ay sabit tutar ödenir.<br>
+            <strong>Artışlı Taksit:</strong> Belirlenen sıklık ve orana göre taksit artar.
+            Artışın gerçekleştiği aylar tabloda
+            <span style="background:#ffedd5;color:#9a3412;padding:1px 7px;border-radius:4px;font-size:.7rem;font-weight:600">↑ Artış</span>
+            badge'i ve sarı satır rengiyle gösterilir.
+          </div>
+        </div>
+
+        <!-- Kayıt -->
+        <div class="tab-panel" id="tab-kaydet">
+          <div class="fg fg2">
+            <div class="field">
+              <label>Hesaplama Adı</label>
+              <input type="text" id="hesaplamaAdi" placeholder="Ör: Daire Finansmanı">
+            </div>
+            <div class="field">
+              <label>Notlar</label>
+              <input type="text" id="hesaplamaAciklama" placeholder="Açıklama veya not...">
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="hesapla()">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Hesapla
+          </button>
+          <button class="btn btn-danger" onclick="temizle()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+            Temizle
+          </button>
+          <button class="btn btn-pdf" onclick="pdfIndir()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+            PDF İndir
+          </button>
+          <button class="btn btn-save" onclick="kaydet()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+            Kaydet
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GEÇMİŞ -->
+    <div>
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-icon">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+          </div>
+          <h2>Hesaplama Geçmişi</h2>
+        </div>
+        <div id="history-container">
+          <div id="history-empty">
+            <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"/></svg>
+            <p>Henüz kayıtlı hesaplama yok.<br>Hesapla → Kaydet adımını izleyin.</p>
+          </div>
+          <div id="history-list" style="display:none"></div>
+        </div>
+        <div id="clear-all-wrap" style="display:none">
+          <button class="clear-btn" onclick="tumunuTemizle()">Tümünü Sil</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /top-row -->
+
+  <!-- ÖDEME PLANI — tam genişlik -->
+  <div id="results-section">
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 3v18h18v-2H5V3H3zm4 12l3-4 3 3 3-5 3 4H7z"/></svg>
+        </div>
+        <h2>Ödeme Planı</h2>
+      </div>
+      <div class="card-body">
+
+        <div class="sum-grid">
+          <div class="sc sc-blue">
+            <div class="sc-l">Toplam Taksit Ödemesi</div>
+            <div class="sc-v" id="res-toplam-taksit">—</div>
+          </div>
+          <div class="sc sc-amber">
+            <div class="sc-l">Hizmet Bedeli</div>
+            <div class="sc-v" id="res-hizmet">—</div>
+          </div>
+          <div class="sc sc-green">
+            <div class="sc-l">Toplam Ödeme</div>
+            <div class="sc-v" id="res-toplam">—</div>
+          </div>
+          <div class="sc sc-red">
+            <div class="sc-l">Tahmini Teslim</div>
+            <div class="sc-v" id="res-teslim">—</div>
+            <div class="sc-s">Son taksit: <span id="res-son-taksit">—</span></div>
+          </div>
+        </div>
+
+        <div class="tbl-note">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--s500)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span style="color:var(--g700);font-weight:600">Yeşil satır</span>: tahmini teslim &nbsp;·&nbsp;
+          <span style="color:#92400e;font-weight:600">Sarı satır</span>: taksit artışı
+        </div>
+
+        <div class="tw">
+          <table class="pt">
+            <thead>
+              <tr>
+                <th style="text-align:left;width:48px">No</th>
+                <th style="text-align:left;width:130px">Tarih</th>
+                <th>Taksit (₺)</th>
+                <th>Ödenen Toplam (₺)</th>
+                <th>Kalan Borç (₺)</th>
+                <th style="text-align:center;min-width:150px">Durum</th>
+              </tr>
+            </thead>
+            <tbody id="plan-tbody"></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ───────────────── UTILS ───────────────── */
+const AYLAR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran',
+               'Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
+const fmtPara = n => isNaN(n) ? '—' : Math.round(n).toLocaleString('tr-TR') + ' ₺';
+
+function formatInput(el) {
+  const raw = el.value.replace(/\D/g, '');
+  el.value  = raw ? parseInt(raw, 10).toLocaleString('tr-TR') : '';
+}
+
+function rn(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  if (el.type === 'number') return parseFloat(el.value) || 0;
+  const v = el.value.replace(/\./g,'').replace(',','.');
+  const n = parseFloat(v);
+  return isNaN(n) ? 0 : n;
+}
+
+const tarihStr = (ay, yil) => AYLAR[ay - 1] + ' ' + yil;
+
+function sonrakiAy(ay, yil) {
+  return ay === 12 ? { ay: 1, yil: yil + 1 } : { ay: ay + 1, yil };
+}
+
+function addAy(ay, yil, n) {
+  const t = yil * 12 + ay - 1 + n;
+  return { ay: t % 12 + 1, yil: Math.floor(t / 12) };
+}
+
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+/* ───────────────── TAB / TOGGLE ───────────────── */
+function switchTab(tab) {
+  const keys = ['temel','hizmet','taksit','kaydet'];
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', keys[i] === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function toggleArtis() {
+  const on = document.getElementById('odemeTuru').value === 'artisli';
+  document.getElementById('artis-sik-f').style.display  = on ? '' : 'none';
+  document.getElementById('artis-oran-f').style.display = on ? '' : 'none';
+}
+
+/* ───────────────── CANLI BİLGİ KUTULARI ───────────────── */
+function updateInfoBox() {
+  const tutar   = rn('finansmanTutari');
+  const taksit  = rn('aylikTaksit');
+  const pesinat = rn('pesinat');
+  const pct     = parseFloat(document.getElementById('teslimatYuzdesi').value) || 40;
+  const box     = document.getElementById('info-box');
+  if (!tutar) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  const kalan    = tutar - pesinat;
+  const tesEsik  = Math.max(0, tutar * (pct / 100) - pesinat); // toplam tutarin %X'i, pesinat dusulur
+  const takAdet  = taksit > 0 ? Math.ceil(Math.max(0, tesEsik) / taksit) : 0;
+  document.getElementById('ib-kalan').textContent       = fmtPara(kalan);
+  document.getElementById('ib-teslimat').textContent    = fmtPara(Math.max(0, tesEsik));
+  document.getElementById('ib-taksit-sayi').textContent = takAdet > 0 ? takAdet + '. vade sonrası' : '—';
+  updateHizmetBox();
+}
+
+function updateHizmetBox() {
+  const tutar = rn('finansmanTutari');
+  const oran  = parseFloat(document.getElementById('hizmetOrani').value) || 0;
+  const vade  = parseInt(document.getElementById('hizmetOdeme').value)   || 0;
+  const box   = document.getElementById('hizmet-box');
+  if (!tutar || !oran) { box.style.display = 'none'; return; }
+  box.style.display = '';
+  const hTop  = tutar * (oran / 100);
+  const aylik = vade > 0 ? hTop / vade : hTop;
+  document.getElementById('hb-toplam').textContent      = fmtPara(hTop);
+  document.getElementById('hb-odeme-label').textContent = vade > 0 ? `Aylık Taksit (${vade} ay)` : 'Peşin Tutar';
+  document.getElementById('hb-odeme').textContent       = fmtPara(aylik);
+  document.getElementById('hb-vade').textContent        = vade > 0 ? `Teslim ${vade} ay ötelendi` : 'Öteleme yok';
+}
+
+/* ───────────────── ANA HESAPLAMA ───────────────── */
+let lastCalc = null;
+
+function hesapla() {
+  const tutar      = rn('finansmanTutari');
+  const basTaksit  = rn('aylikTaksit');
+  const pesinat    = rn('pesinat');
+  const pct        = parseFloat(document.getElementById('teslimatYuzdesi').value) || 40;
+  const hizmetOran = parseFloat(document.getElementById('hizmetOrani').value) || 0;
+  const hizmetVade = parseInt(document.getElementById('hizmetOdeme').value)   || 0;
+  const odemeTuru  = document.getElementById('odemeTuru').value;
+  const artisOrani = parseFloat(document.getElementById('artisOrani').value)  || 0;
+  const artisSik   = parseInt(document.getElementById('artisSikligi').value)  || 1;
+  let ay   = parseInt(document.getElementById('baslangicAy').value);
+  let yil  = parseInt(document.getElementById('baslangicYil').value);
+
+  if (!tutar || tutar <= 0)   { toast('Geçerli bir finansman tutarı girin.', 'error'); return; }
+  if (!basTaksit || basTaksit <= 0) { toast('Aylık taksit tutarını girin.', 'error'); return; }
+  const kalan0 = tutar - pesinat;
+  if (kalan0 <= 0) { toast('Peşinat toplam tutardan büyük olamaz.', 'error'); return; }
+
+  const hizmetToplam = tutar * (hizmetOran / 100);
+  // Teslim esigi: toplam finansman tutarinin %X'i, pesinat sayilir, hizmet bedeli dahil degil
+  // Pesinatin etkisi: esikten dusulur, kalan taksitlerle tamamlanacak miktar
+  const tesEsik      = Math.max(0, tutar * (pct / 100) - pesinat);
+
+  const rows = [];
+  let kalan       = kalan0;
+  let odenenmis   = 0;
+  let taksitTutar = basTaksit;
+  let prevTaksit  = basTaksit;
+  let teslimVadeNo = null, teslimAy = null, teslimYil = null;
+  let vadeNo = 1;
+
+  while (kalan > 0.005 && vadeNo <= 600) {
+    let isArtis = false;
+    if (odemeTuru === 'artisli' && vadeNo > 1 && artisOrani > 0) {
+      if ((vadeNo - 1) % artisSik === 0) {
+        prevTaksit  = taksitTutar;
+        taksitTutar = taksitTutar * (1 + artisOrani / 100);
+        isArtis     = true;
+      }
+    }
+
+    const odeme = Math.min(taksitTutar, kalan);
+    kalan      -= odeme;
+    odenenmis  += odeme;
+
+    if (teslimVadeNo === null && odenenmis >= tesEsik - 0.001) {
+      // En erken teslim 5. ay — hesaplanan vade 5'ten küçükse 5'e yükselt
+      const hesaplananVade = vadeNo + hizmetVade;
+      const gercekVade     = Math.max(hesaplananVade, 5);
+      teslimVadeNo = gercekVade;
+      const t = addAy(parseInt(document.getElementById('baslangicAy').value),
+                      parseInt(document.getElementById('baslangicYil').value),
+                      gercekVade - 1);
+      teslimAy = t.ay; teslimYil = t.yil;
+    }
+
+    rows.push({
+      no: vadeNo, tarih: tarihStr(ay, yil),
+      taksit: odeme,
+      odenenmis: odenenmis + pesinat,
+      kalan: Math.max(0, kalan),
+      isTeslim: vadeNo === teslimVadeNo,
+      isArtis,
+      artisOnceki: isArtis ? prevTaksit : 0,
+      artisYeni:   isArtis ? taksitTutar : 0,
+    });
+
+    const s = sonrakiAy(ay, yil);
+    ay = s.ay; yil = s.yil;
+    vadeNo++;
+  }
+
+  if (vadeNo > 600) { toast('Plan 600 vadeyi aşıyor, taksiti artırın.', 'error'); return; }
+
+  const toplamTaksit = rows.reduce((s, r) => s + r.taksit, 0) + pesinat;
+  const toplamOdeme  = toplamTaksit + hizmetToplam;
+  const sonRow       = rows[rows.length - 1];
+  lastCalc = { rows, tutar, pesinat, hizmetToplam, toplamTaksit, toplamOdeme,
+               teslimAy, teslimYil, teslimVadeNo, sonRow };
+
+  document.getElementById('res-toplam-taksit').textContent = fmtPara(toplamTaksit);
+  document.getElementById('res-hizmet').textContent        = fmtPara(hizmetToplam);
+  document.getElementById('res-toplam').textContent        = fmtPara(toplamOdeme);
+  document.getElementById('res-teslim').textContent        = teslimAy ? tarihStr(teslimAy, teslimYil) : 'Belirsiz';
+  document.getElementById('res-son-taksit').textContent    = sonRow.tarih;
+
+  /* — tablo — */
+  const tbody = document.getElementById('plan-tbody');
+  tbody.innerHTML = '';
+
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r.isTeslim) tr.classList.add('row-teslim');
+    else if (r.isArtis) tr.classList.add('row-artis');
+
+    let durum = '';
+    if (r.isTeslim && r.isArtis) {
+      durum = `<span class="badge b-green"><svg width="10" height="10" viewBox="0 0 24 24" style="fill:currentColor;vertical-align:middle;margin-right:3px"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Teslim</span>&nbsp;<span class="badge b-orange">↑ ${artisOrani}%</span>`;
+    } else if (r.isTeslim) {
+      durum = `<span class="badge b-green"><svg width="10" height="10" viewBox="0 0 24 24" style="fill:currentColor;vertical-align:middle;margin-right:3px"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>Teslim</span>`;
+    } else if (r.isArtis) {
+      const oc = Math.round(r.artisOnceki).toLocaleString('tr-TR');
+      const yn = Math.round(r.artisYeni).toLocaleString('tr-TR');
+      durum = `<span class="badge b-orange">↑ +${artisOrani}%&nbsp;·&nbsp;${oc}→${yn}₺</span>`;
+    } else if (r.no < (teslimVadeNo ?? Infinity)) {
+      durum = `<span class="badge b-amber">Birikim</span>`;
+    } else {
+      durum = `<span class="badge b-blue">Taksit</span>`;
+    }
+
+    tr.innerHTML = `
+      <td>${r.no}</td>
+      <td>${r.tarih}</td>
+      <td>${Math.round(r.taksit).toLocaleString('tr-TR')}</td>
+      <td>${Math.round(r.odenenmis).toLocaleString('tr-TR')}</td>
+      <td>${Math.round(r.kalan).toLocaleString('tr-TR')}</td>
+      <td>${durum}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('results-section').classList.add('visible');
+  setTimeout(() =>
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' })
+  , 80);
+  toast('Ödeme planı oluşturuldu!', 'success');
+}
+
+/* ───────────────── KAYDET / GEÇMİŞ ───────────────── */
+function kaydet() {
+  if (!lastCalc) { toast('Önce hesaplama yapın.', 'error'); return; }
+  const ad  = document.getElementById('hesaplamaAdi').value.trim()
+              || 'Hesaplama ' + new Date().toLocaleString('tr-TR');
+  const not = document.getElementById('hesaplamaAciklama').value.trim();
+  const list = JSON.parse(localStorage.getItem('tf_history') || '[]');
+  list.unshift({
+    id: Date.now(), ad, not,
+    tutari: rn('finansmanTutari'),
+    toplamOdeme: lastCalc.toplamOdeme,
+    teslim: lastCalc.teslimAy ? tarihStr(lastCalc.teslimAy, lastCalc.teslimYil) : 'Belirsiz',
+    tarih: new Date().toLocaleDateString('tr-TR'),
+    params: {
+      urunTipi:        document.getElementById('urunTipi').value,
+      finansmanTutari: document.getElementById('finansmanTutari').value,
+      aylikTaksit:     document.getElementById('aylikTaksit').value,
+      pesinat:         document.getElementById('pesinat').value,
+      hizmetOrani:     document.getElementById('hizmetOrani').value,
+      hizmetOdeme:     document.getElementById('hizmetOdeme').value,
+      odemeTuru:       document.getElementById('odemeTuru').value,
+      artisOrani:      document.getElementById('artisOrani').value,
+      artisSikligi:    document.getElementById('artisSikligi').value,
+      baslangicAy:     document.getElementById('baslangicAy').value,
+      baslangicYil:    document.getElementById('baslangicYil').value,
+      teslimatYuzdesi: document.getElementById('teslimatYuzdesi').value,
+    }
+  });
+  localStorage.setItem('tf_history', JSON.stringify(list.slice(0, 50)));
+  renderHistory();
+  toast('Hesaplama kaydedildi!', 'success');
+}
+
+function renderHistory() {
+  const list   = JSON.parse(localStorage.getItem('tf_history') || '[]');
+  const empty  = document.getElementById('history-empty');
+  const hlist  = document.getElementById('history-list');
+  const cWrap  = document.getElementById('clear-all-wrap');
+  if (!list.length) {
+    empty.style.display = ''; hlist.style.display = 'none'; cWrap.style.display = 'none'; return;
+  }
+  empty.style.display = 'none'; hlist.style.display = ''; cWrap.style.display = '';
+  hlist.innerHTML = list.map(item => `
+    <div class="hi" onclick="yukle(${item.id})">
+      <div class="hi-top">
+        <div>
+          <div class="hi-name">${item.ad}</div>
+          <div class="hi-meta">${item.tarih}${item.not ? ' · ' + item.not : ''}</div>
+          <div class="hi-amount">${Math.round(item.tutari).toLocaleString('tr-TR')} ₺ &middot; Teslim: ${item.teslim}</div>
+        </div>
+        <button class="hi-del" onclick="event.stopPropagation();sil(${item.id})" title="Sil">
+          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function sil(id) {
+  let list = JSON.parse(localStorage.getItem('tf_history') || '[]');
+  list = list.filter(i => i.id !== id);
+  localStorage.setItem('tf_history', JSON.stringify(list));
+  renderHistory();
+}
+
+function tumunuTemizle() {
+  if (!confirm('Tüm geçmiş silinsin mi?')) return;
+  localStorage.removeItem('tf_history');
+  renderHistory();
+}
+
+function yukle(id) {
+  const list = JSON.parse(localStorage.getItem('tf_history') || '[]');
+  const item = list.find(i => i.id === id);
+  if (!item?.params) return;
+  const p = item.params;
+  const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+  sv('finansmanTutari', p.finansmanTutari);
+  sv('aylikTaksit',     p.aylikTaksit);
+  sv('pesinat',         p.pesinat);
+  sv('urunTipi',        p.urunTipi);
+  sv('hizmetOrani',     p.hizmetOrani);
+  sv('hizmetOdeme',     p.hizmetOdeme);
+  sv('odemeTuru',       p.odemeTuru);
+  sv('artisOrani',      p.artisOrani);
+  sv('artisSikligi',    p.artisSikligi);
+  sv('baslangicAy',     p.baslangicAy);
+  sv('baslangicYil',    p.baslangicYil);
+  sv('teslimatYuzdesi', p.teslimatYuzdesi);
+  sv('hesaplamaAdi',    item.ad);
+  sv('hesaplamaAciklama', item.not || '');
+  toggleArtis();
+  updateInfoBox();
+  hesapla();
+  toast('Hesaplama yüklendi.', 'success');
+}
+
+/* ───────────────── TEMİZLE / PDF ───────────────── */
+function temizle() {
+  ['finansmanTutari','aylikTaksit','pesinat','hesaplamaAdi','hesaplamaAciklama']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('hizmetOrani').value     = '8.5';
+  document.getElementById('hizmetOdeme').value     = '0';
+  document.getElementById('odemeTuru').value       = 'esit';
+  document.getElementById('artisOrani').value      = '5';
+  document.getElementById('teslimatYuzdesi').value = '40';
+  document.getElementById('info-box').style.display    = 'none';
+  document.getElementById('hizmet-box').style.display  = 'none';
+  document.getElementById('results-section').classList.remove('visible');
+  toggleArtis();
+  lastCalc = null;
+  toast('Form temizlendi.');
+}
+
+function pdfIndir() {
+  if (!lastCalc) { toast('Önce hesaplama yapın.', 'error'); return; }
+  window.print();
+}
+
+/* ───────────────── INIT ───────────────── */
+(function() {
+  const now = new Date();
+  document.getElementById('baslangicAy').value  = now.getMonth() + 1;
+  document.getElementById('baslangicYil').value = now.getFullYear();
+  renderHistory();
+})();
+</script>
+
+<footer style="background:var(--s900);color:rgba(255,255,255,.6);margin-top:64px">
+  <div style="max-width:1200px;margin:0 auto;padding:36px 28px 20px;display:grid;grid-template-columns:2fr 1fr 1fr;gap:28px">
+    <div>
+      <div style="font-size:.95rem;font-weight:800;color:white;margin-bottom:8px">Ucuz Finansman</div>
+      <p style="font-size:.74rem;line-height:1.65;color:rgba(255,255,255,.4)">Tasarruf finansmanı ve banka kredisi karşılaştırması için bağımsız analiz platformu.</p>
+    </div>
+    <div>
+      <div style="font-size:.7rem;font-weight:700;color:white;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">Araçlar</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <a href="index.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Anasayfa</a>
+        <a href="tasarruf-finansman-hesaplama.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Tasarruf Finansmanı</a>
+        <a href="kredi-hesaplama.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Kredi Hesapla</a>
+        <a href="karsilastirma.html" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">Karşılaştırma</a>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:.7rem;font-weight:700;color:white;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em">İletişim</div>
+      <a href="mailto:info@ucuzfinansman.com" style="font-size:.74rem;color:rgba(255,255,255,.4);text-decoration:none">info@ucuzfinansman.com</a>
+    </div>
+  </div>
+  <div style="border-top:1px solid rgba(255,255,255,.08);padding:16px 28px">
+    <div style="max-width:1200px;margin:0 auto">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:12px 16px;font-size:.69rem;line-height:1.7;color:rgba(255,255,255,.35);margin-bottom:12px">
+        <strong style="color:rgba(255,255,255,.5)">Yasal Uyarı:</strong> Bu sitedeki hesaplamalar yalnızca bilgilendirme amaçlıdır; finansal tavsiye değildir. Sonuçlar tahmini olup gerçek koşullardan farklılık gösterebilir. Ucuz Finansman, bu bilgilere dayanılarak alınan kararlardan sorumlu tutulamaz.
+      </div>
+      <div style="font-size:.7rem;color:rgba(255,255,255,.28)">&copy; 2025 Ucuz Finansman. Tüm hakları saklıdır.</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>
