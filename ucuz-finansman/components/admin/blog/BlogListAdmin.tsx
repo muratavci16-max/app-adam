@@ -30,10 +30,9 @@ export default function BlogListAdmin() {
   const deletePost = async (id: string) => {
     if (!confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) return
     const { error } = await supabase.from('blog_posts').delete().eq('id', id)
-    if (!error) {
-      setPosts(prev => prev.filter(p => p.id !== id))
-      showToast('Yazı silindi', 'success')
-    }
+    if (error) { showToast('Hata: ' + error.message, 'error'); return }
+    setPosts(prev => prev.filter(p => p.id !== id))
+    showToast('Yazı silindi', 'success')
   }
 
   if (loading) return <div className="text-center py-20 text-neutral-400 text-sm">Yükleniyor...</div>
