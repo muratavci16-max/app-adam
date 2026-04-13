@@ -1,0 +1,305 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { BarChart2, TrendingUp, Building2, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { karsilastirmaHesapla, formatTL, parseInput } from '@/lib/hesaplamalar'
+import type { KarsilastirmaParams, KarsilastirmaSonuc } from '@/lib/hesaplamalar'
+import { StatCard } from '@/components/ui/Card'
+import AdBanner from '@/components/ui/AdBanner'
+
+// SSR hatası almamak için dinamik import
+const KarsilastirmaChart = dynamic(() => import('./KarsilastirmaChart'), { ssr: false })
+
+const DEFAULT: KarsilastirmaParams = {
+  tutar: 2_000_000,
+  pesinat: 400_000,
+  orgPct: 8.5,
+  taksit0: 60_000,
+  takTuru: 'sabit',
+  artisAy: 0,
+  yeniTaksit: 0,
+  teslimAy: 6,
+  krFaizAylik: 2.49,
+  mevduatYillik: 40,
+}
+
+export default function KarsilastirmaClient() {
+  const searchParams = useSearchParams()
+
+  const [params, setParams] = useState<KarsilastirmaParams>(() => ({
+    tutar: parseFloat(searchParams.get('tutar') ?? '') || DEFAULT.tutar,
+    pesinat: parseFloat(searchParams.get('pesinat') ?? '') || DEFAULT.pesinat,
+    orgPct: parseFloat(searchParams.get('org_pct') ?? '') || DEFAULT.orgPct,
+    taksit0: parseFloat(searchParams.get('taksit') ?? '') || DEFAULT.taksit0,
+    takTuru: 'sabit',
+    artisAy: 0,
+    yeniTaksit: 0,
+    teslimAy: parseInt(searchParams.get('teslim_ay') ?? '') || DEFAULT.teslimAy,
+    krFaizAylik: parseFloat(searchParams.get('kr_faiz') ?? '') || DEFAULT.krFaizAylik,
+    mevduatYillik: parseFloat(searchParams.get('mevduat_y') ?? '') || DEFAULT.mevduatYillik,
+  }))
+
+  const [sonuc, setSonuc] = useState<KarsilastirmaSonuc | null>(null)
+
+  const hesapla = useCallback(() => {
+    try {
+      setSonuc(karsilastirmaHesapla(params))
+    } catch { /* ignore */ }
+  }, [params])
+
+  useEffect(() => { hesapla() }, [hesapla])
+
+  const set = (key: keyof KarsilastirmaParams, val: string | number) => {
+    setParams(prev => ({ ...prev, [key]: val }))
+  }
+
+  const inputClass = "w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all bg-white"
+  const labelClass = "block text-xs font-semibold text-neutral-500 mb-1.5"
+
+  return (
+    <div className="bg-neutral-50 min-h-screen">
+      {/* Banner */}
+      <div className="py-8 px-4" style={{ background: 'linear-gradient(135deg, #2d1b69 0%, #5b21b6 50%, #7c3aed 100%)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-2.5 mb-2">
+            <BarChart2 className="w-5 h-5 text-purple-300" />
+            <span className="text-xs font-semibold text-purple-300 uppercase tracking-wide">IRR Analizi</span>
+          </div>
+          <h1 className="text-white text-xl sm:text-2xl font-extrabold tracking-tight">Karşılaştırma Analizi</h1>
+          <p className="text-purple-200 text-sm mt-1">Tasarruf Finansmanı vs Banka Kredisi — Gerçek maliyet karşılaştırması</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Ad banner top */}
+        <AdBanner placement="homepage_top" className="mb-6" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-6">
+          {/* LEFT — Form */}
+          <div className="space-y-4">
+            {/* TF parametreleri */}
+            <div className="bg-white rounded-2xl shadow-card border border-neutral-100 p-5">
+              <h2 className="font-bold text-neutral-800 text-sm mb-4 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-success-600" />
+                Tasarruf Finansmanı Tarafı
+              </h2>
+              <div className="space-y-3.5">
+                <div>
+                  <label className={labelClass}>Toplam Finansman Tutarı</label>
+                  <div className="relative">
+                    <input type="text" className={inputClass} value={params.tutar.toLocaleString('tr-TR')}
+                      onChange={e => set('tutar', parseInput(e.target.value, false))} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Peşinat</label>
+                  <div className="relative">
+                    <input type="text" className={inputClass} value={params.pesinat.toLocaleString('tr-TR')}
+                      onChange={e => set('pesinat', parseInput(e.target.value, false))} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Organizasyon / Hizmet Ücreti</label>
+                  <div className="relative">
+                    <input type="number" step="0.1" className={inputClass} value={params.orgPct}
+                      onChange={e => set('orgPct', parseFloat(e.target.value) || 0)} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Taksit Türü</label>
+                  <div className="flex gap-2">
+                    {(['sabit', 'artisli'] as const).map(t => (
+                      <button key={t} type="button"
+                        onClick={() => set('takTuru', t)}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${params.takTuru === t ? 'bg-success-50 border-success-300 text-success-700' : 'bg-white border-neutral-200 text-neutral-500'}`}>
+                        {t === 'sabit' ? 'Sabit' : 'Artışlı'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Başlangıç Taksit</label>
+                  <div className="relative">
+                    <input type="text" className={inputClass} value={params.taksit0.toLocaleString('tr-TR')}
+                      onChange={e => set('taksit0', parseInput(e.target.value, false))} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
+                  </div>
+                </div>
+                {params.takTuru === 'artisli' && (
+                  <div className="grid grid-cols-2 gap-3 bg-amber-50 p-3 rounded-xl">
+                    <div>
+                      <label className={labelClass}>Artış Başlangıç Ayı</label>
+                      <input type="number" className={inputClass} value={params.artisAy}
+                        onChange={e => set('artisAy', parseInt(e.target.value) || 0)} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Yeni Taksit</label>
+                      <div className="relative">
+                        <input type="text" className={inputClass} value={params.yeniTaksit.toLocaleString('tr-TR')}
+                          onChange={e => set('yeniTaksit', parseInput(e.target.value, false))} />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className={labelClass}>Tahmini Teslim Ayı</label>
+                  <div className="relative">
+                    <input type="number" min="1" className={inputClass} value={params.teslimAy}
+                      onChange={e => set('teslimAy', parseInt(e.target.value) || 1)} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">. ay</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Kredi parametreleri */}
+            <div className="bg-white rounded-2xl shadow-card border border-neutral-100 p-5">
+              <h2 className="font-bold text-neutral-800 text-sm mb-4 flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-blue-500" />
+                Banka Kredisi Tarafı
+              </h2>
+              <div className="space-y-3.5">
+                <div>
+                  <label className={labelClass}>Banka Aylık Faiz Oranı</label>
+                  <div className="relative">
+                    <input type="number" step="0.01" className={inputClass} value={params.krFaizAylik}
+                      onChange={e => set('krFaizAylik', parseFloat(e.target.value) || 0)} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Alternatif Mevduat Getirisi (Yıllık)</label>
+                  <div className="relative">
+                    <input type="number" step="0.5" className={inputClass} value={params.mevduatYillik}
+                      onChange={e => set('mevduatYillik', parseFloat(e.target.value) || 0)} />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1">Tasarruf alternatifinizin getirisi</p>
+                </div>
+              </div>
+            </div>
+
+            <AdBanner placement="sidebar" />
+          </div>
+
+          {/* RIGHT — Sonuçlar */}
+          {sonuc && (
+            <div className="space-y-5">
+              {/* Verdict */}
+              {!isNaN(sonuc.irrAylikPct) && (
+                <div className={`flex items-center gap-4 p-5 rounded-2xl border-2 ${sonuc.tfDahaAvantajli ? 'bg-success-50 border-success-300' : 'bg-blue-50 border-blue-300'}`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${sonuc.tfDahaAvantajli ? 'bg-success-100' : 'bg-blue-100'}`}>
+                    {sonuc.tfDahaAvantajli ? <TrendingUp className="w-6 h-6 text-success-600" /> : <Building2 className="w-6 h-6 text-blue-600" />}
+                  </div>
+                  <div>
+                    <p className={`text-base font-extrabold ${sonuc.tfDahaAvantajli ? 'text-success-800' : 'text-blue-800'}`}>
+                      {sonuc.tfDahaAvantajli
+                        ? '✓ Tasarruf Finansmanı Daha Avantajlı'
+                        : '✓ Banka Kredisi Daha Uygun'}
+                    </p>
+                    <p className={`text-sm mt-0.5 ${sonuc.tfDahaAvantajli ? 'text-success-600' : 'text-blue-600'}`}>
+                      {sonuc.krDahaUcuz
+                        ? `Banka alternatifiniz ${formatTL(sonuc.fark)} daha ucuz`
+                        : `TF sistemi ${formatTL(sonuc.fark)} daha avantajlı`
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* IRR & stats */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <StatCard
+                  label="TF Efektif Faiz (IRR)"
+                  value={isNaN(sonuc.irrAylikPct) ? '—' : `%${sonuc.irrAylikPct.toFixed(2)}`}
+                  sub="Aylık"
+                  color={sonuc.tfDahaAvantajli ? 'green' : 'amber'}
+                />
+                <StatCard
+                  label="IRR Yıllık Bileşik"
+                  value={isNaN(sonuc.irrYillik) ? '—' : `%${sonuc.irrYillik.toFixed(1)}`}
+                  sub="vs banka faizi"
+                  color={sonuc.tfDahaAvantajli ? 'green' : 'amber'}
+                />
+                <StatCard label="TF Toplam Maliyet" value={formatTL(sonuc.tfToplam)} color="blue" />
+                <StatCard label="Kredi Alt. Toplam" value={formatTL(sonuc.altToplam)} color="indigo" />
+              </div>
+
+              {/* Detaylar */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* TF tarafı */}
+                <div className="bg-white rounded-2xl shadow-card border border-neutral-100 p-5">
+                  <h3 className="font-bold text-sm text-neutral-800 mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-success-600" />
+                    Tasarruf Finansmanı
+                  </h3>
+                  <div className="space-y-2.5">
+                    {[
+                      ['Vade', `${sonuc.vade} ay`],
+                      ['Peşinat', formatTL(params.pesinat)],
+                      ['Org. Bedeli', formatTL(sonuc.orgBedeli)],
+                      ['Toplam Maliyet', formatTL(sonuc.tfToplam)],
+                      ['IRR (Aylık)', isNaN(sonuc.irrAylikPct) ? '—' : `%${sonuc.irrAylikPct.toFixed(4)}`],
+                      ['IRR (Yıllık)', isNaN(sonuc.irrYillik) ? '—' : `%${sonuc.irrYillik.toFixed(2)}`],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between text-xs">
+                        <span className="text-neutral-500">{k}</span>
+                        <span className="font-semibold text-neutral-800">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Kredi tarafı */}
+                <div className="bg-white rounded-2xl shadow-card border border-neutral-100 p-5">
+                  <h3 className="font-bold text-sm text-neutral-800 mb-3 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-500" />
+                    Kredi Alternatifi
+                  </h3>
+                  <div className="space-y-2.5">
+                    {[
+                      ['Birikim (teslimde)', formatTL(sonuc.birikilenToplam)],
+                      ['Kredi İhtiyacı', formatTL(sonuc.krediIhtiyaci)],
+                      ['Kalan Vade', `${sonuc.kalanVade} ay`],
+                      ['Kredi Taksiti', sonuc.krTaksit > 0 ? formatTL(sonuc.krTaksit) : '—'],
+                      ['Kredi Faizi', formatTL(sonuc.krFaizToplam)],
+                      ['Toplam Maliyet', formatTL(sonuc.altToplam)],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between text-xs">
+                        <span className="text-neutral-500">{k}</span>
+                        <span className="font-semibold text-neutral-800">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chart */}
+              <div className="bg-white rounded-2xl shadow-card border border-neutral-100 p-5">
+                <h3 className="font-bold text-sm text-neutral-800 mb-4">Kümülatif Ödeme Karşılaştırması</h3>
+                <KarsilastirmaChart params={params} sonuc={sonuc} />
+              </div>
+
+              {/* Warning */}
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs">
+                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-amber-700">
+                  Bu analiz yalnızca bilgilendirme amaçlıdır. Gerçek maliyet firmanın uyguladığı koşullara göre değişebilir.
+                  Karar vermeden önce ilgili firmadan resmi teklif alınız.
+                </p>
+              </div>
+
+              <AdBanner placement="table_below" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
