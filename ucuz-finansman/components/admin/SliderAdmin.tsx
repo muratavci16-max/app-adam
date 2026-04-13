@@ -15,7 +15,7 @@ export default function SliderAdmin() {
 
   useEffect(() => {
     supabase.from('content').select('value').eq('key', 'hero_slides').single()
-      .then(({ data }) => { if (data?.value) setSlides(data.value as HeroSlide[]) })
+      .then((res) => { if (res.data?.value) setSlides(res.data.value as HeroSlide[]) })
   }, [])
 
   const save = async () => {

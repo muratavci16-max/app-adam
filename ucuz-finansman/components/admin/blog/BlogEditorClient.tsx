@@ -63,9 +63,9 @@ export default function BlogEditorClient({ mode, postId }: Props) {
   useEffect(() => {
     if (mode === 'edit' && postId) {
       supabase.from('blog_posts').select('*').eq('id', postId).single()
-        .then(({ data }) => {
-          if (data) {
-            const { id, created_at, updated_at, ...rest } = data as BlogPost
+        .then((res) => {
+          if (res.data) {
+            const { id, created_at, updated_at, ...rest } = res.data as BlogPost
             void id; void created_at; void updated_at
             setPost(rest)
             setTagInput((rest.tags ?? []).join(', '))

@@ -14,7 +14,7 @@ export default function BlogListAdmin() {
 
   useEffect(() => {
     supabase.from('blog_posts').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setPosts((data as BlogPost[]) ?? []); setLoading(false) })
+      .then((res) => { setPosts((res.data as BlogPost[]) ?? []); setLoading(false) })
   }, [])
 
   const togglePublish = async (post: BlogPost) => {

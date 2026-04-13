@@ -20,7 +20,7 @@ export default function AdBanner({ placement, className = '' }: AdBannerProps) {
       .eq('placement', placement)
       .eq('is_active', true)
       .order('order_index')
-      .then(({ data }) => { if (data) setAds(data) })
+      .then((res) => { if (res.data) setAds(res.data) })
   }, [placement])
 
   if (ads.length === 0) return null

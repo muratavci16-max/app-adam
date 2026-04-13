@@ -22,7 +22,8 @@ export default function HesaplamarimClient() {
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then((res) => {
+      const data = res.data
       if (!data.user) {
         router.push('/auth/giris')
         return

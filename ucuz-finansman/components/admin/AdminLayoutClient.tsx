@@ -29,7 +29,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   const router = useRouter()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then((res) => {
+      const data = res.data
       const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
       if (!data.user || (adminEmail && data.user.email !== adminEmail)) {
         router.push('/auth/giris?redirect=/admin')

@@ -20,7 +20,7 @@ export default function MenuAdmin() {
 
   useEffect(() => {
     supabase.from('content').select('value').eq('key', 'nav_menu').single()
-      .then(({ data }) => { if (data?.value) setItems(data.value as MenuItem[]) })
+      .then((res) => { if (res.data?.value) setItems(res.data.value as MenuItem[]) })
   }, [])
 
   const save = async () => {
