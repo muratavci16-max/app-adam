@@ -28,7 +28,7 @@ export default function IcerikAdmin() {
 
   useEffect(() => {
     supabase.from('content').select('value').eq('key', 'site_content').single()
-      .then(({ data }) => { if (data?.value) setContent({ ...defaults, ...(data.value as SiteContent) }) })
+      .then((res) => { if (res.data?.value) setContent({ ...defaults, ...(res.data.value as SiteContent) }) })
   }, [])
 
   const save = async () => {

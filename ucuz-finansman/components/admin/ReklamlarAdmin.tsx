@@ -32,8 +32,8 @@ export default function ReklamlarAdmin() {
   const [showNew, setShowNew] = useState(false)
 
   useEffect(() => {
-    supabase.from('ads').select('*').order('order_index').then(({ data }) => {
-      setAds((data as Ad[]) ?? [])
+    supabase.from('ads').select('*').order('order_index').then((res) => {
+      setAds((res.data as Ad[]) ?? [])
       setLoading(false)
     })
   }, [])

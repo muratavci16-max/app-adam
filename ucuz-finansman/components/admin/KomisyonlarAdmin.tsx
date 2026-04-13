@@ -27,7 +27,7 @@ export default function KomisyonlarAdmin() {
 
   useEffect(() => {
     supabase.from('bank_rates').select('*').order('order_index')
-      .then(({ data }) => { setRates((data as BankRate[]) ?? []); setLoading(false) })
+      .then((res) => { setRates((res.data as BankRate[]) ?? []); setLoading(false) })
   }, [])
 
   const saveRate = async (rate: BankRate) => {
