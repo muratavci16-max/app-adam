@@ -48,10 +48,9 @@ export default function ReklamlarAdmin() {
 
   const deleteAd = async (id: string) => {
     const { error } = await supabase.from('ads').delete().eq('id', id)
-    if (!error) {
-      setAds(prev => prev.filter(a => a.id !== id))
-      showToast('Reklam silindi', 'success')
-    }
+    if (error) { showToast('Hata: ' + error.message, 'error'); return }
+    setAds(prev => prev.filter(a => a.id !== id))
+    showToast('Reklam silindi', 'success')
   }
 
   const createAd = async () => {

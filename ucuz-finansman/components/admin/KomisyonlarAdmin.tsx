@@ -39,7 +39,8 @@ export default function KomisyonlarAdmin() {
   }
 
   const deleteRate = async (id: string) => {
-    await supabase.from('bank_rates').delete().eq('id', id)
+    const { error } = await supabase.from('bank_rates').delete().eq('id', id)
+    if (error) { showToast('Hata: ' + error.message, 'error'); return }
     setRates(prev => prev.filter(r => r.id !== id))
     showToast('Silindi', 'success')
   }
