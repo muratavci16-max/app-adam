@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { createAdminClient } from '@/lib/supabase'
+import { createAnonClient } from '@/lib/supabase'
 import SiteLayout from '@/components/layout/SiteLayout'
 import AdBanner from '@/components/ui/AdBanner'
 import { Clock, Tag, ArrowLeft, Calendar, User } from 'lucide-react'
@@ -14,7 +14,7 @@ interface Props {
 
 async function getPost(slug: string): Promise<BlogPost | null> {
   try {
-    const db = createAdminClient()
+    const db = createAnonClient()
     const { data } = await db
       .from('blog_posts')
       .select('*')

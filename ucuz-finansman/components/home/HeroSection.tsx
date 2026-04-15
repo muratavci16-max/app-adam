@@ -17,7 +17,9 @@ export default function HeroSection({ slides }: HeroSectionProps) {
   const [tutar, setTutar] = useState('2.000.000')
   const [pesinat, setPesinat] = useState('400.000')
   const [taksit, setTaksit] = useState('60.000')
-  const [activeTab, setActiveTab] = useState<'karsilastirma' | 'tasarruf' | 'kredi'>('karsilastirma')
+  const [vade, setVade] = useState('120')
+  const [faiz, setFaiz] = useState('2.49')
+  const [activeTab, setActiveTab] = useState<'tasarruf' | 'kredi'>('tasarruf')
   const router = useRouter()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -39,22 +41,11 @@ export default function HeroSection({ slides }: HeroSectionProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const parseVal = (v: string) => v.replace(/\./g, '').replace(',', '.')
-    if (activeTab === 'karsilastirma') {
-      const params = new URLSearchParams({
-        tutar: parseVal(tutar),
-        pesinat: parseVal(pesinat),
-        taksit: parseVal(taksit),
-        org_pct: '8.5',
-        teslim_ay: '6',
-        kr_faiz: '2.49',
-        mevduat_y: '40',
-      })
-      router.push(`/karsilastirma?${params}`)
-    } else if (activeTab === 'tasarruf') {
+    if (activeTab === 'tasarruf') {
       const params = new URLSearchParams({ tutar: parseVal(tutar), pesinat: parseVal(pesinat), taksit: parseVal(taksit) })
       router.push(`/tasarruf-finansmani?${params}`)
     } else {
-      const params = new URLSearchParams({ tutar: parseVal(tutar), taksit: parseVal(taksit) })
+      const params = new URLSearchParams({ tutar: parseVal(tutar), vade, faiz })
       router.push(`/kredi-hesaplama?${params}`)
     }
   }
@@ -148,9 +139,8 @@ export default function HeroSection({ slides }: HeroSectionProps) {
               {/* Tabs */}
               <div className="flex bg-black/15 rounded-lg p-0.5 gap-0.5 mt-3.5">
                 {([
-                  ['karsilastirma', 'Karşılaştır'],
-                  ['tasarruf', 'TF Planı'],
-                  ['kredi', 'Kredi'],
+                  ['tasarruf', 'Tasarruf Finansmanı'],
+                  ['kredi', 'Banka Kredisi'],
                 ] as const).map(([key, label]) => (
                   <button
                     key={key}
@@ -166,7 +156,9 @@ export default function HeroSection({ slides }: HeroSectionProps) {
             {/* Body */}
             <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-3.5">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-neutral-500">Finansman / Kredi Tutarı</label>
+                <label className="text-xs font-semibold text-neutral-500">
+                  {activeTab === 'tasarruf' ? 'Finansman Tutarı' : 'Kredi Tutarı'}
+                </label>
                 <div className="relative">
                   <input
                     type="text"
@@ -179,46 +171,77 @@ export default function HeroSection({ slides }: HeroSectionProps) {
                 </div>
               </div>
 
-              {activeTab !== 'kredi' && (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-neutral-500">Peşinat</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={pesinat}
-                      onChange={e => setPesinat(e.target.value)}
-                      placeholder="400.000"
-                      className="w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 pr-8 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 font-medium">₺</span>
+              {activeTab === 'tasarruf' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-neutral-500">Peşinat</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={pesinat}
+                        onChange={e => setPesinat(e.target.value)}
+                        placeholder="400.000"
+                        className="w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 pr-8 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 font-medium">₺</span>
+                    </div>
                   </div>
-                </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-neutral-500">Aylık Taksit</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={taksit}
+                        onChange={e => setTaksit(e.target.value)}
+                        placeholder="60.000"
+                        className="w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 pr-8 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 font-medium">₺</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-400 -mt-1">Diğer alanlar otomatik doldurulacak</p>
+                </>
               )}
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-neutral-500">
-                  {activeTab === 'kredi' ? 'Aylık Faiz Oranı' : 'Aylık Taksit'}
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={taksit}
-                    onChange={e => setTaksit(e.target.value)}
-                    placeholder={activeTab === 'kredi' ? '2.49' : '60.000'}
-                    className="w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 pr-8 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 font-medium">
-                    {activeTab === 'kredi' ? '%' : '₺'}
-                  </span>
-                </div>
-              </div>
+              {activeTab === 'kredi' && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-neutral-500">Vade</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={vade}
+                        onChange={e => setVade(e.target.value)}
+                        placeholder="120"
+                        className="w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 pr-10 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 font-medium">ay</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-neutral-500">Aylık Faiz Oranı</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={faiz}
+                        onChange={e => setFaiz(e.target.value)}
+                        placeholder="2.49"
+                        className="w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 pr-8 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400 font-medium">%</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-neutral-400 -mt-1">Detaylı plan için kredi hesaplama sayfasını kullanın</p>
+                </>
+              )}
 
               <button
                 type="submit"
                 className="w-full mt-1 py-3 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:from-primary-700 hover:to-primary-600 hover:-translate-y-0.5 transition-all shadow-[0_4px_14px_rgba(14,165,233,.35)]"
               >
                 <Calculator className="w-4 h-4" />
-                Hesapla & Karşılaştır
+                Analizi Başlat
                 <ChevronRight className="w-4 h-4" />
               </button>
 

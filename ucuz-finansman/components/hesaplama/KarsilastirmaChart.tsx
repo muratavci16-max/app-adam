@@ -44,13 +44,13 @@ export default function KarsilastirmaChart({ params, sonuc }: Props) {
   // Alt kümülatif
   const altCumulative: number[] = [params.pesinat + sonuc.orgBedeli]
   let kalanAlt = params.tutar - params.pesinat
-  for (let t = 1; t <= params.teslimAy; t++) {
+  for (let t = 1; t <= sonuc.teslimAy; t++) {
     const tak = Math.min(getTaksit(t), kalanAlt)
     kalanAlt -= tak
     altCumulative.push(altCumulative[t - 1] + tak)
   }
   const krTaksit = sonuc.krTaksit
-  for (let t = params.teslimAy + 1; t <= vade; t++) {
+  for (let t = sonuc.teslimAy + 1; t <= vade; t++) {
     altCumulative.push(altCumulative[altCumulative.length - 1] + (krTaksit > 0 ? krTaksit : 0))
   }
 
