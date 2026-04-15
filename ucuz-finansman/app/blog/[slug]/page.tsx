@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createAnonClient } from '@/lib/supabase'
 import SiteLayout from '@/components/layout/SiteLayout'
 import AdBanner from '@/components/ui/AdBanner'
+import BlogSidebarCalc from '@/components/blog/BlogSidebarCalc'
 import { Clock, Tag, ArrowLeft, Calendar, User } from 'lucide-react'
 import type { BlogPost } from '@/types'
 
@@ -24,6 +25,22 @@ async function getPost(slug: string): Promise<BlogPost | null> {
     return (data as BlogPost) ?? null
   } catch {
     return null
+  }
+}
+
+async function getPopularPosts(excludeSlug: string): Promise<Pick<BlogPost, 'slug' | 'title' | 'reading_time' | 'category' | 'published_at'>[]> {
+  try {
+    const db = createAnonClient()
+    const { data } = await db
+      .from('blog_posts')
+      .select('slug, title, reading_time, category, published_at')
+      .eq('published', true)
+      .neq('slug', excludeSlug)
+      .order('published_at', { ascending: false })
+      .limit(5)
+    return (data as Pick<BlogPost, 'slug' | 'title' | 'reading_time' | 'category' | 'published_at'>[]) ?? []
+  } catch {
+    return []
   }
 }
 
@@ -54,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
-  const post = await getPost(slug)
+  const [post, popularPosts] = await Promise.all([getPost(slug), getPopularPosts(slug)])
   if (!post) notFound()
 
   const schemaType = post.schema_type || 'Article'
@@ -84,9 +101,10 @@ export default async function BlogPostPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       <div className="bg-neutral-50 min-h-screen">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-8">
-            {/* Main */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
+
+            {/* Main article */}
             <article className="min-w-0">
               {/* Breadcrumb */}
               <div className="flex items-center gap-2 text-xs text-neutral-400 mb-6">
@@ -128,17 +146,17 @@ export default async function BlogPostPage({ params }: Props) {
                   )}
                 </div>
 
-                <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight leading-snug mb-4">{post.title}</h1>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight leading-snug mb-4">{post.title}</h1>
 
                 {post.excerpt && (
-                  <p className="text-neutral-500 text-sm leading-relaxed border-l-2 border-primary-400 pl-4">{post.excerpt}</p>
+                  <p className="text-neutral-500 text-base leading-relaxed border-l-4 border-primary-400 pl-4">{post.excerpt}</p>
                 )}
               </div>
 
               {/* Content */}
-              <div className="bg-white rounded-2xl border border-neutral-100 p-6 sm:p-8 mb-6">
+              <div className="bg-white rounded-2xl border border-neutral-100 p-6 sm:p-10 mb-6">
                 <div
-                  className="blog-content"
+                  className="blog-content prose prose-neutral max-w-none prose-headings:font-extrabold prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-p:leading-relaxed prose-p:text-neutral-700 prose-li:text-neutral-700"
                   dangerouslySetInnerHTML={{ __html: post.content }}
                 />
               </div>
@@ -155,24 +173,42 @@ export default async function BlogPostPage({ params }: Props) {
             </article>
 
             {/* Sidebar */}
-            <aside className="space-y-5">
+            <aside className="space-y-5 lg:sticky lg:top-6 lg:self-start">
               <AdBanner placement="sidebar" />
 
-              <div className="bg-white rounded-2xl border border-neutral-100 p-4">
-                <h3 className="font-bold text-xs text-neutral-600 uppercase tracking-wide mb-3">Hızlı Hesaplama</h3>
-                <div className="space-y-2">
-                  {[
-                    { href: '/karsilastirma', label: 'TF vs Kredi Karşılaştır' },
-                    { href: '/tasarruf-finansmani', label: 'TF Planı Hesapla' },
-                    { href: '/kredi-hesaplama', label: 'Kredi Hesapla' },
-                  ].map(l => (
-                    <Link key={l.href} href={l.href} className="flex items-center gap-2 text-xs font-medium text-neutral-600 hover:text-primary-600 transition-colors p-2 rounded-lg hover:bg-primary-50">
-                      <span className="w-1 h-1 rounded-full bg-primary-400" />
-                      {l.label}
-                    </Link>
-                  ))}
+              {/* Mini karşılaştırma hesaplayıcı */}
+              <BlogSidebarCalc />
+
+              {/* Popüler yazılar */}
+              {popularPosts.length > 0 && (
+                <div className="bg-white rounded-2xl border border-neutral-100 p-4">
+                  <h3 className="font-bold text-xs text-neutral-600 uppercase tracking-wide mb-3">Son Yazılar</h3>
+                  <div className="space-y-3">
+                    {popularPosts.map(p => (
+                      <Link
+                        key={p.slug}
+                        href={`/blog/${p.slug}`}
+                        className="block group"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-1.5 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-neutral-700 group-hover:text-primary-600 transition-colors leading-snug line-clamp-2">{p.title}</p>
+                            {p.reading_time && (
+                              <p className="text-[11px] text-neutral-400 mt-0.5 flex items-center gap-1">
+                                <Clock className="w-3 h-3" />{p.reading_time} dk
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                  <Link href="/blog" className="block mt-4 text-center text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors">
+                    Tüm yazıları gör →
+                  </Link>
                 </div>
-              </div>
+              )}
             </aside>
           </div>
         </div>
