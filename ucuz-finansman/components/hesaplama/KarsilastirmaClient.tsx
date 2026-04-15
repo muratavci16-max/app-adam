@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { BarChart2, TrendingUp, Building2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
@@ -40,6 +40,8 @@ export default function KarsilastirmaClient() {
   }))
 
   const [showAllRows, setShowAllRows] = useState(false)
+  const [kalanVadeStr, setKalanVadeStr] = useState<string>('')
+  const userEditedKalanVade = useRef(false)
 
   const [sonuc, setSonuc] = useState<KarsilastirmaSonuc | null>(null)
 
@@ -51,8 +53,27 @@ export default function KarsilastirmaClient() {
 
   useEffect(() => { hesapla() }, [hesapla])
 
+  // Sync kalanVadeStr from auto-calc when user hasn't overridden
+  useEffect(() => {
+    if (sonuc && !userEditedKalanVade.current) {
+      setKalanVadeStr(sonuc.kalanVade.toString())
+    }
+  }, [sonuc])
+
   const set = (key: keyof KarsilastirmaParams, val: string | number) => {
     setParams(prev => ({ ...prev, [key]: val }))
+  }
+
+  const handleKalanVadeChange = (val: string) => {
+    setKalanVadeStr(val)
+    const n = parseInt(val) || 0
+    userEditedKalanVade.current = n > 0
+    setParams(prev => ({ ...prev, kalanVadeOverride: n > 0 ? n : undefined }))
+  }
+
+  const resetKalanVade = () => {
+    userEditedKalanVade.current = false
+    setParams(prev => ({ ...prev, kalanVadeOverride: undefined }))
   }
 
   const inputClass = "w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all bg-white"
@@ -185,6 +206,25 @@ export default function KarsilastirmaClient() {
                   </div>
                   <p className="text-xs text-neutral-400 mt-1">Tasarruf alternatifinizin getirisi</p>
                 </div>
+                <div>
+                  <label className={labelClass}>
+                    Kalan Vade (Teslim Sonrası)
+                    {userEditedKalanVade.current && (
+                      <button onClick={resetKalanVade} className="ml-2 text-xs text-primary-500 hover:underline font-normal">Sıfırla</button>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      className={inputClass}
+                      value={kalanVadeStr}
+                      onChange={e => handleKalanVadeChange(e.target.value)}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">ay</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1">Otomatik: vade − teslimat ayı</p>
+                </div>
               </div>
             </div>
 
@@ -249,7 +289,7 @@ export default function KarsilastirmaClient() {
                       ['Peşinat', formatTL(params.pesinat)],
                       ['Org. Bedeli', formatTL(sonuc.orgBedeli)],
                       ['Toplam Maliyet', formatTL(sonuc.tfToplam)],
-                      ['IRR (Aylık)', isNaN(sonuc.irrAylikPct) ? '—' : `%${sonuc.irrAylikPct.toFixed(4)}`],
+                      ['IRR (Aylık)', isNaN(sonuc.irrAylikPct) ? '—' : `%${sonuc.irrAylikPct.toFixed(2)}`],
                       ['IRR (Yıllık)', isNaN(sonuc.irrYillik) ? '—' : `%${sonuc.irrYillik.toFixed(2)}`],
                     ].map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between text-xs">
@@ -292,7 +332,7 @@ export default function KarsilastirmaClient() {
                     onClick={() => setShowAllRows(v => !v)}
                     className="flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
                   >
-                    {showAllRows ? <><ChevronUp className="w-3.5 h-3.5" />Daralt</> : <><ChevronDown className="w-3.5 h-3.5" />Tümünü Gör ({sonuc.rows.length} ay)</>}
+                    {showAllRows ? <><ChevronUp className="w-3.5 h-3.5" />Daralt</> : <><ChevronDown className="w-3.5 h-3.5" />Tümünü Gör ({sonuc.rows.length} ay + 3 başlangıç)</>}
                   </button>
                 </div>
                 <div className="overflow-x-auto">
@@ -307,7 +347,25 @@ export default function KarsilastirmaClient() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(showAllRows ? sonuc.rows : sonuc.rows.slice(0, 24)).map(row => (
+                      {/* 3 başlangıç satırı: Peşinat / Taksit (Ay 1) / Org. Bedeli */}
+                      {[
+                        { label: 'Peşinat', tf: params.pesinat, tfK: params.pesinat },
+                        { label: '1. Taksit', tf: sonuc.rows[0]?.tfTaksit ?? 0, tfK: params.pesinat + (sonuc.rows[0]?.tfTaksit ?? 0) },
+                        { label: 'Org. Bedeli', tf: sonuc.orgBedeli, tfK: sonuc.rows[0]?.tfKumul ?? params.pesinat + sonuc.orgBedeli },
+                      ].map((r, i) => (
+                        <tr key={`init-${i}`} className="border-b border-neutral-100 bg-neutral-50/40">
+                          <td className="px-4 py-2">
+                            <span className="text-[10px] font-semibold bg-neutral-200 text-neutral-600 px-1.5 py-0.5 rounded">1</span>
+                            <span className="ml-1.5 text-xs font-semibold text-neutral-600">{r.label}</span>
+                          </td>
+                          <td className="px-4 py-2 text-right text-neutral-700 text-xs">{Math.round(r.tf).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-success-700 text-xs">{Math.round(r.tfK).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
+                          <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
+                        </tr>
+                      ))}
+                      {/* Ay 2'den itibaren normal satırlar */}
+                      {(showAllRows ? sonuc.rows.slice(1) : sonuc.rows.slice(1, 25)).map(row => (
                         <tr
                           key={row.ay}
                           className={`border-b border-neutral-50 ${row.isTeslim ? 'bg-amber-50 font-bold' : 'hover:bg-neutral-50/60'}`}

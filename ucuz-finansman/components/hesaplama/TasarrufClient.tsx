@@ -53,8 +53,6 @@ export default function TasarrufClient() {
   const AYLAR_TR = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık']
   const YEARS = Array.from({ length: 10 }, (_, i) => now.getFullYear() + i)
 
-  const displayedRows = showAll ? sonuc?.rows : sonuc?.rows.slice(0, 24)
-
   return (
     <div className="bg-neutral-50 min-h-screen">
       {/* Banner */}
@@ -303,7 +301,25 @@ export default function TasarrufClient() {
                       </tr>
                     </thead>
                     <tbody>
-                      {displayedRows?.map(row => (
+                      {/* 3 başlangıç satırı: Peşinat / 1. Taksit / Hizmet Bedeli */}
+                      {sonuc.rows[0] && [
+                        { label: 'Peşinat',      tutar: params.pesinat,      toplam: params.pesinat,                               kalan: params.tutar - params.pesinat },
+                        { label: '1. Taksit',    tutar: sonuc.rows[0].taksit, toplam: sonuc.rows[0].odenenmis,                     kalan: sonuc.rows[0].kalan },
+                        { label: 'Hizmet Bedeli',tutar: sonuc.hizmetToplam,   toplam: sonuc.rows[0].odenenmis + sonuc.hizmetToplam, kalan: sonuc.rows[0].kalan },
+                      ].map((r, i) => (
+                        <tr key={`init-${i}`} className="bg-primary-50/30 border-b border-primary-100/60">
+                          <td>
+                            <span className="text-[0.65rem] font-bold bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded">1</span>
+                            <span className="ml-1.5 text-xs font-semibold text-primary-800">{r.label}</span>
+                          </td>
+                          <td className="text-neutral-500 text-xs">{sonuc.rows[0].tarih}</td>
+                          <td className="text-right font-semibold">{formatTL2(r.tutar)}</td>
+                          <td className="text-right">{formatTL2(r.toplam)}</td>
+                          <td className="text-right">{formatTL2(r.kalan)}</td>
+                        </tr>
+                      ))}
+                      {/* Ay 2'den itibaren normal satırlar */}
+                      {(showAll ? sonuc.rows.slice(1) : sonuc.rows.slice(1, 25))?.map(row => (
                         <tr
                           key={row.no}
                           className={row.isTeslim ? 'highlight-teslim' : row.isArtis ? 'highlight-artis' : ''}
@@ -323,10 +339,10 @@ export default function TasarrufClient() {
                     </tbody>
                   </table>
                 </div>
-                {(sonuc.rows.length > 24) && (
+                {(sonuc.rows.length > 25) && (
                   <div className="px-5 py-3 border-t border-neutral-100 flex items-center justify-between">
                     <span className="text-xs text-neutral-400">
-                      {showAll ? `Tüm ${sonuc.rows.length} vade gösteriliyor` : `${Math.min(24, sonuc.rows.length)} / ${sonuc.rows.length} vade gösteriliyor`}
+                      {showAll ? `Tüm ${sonuc.rows.length - 1} vade + 3 başlangıç satırı` : `${Math.min(24, sonuc.rows.length - 1)} / ${sonuc.rows.length - 1} vade gösteriliyor`}
                     </span>
                     <button
                       onClick={() => setShowAll(!showAll)}

@@ -247,6 +247,7 @@ export interface KarsilastirmaParams {
   // Kredi tarafı
   krFaizAylik: number     // Aylık faiz (%)
   mevduatYillik: number   // Alternatif mevduat getirisi yıllık (%)
+  kalanVadeOverride?: number // 0/undefined = otomatik (vade - teslimAy)
 }
 
 export interface KarsilastirmaRow {
@@ -362,7 +363,9 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   }
   const birikilenToplam = birikim
   const krediIhtiyaci = Math.max(0, tutar - birikilenToplam)
-  const kalanVade = vade - teslimAy
+  const kalanVade = (p.kalanVadeOverride && p.kalanVadeOverride > 0)
+    ? p.kalanVadeOverride
+    : Math.max(0, vade - teslimAy)
 
   const r = krFaizAylik / 100
   let krTaksit = 0, krToplam = 0, krFaizToplam = 0
