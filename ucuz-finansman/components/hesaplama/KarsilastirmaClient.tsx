@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { BarChart2, TrendingUp, Building2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { BarChart2, TrendingUp, Building2, AlertTriangle } from 'lucide-react'
 import { karsilastirmaHesapla, formatTL, parseInput } from '@/lib/hesaplamalar'
 import type { KarsilastirmaParams, KarsilastirmaSonuc } from '@/lib/hesaplamalar'
 import { StatCard } from '@/components/ui/Card'
@@ -39,7 +39,6 @@ export default function KarsilastirmaClient() {
     mevduatYillik: parseFloat(searchParams.get('mevduat_y') ?? '') || DEFAULT.mevduatYillik,
   }))
 
-  const [showAllRows, setShowAllRows] = useState(false)
   const [kalanVadeStr, setKalanVadeStr] = useState<string>('')
   const userEditedKalanVade = useRef(false)
 
@@ -326,82 +325,130 @@ export default function KarsilastirmaClient() {
 
               {/* Karşılaştırmalı Ödeme Planı Tablosu */}
               <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+                <div className="px-5 py-4 border-b border-neutral-100">
                   <h3 className="font-bold text-sm text-neutral-800">Karşılaştırmalı Ödeme Planı</h3>
-                  <button
-                    onClick={() => setShowAllRows(v => !v)}
-                    className="flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
-                  >
-                    {showAllRows ? <><ChevronUp className="w-3.5 h-3.5" />Daralt</> : <><ChevronDown className="w-3.5 h-3.5" />Tümünü Gör ({sonuc.rows.length} ay + 3 başlangıç)</>}
-                  </button>
+                  <p className="text-[11px] text-neutral-400 mt-0.5">
+                    TF ödemeleri aynı miktarda mevduata yatırılarak birikiyor; teslimat ayında kalan tutar krediyle karşılanıyor.
+                  </p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-neutral-50 border-b border-neutral-100">
-                        <th className="px-4 py-2.5 text-left font-semibold text-neutral-500">Ay</th>
-                        <th className="px-4 py-2.5 text-right font-semibold text-success-600">TF Taksit</th>
-                        <th className="px-4 py-2.5 text-right font-semibold text-success-600">TF Kümülatif</th>
-                        <th className="px-4 py-2.5 text-right font-semibold text-blue-600">Alt. Taksit</th>
-                        <th className="px-4 py-2.5 text-right font-semibold text-emerald-600">+Faiz</th>
-                        <th className="px-4 py-2.5 text-right font-semibold text-blue-600">Alt. Kümülatif</th>
+                      <tr className="border-b border-neutral-100">
+                        <th className="px-4 py-2.5 text-left font-semibold text-neutral-500 bg-neutral-50">Ay</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-success-600 bg-success-50/40">TF Taksit</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-success-600 bg-success-50/40">TF Kümülatif</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-blue-600 bg-blue-50/40">Alt. Ödeme</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-emerald-600 bg-emerald-50/40">+Faiz</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-blue-600 bg-blue-50/40">Mevd. Bakiye*</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {/* 3 başlangıç satırı: Peşinat / Org. Bedeli / Taksit — alt taraf ay 1'de toplu mevduata yatırılıyor */}
+                      {/* ── AY 1: 3 başlangıç satırı (TF tarafı ayrıntılı; alt taraf ay 1'de toplu mevduata girer) ── */}
                       {[
-                        { label: 'Peşinat',    tf: params.pesinat,                tfK: params.pesinat },
-                        { label: 'Org. Bedeli',tf: sonuc.orgBedeli,               tfK: params.pesinat + sonuc.orgBedeli },
-                        { label: '',           tf: sonuc.rows[0]?.tfTaksit ?? 0,  tfK: sonuc.rows[0]?.tfKumul ?? params.pesinat + sonuc.orgBedeli },
+                        { label: 'Peşinat',    tf: params.pesinat,               tfK: params.pesinat },
+                        { label: 'Org. Bedeli',tf: sonuc.orgBedeli,              tfK: params.pesinat + sonuc.orgBedeli },
+                        { label: '',           tf: sonuc.rows[0]?.tfTaksit ?? 0, tfK: sonuc.rows[0]?.tfKumul ?? params.pesinat + sonuc.orgBedeli },
                       ].map((r, i) => (
                         <tr key={`init-${i}`} className="border-b border-neutral-50 hover:bg-neutral-50/60">
-                          <td className="px-4 py-2">
+                          <td className="px-4 py-2 bg-neutral-50/60">
                             <span className="font-semibold text-neutral-700">1</span>
                           </td>
-                          <td className="px-4 py-2 text-right text-neutral-700 text-xs">
+                          <td className="px-4 py-2 text-right text-neutral-700">
                             {r.label && <span className="mr-1.5 text-[10px] bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">{r.label}</span>}
                             {Math.round(r.tf).toLocaleString('tr-TR')} ₺
                           </td>
-                          <td className="px-4 py-2 text-right text-success-700 text-xs">{Math.round(r.tfK).toLocaleString('tr-TR')} ₺</td>
-                          <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
-                          <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
-                          <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
+                          <td className="px-4 py-2 text-right text-success-700">{Math.round(r.tfK).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                          <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                          <td className="px-4 py-2 text-right text-neutral-300">—</td>
                         </tr>
                       ))}
-                      {/* Ay 2'den itibaren normal satırlar */}
-                      {(showAllRows ? sonuc.rows.slice(1) : sonuc.rows.slice(1, 25)).map(row => (
-                        <tr
-                          key={row.ay}
-                          className={`border-b border-neutral-50 ${row.isTeslim ? 'bg-amber-50 font-bold' : 'hover:bg-neutral-50/60'}`}
-                        >
-                          <td className="px-4 py-2">
-                            <span className="font-semibold text-neutral-700">{row.ay}</span>
-                            {row.isTeslim && <span className="ml-1.5 text-[10px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full">Teslimat</span>}
-                          </td>
-                          <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.tfTaksit).toLocaleString('tr-TR')} ₺</td>
-                          <td className="px-4 py-2 text-right text-success-700">{Math.round(row.tfKumul).toLocaleString('tr-TR')} ₺</td>
-                          <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.altTaksit).toLocaleString('tr-TR')} ₺</td>
-                          <td className="px-4 py-2 text-right">
-                            {row.altFaiz > 0
-                              ? <span className="text-emerald-600 font-medium">+{Math.round(row.altFaiz).toLocaleString('tr-TR')} ₺</span>
-                              : <span className="text-neutral-300">—</span>
-                            }
-                          </td>
-                          <td className="px-4 py-2 text-right text-blue-700">{Math.round(row.altKumul).toLocaleString('tr-TR')} ₺</td>
-                        </tr>
-                      ))}
+
+                      {/* ── AY 2'den itibaren satırlar ── */}
+                      {sonuc.rows.slice(1).map(row => {
+                        if (row.isTeslim) {
+                          // Teslimat ayı: 3 alt satır (Biriken Tutar / Çekilen Kredi / 1. Taksit)
+                          return (
+                            <>
+                              {/* Alt-satır 1: Biriken mevduat tutarı */}
+                              <tr key={`t-${row.ay}-1`} className="bg-amber-50/80 border-b border-amber-100">
+                                <td rowSpan={3} className="px-4 py-2 align-middle bg-amber-50 border-r border-amber-100">
+                                  <div className="flex flex-col items-start gap-1">
+                                    <span className="font-bold text-neutral-800">{row.ay}</span>
+                                    <span className="text-[10px] bg-amber-300 text-amber-900 px-1.5 py-0.5 rounded-full font-semibold">Teslimat</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.tfTaksit).toLocaleString('tr-TR')} ₺</td>
+                                <td className="px-4 py-2 text-right text-success-700 font-semibold">{Math.round(row.tfKumul).toLocaleString('tr-TR')} ₺</td>
+                                <td className="px-4 py-2 text-right">
+                                  <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded mr-1">Biriken</span>
+                                  <span className="text-emerald-700 font-semibold">{Math.round(sonuc.birikilenToplam).toLocaleString('tr-TR')} ₺</span>
+                                </td>
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right text-emerald-700 font-bold">{Math.round(sonuc.birikilenToplam).toLocaleString('tr-TR')} ₺</td>
+                              </tr>
+                              {/* Alt-satır 2: Çekilen kredi tutarı */}
+                              <tr key={`t-${row.ay}-2`} className="bg-amber-50/80 border-b border-amber-100">
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right">
+                                  <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">Kredi</span>
+                                  <span className="text-blue-700 font-semibold">{Math.round(sonuc.krediIhtiyaci).toLocaleString('tr-TR')} ₺</span>
+                                </td>
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                              </tr>
+                              {/* Alt-satır 3: İlk kredi taksiti */}
+                              <tr key={`t-${row.ay}-3`} className="bg-amber-50/80 border-b border-neutral-100">
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right">
+                                  <span className="text-[10px] bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded mr-1">1. Taksit</span>
+                                  <span className="text-neutral-700">{Math.round(row.altTaksit).toLocaleString('tr-TR')} ₺</span>
+                                </td>
+                                <td className="px-4 py-2 text-right text-neutral-300">—</td>
+                                <td className="px-4 py-2 text-right text-blue-700 font-semibold">{Math.round(row.altKumul).toLocaleString('tr-TR')} ₺</td>
+                              </tr>
+                            </>
+                          )
+                        }
+                        // Normal satır (teslimat öncesi → mevduat; teslimat sonrası → kredi)
+                        const isPreDelivery = row.altFaiz > 0
+                        return (
+                          <tr key={row.ay} className="border-b border-neutral-50 hover:bg-neutral-50/60">
+                            <td className="px-4 py-2 bg-neutral-50/40">
+                              <span className="font-semibold text-neutral-700">{row.ay}</span>
+                            </td>
+                            <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.tfTaksit).toLocaleString('tr-TR')} ₺</td>
+                            <td className="px-4 py-2 text-right text-success-700">{Math.round(row.tfKumul).toLocaleString('tr-TR')} ₺</td>
+                            <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.altTaksit).toLocaleString('tr-TR')} ₺</td>
+                            <td className="px-4 py-2 text-right">
+                              {isPreDelivery
+                                ? <span className="text-emerald-600 font-medium">+{Math.round(row.altFaiz).toLocaleString('tr-TR')} ₺</span>
+                                : <span className="text-neutral-300">—</span>}
+                            </td>
+                            <td className={`px-4 py-2 text-right font-medium ${isPreDelivery ? 'text-emerald-700' : 'text-blue-700'}`}>
+                              {Math.round(row.altKumul).toLocaleString('tr-TR')} ₺
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                     <tfoot>
-                      <tr className="bg-neutral-50 border-t border-neutral-200">
-                        <td className="px-4 py-2.5 font-bold text-neutral-700">Toplam</td>
-                        <td className="px-4 py-2.5" />
-                        <td className="px-4 py-2.5 text-right font-bold text-success-700">{Math.round(sonuc.tfToplam).toLocaleString('tr-TR')} ₺</td>
-                        <td className="px-4 py-2.5" />
-                        <td className="px-4 py-2.5" />
-                        <td className="px-4 py-2.5 text-right font-bold text-blue-700">{Math.round(sonuc.altToplam).toLocaleString('tr-TR')} ₺</td>
+                      <tr className="bg-neutral-50 border-t-2 border-neutral-200">
+                        <td className="px-4 py-3 font-bold text-neutral-700 text-xs">Toplam Ödeme</td>
+                        <td className="px-4 py-3" />
+                        <td className="px-4 py-3 text-right font-bold text-success-700">{Math.round(sonuc.tfToplam).toLocaleString('tr-TR')} ₺</td>
+                        <td className="px-4 py-3" />
+                        <td className="px-4 py-3" />
+                        <td className="px-4 py-3 text-right font-bold text-blue-700">{Math.round(sonuc.altToplam).toLocaleString('tr-TR')} ₺</td>
                       </tr>
                     </tfoot>
                   </table>
+                </div>
+                <div className="px-4 py-2 border-t border-neutral-100 bg-neutral-50">
+                  <p className="text-[10px] text-neutral-400">* Teslimat öncesi: mevduat bakiyesi (yatırım + kazanılan faiz) · Teslimat sonrası: kümülatif kredi ödemesi</p>
                 </div>
               </div>
 

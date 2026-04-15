@@ -392,9 +392,12 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   altToplam += krToplam
 
   // Karşılaştırmalı ödeme planı tablosu için satırlar
+  // altKumul: teslimat öncesi → gerçek mevduat bakiyesi (yatırım + faiz kümülatif)
+  //           teslimat ayı ve sonrası → kümülatif kredi ödemesi
   const rows: KarsilastirmaRow[] = []
   let tfKumul = pesinat + orgBedeli
-  let altKumul = pesinat + orgBedeli
+  let birikimForRows = pesinat + orgBedeli  // mevduat bakiyesi (faiz dahil)
+  let altKumul = 0
   let kalanTFRows = kalanBorcBaslangic
   let kalanAltRows = kalanBorcBaslangic
   for (let t = 1; t <= vade; t++) {
@@ -405,16 +408,18 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
     let altTak: number
     let altFaizRow: number
     if (t < teslimAy) {
-      // Teslimat öncesi: mevduata yatırım
+      // Teslimat öncesi: TF ile aynı taksit mevduata yatırılır; bakiye faizle büyür
       altTak = Math.min(getTaksit(t), kalanAltRows)
       kalanAltRows = Math.max(0, kalanAltRows - altTak)
       altFaizRow = altFaizArr[t]
+      birikimForRows += altFaizRow + altTak   // = birikimForRows * (1+rate) + altTak
+      altKumul = birikimForRows
     } else {
-      // Teslimat ayı ve sonrası: kredi ödemesi
+      // Teslimat ayı ve sonrası: kredi taksiti ödenir
       altTak = krTaksit > 0 ? krTaksit : 0
       altFaizRow = 0
+      altKumul += altTak
     }
-    altKumul += altTak
 
     rows.push({ ay: t, tfTaksit: tfTak, tfKumul, altTaksit: altTak, altFaiz: altFaizRow, altKumul, isTeslim: t === teslimAy })
   }
