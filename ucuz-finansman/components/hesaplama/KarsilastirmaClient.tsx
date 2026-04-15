@@ -347,18 +347,20 @@ export default function KarsilastirmaClient() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* 3 başlangıç satırı: Peşinat / Taksit (Ay 1) / Org. Bedeli */}
+                      {/* 3 başlangıç satırı: Peşinat / Org. Bedeli / Taksit */}
                       {[
-                        { label: 'Peşinat', tf: params.pesinat, tfK: params.pesinat },
-                        { label: '1. Taksit', tf: sonuc.rows[0]?.tfTaksit ?? 0, tfK: params.pesinat + (sonuc.rows[0]?.tfTaksit ?? 0) },
-                        { label: 'Org. Bedeli', tf: sonuc.orgBedeli, tfK: sonuc.rows[0]?.tfKumul ?? params.pesinat + sonuc.orgBedeli },
+                        { label: 'Peşinat',    tf: params.pesinat,                tfK: params.pesinat },
+                        { label: 'Org. Bedeli',tf: sonuc.orgBedeli,               tfK: params.pesinat + sonuc.orgBedeli },
+                        { label: '',           tf: sonuc.rows[0]?.tfTaksit ?? 0,  tfK: sonuc.rows[0]?.tfKumul ?? params.pesinat + sonuc.orgBedeli },
                       ].map((r, i) => (
-                        <tr key={`init-${i}`} className="border-b border-neutral-100 bg-neutral-50/40">
+                        <tr key={`init-${i}`} className="border-b border-neutral-50 hover:bg-neutral-50/60">
                           <td className="px-4 py-2">
-                            <span className="text-[10px] font-semibold bg-neutral-200 text-neutral-600 px-1.5 py-0.5 rounded">1</span>
-                            <span className="ml-1.5 text-xs font-semibold text-neutral-600">{r.label}</span>
+                            <span className="font-semibold text-neutral-700">1</span>
                           </td>
-                          <td className="px-4 py-2 text-right text-neutral-700 text-xs">{Math.round(r.tf).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-neutral-700 text-xs">
+                            {r.label && <span className="mr-1.5 text-[10px] bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">{r.label}</span>}
+                            {Math.round(r.tf).toLocaleString('tr-TR')} ₺
+                          </td>
                           <td className="px-4 py-2 text-right text-success-700 text-xs">{Math.round(r.tfK).toLocaleString('tr-TR')} ₺</td>
                           <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
                           <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>

@@ -301,19 +301,19 @@ export default function TasarrufClient() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* 3 başlangıç satırı: Peşinat / 1. Taksit / Hizmet Bedeli */}
+                      {/* 3 başlangıç satırı: Peşinat / Hizmet Bedeli / Taksit */}
                       {sonuc.rows[0] && [
-                        { label: 'Peşinat',      tutar: params.pesinat,      toplam: params.pesinat,                               kalan: params.tutar - params.pesinat },
-                        { label: '1. Taksit',    tutar: sonuc.rows[0].taksit, toplam: sonuc.rows[0].odenenmis,                     kalan: sonuc.rows[0].kalan },
-                        { label: 'Hizmet Bedeli',tutar: sonuc.hizmetToplam,   toplam: sonuc.rows[0].odenenmis + sonuc.hizmetToplam, kalan: sonuc.rows[0].kalan },
+                        { label: 'Peşinat',       tutar: params.pesinat,       toplam: params.pesinat,                                kalan: params.tutar - params.pesinat },
+                        { label: 'Hizmet Bedeli', tutar: sonuc.hizmetToplam,   toplam: params.pesinat + sonuc.hizmetToplam,            kalan: params.tutar - params.pesinat },
+                        { label: '',              tutar: sonuc.rows[0].taksit, toplam: sonuc.rows[0].odenenmis + sonuc.hizmetToplam,   kalan: sonuc.rows[0].kalan },
                       ].map((r, i) => (
-                        <tr key={`init-${i}`} className="bg-primary-50/30 border-b border-primary-100/60">
-                          <td>
-                            <span className="text-[0.65rem] font-bold bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded">1</span>
-                            <span className="ml-1.5 text-xs font-semibold text-primary-800">{r.label}</span>
+                        <tr key={`init-${i}`}>
+                          <td className="font-semibold">1</td>
+                          <td>{sonuc.rows[0].tarih}</td>
+                          <td className="text-right font-semibold">
+                            {r.label && <span className="mr-1.5 text-[0.65rem] bg-neutral-100 text-neutral-500 px-1.5 py-0.5 rounded">{r.label}</span>}
+                            {formatTL2(r.tutar)}
                           </td>
-                          <td className="text-neutral-500 text-xs">{sonuc.rows[0].tarih}</td>
-                          <td className="text-right font-semibold">{formatTL2(r.tutar)}</td>
                           <td className="text-right">{formatTL2(r.toplam)}</td>
                           <td className="text-right">{formatTL2(r.kalan)}</td>
                         </tr>
