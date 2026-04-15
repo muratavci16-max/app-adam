@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { BarChart2, TrendingUp, Building2, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { BarChart2, TrendingUp, Building2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import { karsilastirmaHesapla, formatTL, parseInput } from '@/lib/hesaplamalar'
 import type { KarsilastirmaParams, KarsilastirmaSonuc } from '@/lib/hesaplamalar'
 import { StatCard } from '@/components/ui/Card'
@@ -20,7 +20,6 @@ const DEFAULT: KarsilastirmaParams = {
   takTuru: 'sabit',
   artisAy: 0,
   yeniTaksit: 0,
-  teslimAy: 6,
   krFaizAylik: 2.49,
   mevduatYillik: 40,
 }
@@ -36,10 +35,11 @@ export default function KarsilastirmaClient() {
     takTuru: 'sabit',
     artisAy: 0,
     yeniTaksit: 0,
-    teslimAy: parseInt(searchParams.get('teslim_ay') ?? '') || DEFAULT.teslimAy,
     krFaizAylik: parseFloat(searchParams.get('kr_faiz') ?? '') || DEFAULT.krFaizAylik,
     mevduatYillik: parseFloat(searchParams.get('mevduat_y') ?? '') || DEFAULT.mevduatYillik,
   }))
+
+  const [showAllRows, setShowAllRows] = useState(false)
 
   const [sonuc, setSonuc] = useState<KarsilastirmaSonuc | null>(null)
 
@@ -147,14 +147,17 @@ export default function KarsilastirmaClient() {
                     </div>
                   </div>
                 )}
-                <div>
-                  <label className={labelClass}>Tahmini Teslim Ayı</label>
-                  <div className="relative">
-                    <input type="number" min="1" className={inputClass} value={params.teslimAy}
-                      onChange={e => set('teslimAy', parseInt(e.target.value) || 1)} />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">. ay</span>
+                {sonuc && (
+                  <div className="bg-primary-50 border border-primary-200 rounded-xl px-3.5 py-2.5">
+                    <p className="text-xs font-semibold text-primary-700">Otomatik Teslimat Ayı</p>
+                    <p className="text-sm font-extrabold text-primary-900 mt-0.5">
+                      {sonuc.teslimAy}. Ay
+                    </p>
+                    <p className="text-xs text-primary-500 mt-0.5">
+                      Min. 6. ay · Tutarın %40'ına ulaşıldığında (hizmet bedeli hariç)
+                    </p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -242,6 +245,7 @@ export default function KarsilastirmaClient() {
                   <div className="space-y-2.5">
                     {[
                       ['Vade', `${sonuc.vade} ay`],
+                      ['Teslimat Ayı', `${sonuc.teslimAy}. ay`],
                       ['Peşinat', formatTL(params.pesinat)],
                       ['Org. Bedeli', formatTL(sonuc.orgBedeli)],
                       ['Toplam Maliyet', formatTL(sonuc.tfToplam)],
@@ -277,6 +281,58 @@ export default function KarsilastirmaClient() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Karşılaştırmalı Ödeme Planı Tablosu */}
+              <div className="bg-white rounded-2xl shadow-card border border-neutral-100 overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100">
+                  <h3 className="font-bold text-sm text-neutral-800">Karşılaştırmalı Ödeme Planı</h3>
+                  <button
+                    onClick={() => setShowAllRows(v => !v)}
+                    className="flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
+                  >
+                    {showAllRows ? <><ChevronUp className="w-3.5 h-3.5" />Daralt</> : <><ChevronDown className="w-3.5 h-3.5" />Tümünü Gör ({sonuc.rows.length} ay)</>}
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-neutral-50 border-b border-neutral-100">
+                        <th className="px-4 py-2.5 text-left font-semibold text-neutral-500">Ay</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-success-600">TF Taksit</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-success-600">TF Kümülatif</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-blue-600">Alt. Taksit</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-blue-600">Alt. Kümülatif</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(showAllRows ? sonuc.rows : sonuc.rows.slice(0, 24)).map(row => (
+                        <tr
+                          key={row.ay}
+                          className={`border-b border-neutral-50 ${row.isTeslim ? 'bg-amber-50 font-bold' : 'hover:bg-neutral-50/60'}`}
+                        >
+                          <td className="px-4 py-2">
+                            <span className="font-semibold text-neutral-700">{row.ay}</span>
+                            {row.isTeslim && <span className="ml-1.5 text-[10px] bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded-full">Teslimat</span>}
+                          </td>
+                          <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.tfTaksit).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-success-700">{Math.round(row.tfKumul).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.altTaksit).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-blue-700">{Math.round(row.altKumul).toLocaleString('tr-TR')} ₺</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-neutral-50 border-t border-neutral-200">
+                        <td className="px-4 py-2.5 font-bold text-neutral-700">Toplam</td>
+                        <td className="px-4 py-2.5" />
+                        <td className="px-4 py-2.5 text-right font-bold text-success-700">{Math.round(sonuc.tfToplam).toLocaleString('tr-TR')} ₺</td>
+                        <td className="px-4 py-2.5" />
+                        <td className="px-4 py-2.5 text-right font-bold text-blue-700">{Math.round(sonuc.altToplam).toLocaleString('tr-TR')} ₺</td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </div>
 

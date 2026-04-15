@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createAdminClient } from '@/lib/supabase'
+import { createAnonClient } from '@/lib/supabase'
 import SiteLayout from '@/components/layout/SiteLayout'
 import { Clock, Tag, BookOpen, ArrowRight } from 'lucide-react'
 import type { BlogPost } from '@/types'
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 async function getPosts(): Promise<BlogPost[]> {
   try {
-    const db = createAdminClient()
+    const db = createAnonClient()
     const { data } = await db
       .from('blog_posts')
       .select('id, title, slug, excerpt, cover_image, category, tags, reading_time, published_at, author_name')

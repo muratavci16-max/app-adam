@@ -117,7 +117,7 @@ export function tasarrufHesapla(p: TasarrufParams): TasarrufSonuc {
     // Teslim tespiti
     if (teslimVadeNo === null && odenenmis >= tesEsik - 0.001) {
       const hesaplananVade = vadeNo + hizmetVade
-      const gercekVade = Math.max(hesaplananVade, 5)  // EN ERKEN TESLİM 5. AY
+      const gercekVade = Math.max(hesaplananVade, 6)  // EN ERKEN TESLİM 6. AY
       teslimVadeNo = gercekVade
       const t = addAy(baslangicAy, baslangicYil, gercekVade - 1)
       teslimAy = t.ay
@@ -243,10 +243,19 @@ export interface KarsilastirmaParams {
   takTuru: 'sabit' | 'artisli'
   artisAy: number         // Kaçıncı aydan sonra artıyor
   yeniTaksit: number      // Artışlı taksit tutarı
-  teslimAy: number        // Finansman teslim ayı
+  // teslimAy kaldırıldı — otomatik hesaplanır (min 6, tutar×%40 eşiği)
   // Kredi tarafı
   krFaizAylik: number     // Aylık faiz (%)
   mevduatYillik: number   // Alternatif mevduat getirisi yıllık (%)
+}
+
+export interface KarsilastirmaRow {
+  ay: number
+  tfTaksit: number
+  tfKumul: number
+  altTaksit: number
+  altKumul: number
+  isTeslim: boolean
 }
 
 export interface KarsilastirmaSonuc {
@@ -258,6 +267,8 @@ export interface KarsilastirmaSonuc {
   irrAylikPct: number
   irrYillik: number
   teslimVadeNo: number | null
+  teslimAy: number          // otomatik hesaplanan teslimat ayı
+  rows: KarsilastirmaRow[]  // karşılaştırmalı ödeme planı
   // Kredi alternatifi
   birikilenToplam: number
   krediIhtiyaci: number
@@ -275,7 +286,7 @@ export interface KarsilastirmaSonuc {
 export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc {
   const {
     tutar, pesinat, orgPct, taksit0, takTuru,
-    artisAy, yeniTaksit, teslimAy, krFaizAylik, mevduatYillik
+    artisAy, yeniTaksit, krFaizAylik, mevduatYillik
   } = p
 
   const orgBedeli = tutar * orgPct / 100
@@ -293,6 +304,24 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
     kalan -= Math.min(getTaksit(t), kalan)
     vade = t
   }
+
+  // Teslimat ayını otomatik hesapla:
+  // Hizmet bedeli HARİÇ — peşinat + taksitler ≥ tutar×%40 olan ilk ay, minimum 6. ay
+  const teslimatEsik = tutar * 0.40
+  let kumulatif = pesinat
+  let tempKalan = kalanBorcBaslangic
+  let autoTeslimAy = 0
+  for (let t = 1; t <= Math.max(vade, 600); t++) {
+    const tak = Math.min(getTaksit(t), tempKalan)
+    tempKalan -= tak
+    kumulatif += tak
+    if (autoTeslimAy === 0 && kumulatif >= teslimatEsik) {
+      autoTeslimAy = t
+      break
+    }
+    if (tempKalan <= 0.005) break
+  }
+  const teslimAy = Math.max(autoTeslimAy || vade, 6)
 
   // Nakit akışı (IRR için)
   const cashflows = new Array(vade + 1).fill(0)
@@ -354,13 +383,37 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   }
   altToplam += krToplam
 
+  // Karşılaştırmalı ödeme planı tablosu için satırlar
+  const rows: KarsilastirmaRow[] = []
+  let tfKumul = pesinat + orgBedeli
+  let altKumul = pesinat + orgBedeli
+  let kalanTFRows = kalanBorcBaslangic
+  let kalanAltRows = kalanBorcBaslangic
+  for (let t = 1; t <= vade; t++) {
+    const tfTak = Math.min(getTaksit(t), kalanTFRows)
+    kalanTFRows = Math.max(0, kalanTFRows - tfTak)
+    tfKumul += tfTak
+
+    let altTak: number
+    if (t <= teslimAy) {
+      altTak = Math.min(getTaksit(t), kalanAltRows)
+      kalanAltRows = Math.max(0, kalanAltRows - altTak)
+      altKumul += altTak
+    } else {
+      altTak = krTaksit > 0 ? krTaksit : 0
+      altKumul += altTak
+    }
+
+    rows.push({ ay: t, tfTaksit: tfTak, tfKumul, altTaksit: altTak, altKumul, isTeslim: t === teslimAy })
+  }
+
   const tfDahaAvantajli = !isNaN(irrAylikPct) && irrAylikPct < krFaizAylik
   const fark = Math.abs(tfToplam - altToplam)
   const krDahaUcuz = altToplam < tfToplam
 
   return {
     vade, cashflows, tfToplam, orgBedeli, irrAylikPct, irrYillik,
-    teslimVadeNo: teslimAy,
+    teslimVadeNo: teslimAy, teslimAy, rows,
     birikilenToplam, krediIhtiyaci, kalanVade,
     krTaksit, krToplam, krFaizToplam, altToplam,
     fark, tfDahaAvantajli, krDahaUcuz
