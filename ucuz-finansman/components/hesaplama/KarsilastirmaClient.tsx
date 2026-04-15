@@ -343,11 +343,12 @@ export default function KarsilastirmaClient() {
                         <th className="px-4 py-2.5 text-right font-semibold text-success-600">TF Taksit</th>
                         <th className="px-4 py-2.5 text-right font-semibold text-success-600">TF Kümülatif</th>
                         <th className="px-4 py-2.5 text-right font-semibold text-blue-600">Alt. Taksit</th>
+                        <th className="px-4 py-2.5 text-right font-semibold text-emerald-600">+Faiz</th>
                         <th className="px-4 py-2.5 text-right font-semibold text-blue-600">Alt. Kümülatif</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {/* 3 başlangıç satırı: Peşinat / Org. Bedeli / Taksit */}
+                      {/* 3 başlangıç satırı: Peşinat / Org. Bedeli / Taksit — alt taraf ay 1'de toplu mevduata yatırılıyor */}
                       {[
                         { label: 'Peşinat',    tf: params.pesinat,                tfK: params.pesinat },
                         { label: 'Org. Bedeli',tf: sonuc.orgBedeli,               tfK: params.pesinat + sonuc.orgBedeli },
@@ -362,6 +363,7 @@ export default function KarsilastirmaClient() {
                             {Math.round(r.tf).toLocaleString('tr-TR')} ₺
                           </td>
                           <td className="px-4 py-2 text-right text-success-700 text-xs">{Math.round(r.tfK).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
                           <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
                           <td className="px-4 py-2 text-right text-neutral-300 text-xs">—</td>
                         </tr>
@@ -379,6 +381,12 @@ export default function KarsilastirmaClient() {
                           <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.tfTaksit).toLocaleString('tr-TR')} ₺</td>
                           <td className="px-4 py-2 text-right text-success-700">{Math.round(row.tfKumul).toLocaleString('tr-TR')} ₺</td>
                           <td className="px-4 py-2 text-right text-neutral-700">{Math.round(row.altTaksit).toLocaleString('tr-TR')} ₺</td>
+                          <td className="px-4 py-2 text-right">
+                            {row.altFaiz > 0
+                              ? <span className="text-emerald-600 font-medium">+{Math.round(row.altFaiz).toLocaleString('tr-TR')} ₺</span>
+                              : <span className="text-neutral-300">—</span>
+                            }
+                          </td>
                           <td className="px-4 py-2 text-right text-blue-700">{Math.round(row.altKumul).toLocaleString('tr-TR')} ₺</td>
                         </tr>
                       ))}
@@ -388,6 +396,7 @@ export default function KarsilastirmaClient() {
                         <td className="px-4 py-2.5 font-bold text-neutral-700">Toplam</td>
                         <td className="px-4 py-2.5" />
                         <td className="px-4 py-2.5 text-right font-bold text-success-700">{Math.round(sonuc.tfToplam).toLocaleString('tr-TR')} ₺</td>
+                        <td className="px-4 py-2.5" />
                         <td className="px-4 py-2.5" />
                         <td className="px-4 py-2.5 text-right font-bold text-blue-700">{Math.round(sonuc.altToplam).toLocaleString('tr-TR')} ₺</td>
                       </tr>

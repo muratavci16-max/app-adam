@@ -255,6 +255,7 @@ export interface KarsilastirmaRow {
   tfTaksit: number
   tfKumul: number
   altTaksit: number
+  altFaiz: number   // mevduattan kazanılan aylık faiz (teslimat öncesi dönem, sonrası 0)
   altKumul: number
   isTeslim: boolean
 }
@@ -352,11 +353,15 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   }
 
   // Alternatif: Mevduat + Kredi
+  // Birikim teslimAy-1'e kadar çalışır; teslimAy'da ilk kredi ödemesi yapılır
   const mevduatAylik = Math.pow(1 + mevduatYillik / 100, 1/12) - 1
   let birikim = pesinat + orgBedeli
   let kalanAlt = kalanBorcBaslangic
-  for (let t = 1; t <= teslimAy; t++) {
-    birikim = birikim * (1 + mevduatAylik)
+  const altFaizArr: number[] = new Array(teslimAy + 1).fill(0)
+  for (let t = 1; t <= teslimAy - 1; t++) {
+    const faiz = birikim * mevduatAylik
+    altFaizArr[t] = faiz
+    birikim += faiz
     const tak = Math.min(getTaksit(t), kalanAlt)
     kalanAlt -= tak
     birikim += tak
@@ -379,7 +384,7 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
 
   let altToplam = pesinat + orgBedeli
   let kalanAlt2 = kalanBorcBaslangic
-  for (let t = 1; t <= teslimAy; t++) {
+  for (let t = 1; t <= teslimAy - 1; t++) {
     const tak = Math.min(getTaksit(t), kalanAlt2)
     kalanAlt2 -= tak
     altToplam += tak
@@ -398,16 +403,20 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
     tfKumul += tfTak
 
     let altTak: number
-    if (t <= teslimAy) {
+    let altFaizRow: number
+    if (t < teslimAy) {
+      // Teslimat öncesi: mevduata yatırım
       altTak = Math.min(getTaksit(t), kalanAltRows)
       kalanAltRows = Math.max(0, kalanAltRows - altTak)
-      altKumul += altTak
+      altFaizRow = altFaizArr[t]
     } else {
+      // Teslimat ayı ve sonrası: kredi ödemesi
       altTak = krTaksit > 0 ? krTaksit : 0
-      altKumul += altTak
+      altFaizRow = 0
     }
+    altKumul += altTak
 
-    rows.push({ ay: t, tfTaksit: tfTak, tfKumul, altTaksit: altTak, altKumul, isTeslim: t === teslimAy })
+    rows.push({ ay: t, tfTaksit: tfTak, tfKumul, altTaksit: altTak, altFaiz: altFaizRow, altKumul, isTeslim: t === teslimAy })
   }
 
   const tfDahaAvantajli = !isNaN(irrAylikPct) && irrAylikPct < krFaizAylik
