@@ -7,6 +7,7 @@ import { Save, Eye, EyeOff, ArrowLeft, Clock, Tag, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/Toast'
 import { inputCls, labelCls, btnPrimary, btnSecondary } from '../AdminCard'
+import MediaPicker from '@/components/admin/media/MediaPicker'
 import type { BlogPost } from '@/types'
 
 const TiptapEditor = dynamic(() => import('./TiptapEditor'), { ssr: false })
@@ -253,8 +254,7 @@ export default function BlogEditorClient({ mode, postId }: Props) {
               </div>
 
               <div>
-                <label className={labelCls}>OG Image URL</label>
-                <input className={inputCls} value={post.og_image ?? ''} onChange={e => set('og_image', e.target.value)} placeholder="https://..." />
+                <MediaPicker label="OG Image" value={post.og_image ?? ''} onChange={v => set('og_image', v)} />
                 <p className="text-xs text-neutral-400 mt-1">Sosyal medya paylaşımlarında görünecek görsel (1200x630 önerilir)</p>
               </div>
 
@@ -317,8 +317,7 @@ export default function BlogEditorClient({ mode, postId }: Props) {
               </div>
 
               <div>
-                <label className={labelCls}>Kapak Görseli URL</label>
-                <input className={inputCls} value={post.cover_image ?? ''} onChange={e => set('cover_image', e.target.value)} placeholder="https://..." />
+                <MediaPicker label="Kapak Görseli" value={post.cover_image ?? ''} onChange={v => set('cover_image', v)} />
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl">

@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Save } from 'lucide-react'
+import { Plus, Trash2, Save, Building2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/Toast'
 import { AdminCard, AdminSectionTitle, inputCls, labelCls, btnPrimary, btnDanger } from './AdminCard'
+import MediaPicker from '@/components/admin/media/MediaPicker'
 import type { BankRate } from '@/types'
 
 const emptyRate: Omit<BankRate, 'id'> = {
@@ -55,7 +56,7 @@ export default function KomisyonlarAdmin() {
     showToast('Banka eklendi', 'success')
   }
 
-  const update = (id: string, field: keyof BankRate, val: string | number | boolean) => {
+  const update = (id: string, field: keyof BankRate, val: string | number | boolean | null) => {
     setRates(prev => prev.map(r => {
       if (r.id !== id) return r
       const updated = { ...r, [field]: val }
@@ -101,6 +102,9 @@ export default function KomisyonlarAdmin() {
               <label className={labelCls}>Sıra</label>
               <input type="number" className={inputCls} value={newRate.order_index} onChange={e => setNewRate(p => ({ ...p, order_index: parseInt(e.target.value) || 0 }))} />
             </div>
+            <div className="sm:col-span-3">
+              <MediaPicker label="Banka Logo" value={newRate.logo_url ?? ''} onChange={v => setNewRate(p => ({ ...p, logo_url: v || null }))} />
+            </div>
           </div>
           <div className="flex gap-3">
             <button onClick={createRate} className={btnPrimary}><Save className="w-4 h-4" /> Ekle</button>
@@ -126,7 +130,16 @@ export default function KomisyonlarAdmin() {
             {rates.map(rate => (
               <tr key={rate.id} className="border-b border-neutral-50 hover:bg-neutral-50/50">
                 <td className="px-4 py-3">
-                  <input className="border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs w-full" value={rate.banka_adi} onChange={e => update(rate.id, 'banka_adi', e.target.value)} />
+                  <div className="flex items-center gap-2">
+                    {rate.logo_url ? (
+                      <img src={rate.logo_url} alt={rate.banka_adi} className="w-8 h-8 rounded object-contain flex-shrink-0 border border-neutral-100" />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                        <Building2 className="w-4 h-4 text-neutral-300" />
+                      </div>
+                    )}
+                    <input className="border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs flex-1 min-w-0" value={rate.banka_adi} onChange={e => update(rate.id, 'banka_adi', e.target.value)} />
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <input type="number" step="0.01" className="border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs w-20 text-center" value={rate.aylik_faiz} onChange={e => update(rate.id, 'aylik_faiz', parseFloat(e.target.value) || 0)} />
