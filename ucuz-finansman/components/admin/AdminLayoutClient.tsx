@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Image, Megaphone, FileText, Settings,
   Building2, Menu as MenuIcon, AlignLeft, BookOpen, LogOut,
-  ChevronLeft, ChevronRight, X
+  ChevronLeft, ChevronRight, X, HardDrive
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -18,6 +18,7 @@ const navItems = [
   { href: '/admin/menu', label: 'Menü Yönetimi', icon: MenuIcon },
   { href: '/admin/footer', label: 'Footer', icon: AlignLeft },
   { href: '/admin/icerik', label: 'Site İçeriği', icon: Settings },
+  { href: '/admin/ortam', label: 'Ortam', icon: HardDrive },
   { href: '/admin/blog', label: 'Blog Yazıları', icon: BookOpen },
 ]
 

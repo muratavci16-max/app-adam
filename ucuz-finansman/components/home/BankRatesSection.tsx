@@ -48,8 +48,11 @@ export default function BankRatesSection({ rates }: BankRatesSectionProps) {
                   <tr key={rate.id} className={`border-b border-neutral-50 hover:bg-neutral-50 transition-colors ${idx === 0 ? 'bg-success-50/50' : ''}`}>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center">
-                          <Building2 className="w-4 h-4 text-neutral-400" />
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                          {rate.logo_url
+                            ? <img src={rate.logo_url} alt={rate.banka_adi} className="w-full h-full object-contain" />
+                            : <Building2 className="w-4 h-4 text-neutral-400" />
+                          }
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-neutral-800">{rate.banka_adi}</p>

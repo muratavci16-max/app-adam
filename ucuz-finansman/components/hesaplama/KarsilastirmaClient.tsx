@@ -288,8 +288,8 @@ export default function KarsilastirmaClient() {
                       ['Peşinat', formatTL(params.pesinat)],
                       ['Org. Bedeli', formatTL(sonuc.orgBedeli)],
                       ['Toplam Maliyet', formatTL(sonuc.tfToplam)],
-                      ['IRR (Aylık)', isNaN(sonuc.irrAylikPct) ? '—' : `%${sonuc.irrAylikPct.toFixed(2)}`],
-                      ['IRR (Yıllık)', isNaN(sonuc.irrYillik) ? '—' : `%${sonuc.irrYillik.toFixed(2)}`],
+                      ['IRR (Aylık)', !isFinite(sonuc.irrAylikPct) || isNaN(sonuc.irrAylikPct) || Math.abs(sonuc.irrAylikPct) > 999 ? '—' : `%${sonuc.irrAylikPct.toFixed(2)}`],
+                      ['IRR (Yıllık)', !isFinite(sonuc.irrYillik) || isNaN(sonuc.irrYillik) || Math.abs(sonuc.irrYillik) > 999 ? '—' : `%${sonuc.irrYillik.toFixed(2)}`],
                     ].map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between text-xs">
                         <span className="text-neutral-500">{k}</span>

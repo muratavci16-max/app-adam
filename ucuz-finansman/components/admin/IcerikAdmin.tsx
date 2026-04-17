@@ -5,6 +5,7 @@ import { Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/Toast'
 import { AdminCard, AdminSectionTitle, inputCls, labelCls, btnPrimary } from './AdminCard'
+import MediaPicker from '@/components/admin/media/MediaPicker'
 
 interface SiteContent {
   site_baslik: string
@@ -12,6 +13,9 @@ interface SiteContent {
   anasayfa_baslik: string
   anasayfa_alt_baslik: string
   meta_keywords: string
+  logo_url: string
+  favicon_url: string
+  site_url: string
 }
 
 const defaults: SiteContent = {
@@ -20,6 +24,9 @@ const defaults: SiteContent = {
   anasayfa_baslik: 'Tasarruf Finansmanı mı, Banka Kredisi mi?',
   anasayfa_alt_baslik: 'Gerçek maliyet hesabı yapın.',
   meta_keywords: 'tasarruf finansmanı, banka kredisi, IRR hesaplama',
+  logo_url: '',
+  favicon_url: '',
+  site_url: '',
 }
 
 export default function IcerikAdmin() {
@@ -68,6 +75,12 @@ export default function IcerikAdmin() {
           <div>
             <label className={labelCls}>Meta Keywords (virgülle ayırın)</label>
             <input className={inputCls} value={content.meta_keywords} onChange={e => set('meta_keywords', e.target.value)} />
+          </div>
+          <MediaPicker label="Site Logo" value={content.logo_url} onChange={v => set('logo_url', v)} />
+          <MediaPicker label="Favicon" value={content.favicon_url} onChange={v => set('favicon_url', v)} />
+          <div>
+            <label className={labelCls}>Site URL (canonical)</label>
+            <input className={inputCls} value={content.site_url} onChange={e => set('site_url', e.target.value)} placeholder="https://ucuzfinansman.com" />
           </div>
         </div>
       </AdminCard>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -10,6 +11,7 @@ import {
   Quote, Heading1, Heading2, Heading3, Undo, Redo,
   Link as LinkIcon, Image as ImageIcon, Minus
 } from 'lucide-react'
+import MediaLibraryModal from '@/components/admin/media/MediaLibraryModal'
 
 interface TiptapEditorProps {
   content: string
@@ -17,6 +19,8 @@ interface TiptapEditorProps {
 }
 
 export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
+  const [showImagePicker, setShowImagePicker] = useState(false)
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -43,10 +47,7 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
     if (url) editor.chain().focus().setLink({ href: url }).run()
   }
 
-  const addImage = () => {
-    const url = prompt('Görsel URL:')
-    if (url) editor.chain().focus().setImage({ src: url }).run()
-  }
+  const addImage = () => setShowImagePicker(true)
 
   return (
     <div className="border border-neutral-200 rounded-xl overflow-hidden">
@@ -85,6 +86,13 @@ export default function TiptapEditor({ content, onChange }: TiptapEditorProps) {
       <div className="p-4">
         <EditorContent editor={editor} />
       </div>
+
+      {showImagePicker && (
+        <MediaLibraryModal
+          onSelect={url => { editor.chain().focus().setImage({ src: url }).run(); setShowImagePicker(false) }}
+          onClose={() => setShowImagePicker(false)}
+        />
+      )}
     </div>
   )
 }
