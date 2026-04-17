@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/Toast'
 import { AdminCard, AdminSectionTitle, inputCls, labelCls, btnPrimary, btnDanger } from './AdminCard'
 import MediaPicker from '@/components/admin/media/MediaPicker'
+import MediaLibraryModal from '@/components/admin/media/MediaLibraryModal'
 import type { BankRate } from '@/types'
 
 const emptyRate: Omit<BankRate, 'id'> = {
@@ -25,6 +26,7 @@ export default function KomisyonlarAdmin() {
   const [saving, setSaving] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
   const [newRate, setNewRate] = useState({ ...emptyRate })
+  const [editingLogoId, setEditingLogoId] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.from('bank_rates').select('*').order('order_index')
@@ -131,13 +133,17 @@ export default function KomisyonlarAdmin() {
               <tr key={rate.id} className="border-b border-neutral-50 hover:bg-neutral-50/50">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    {rate.logo_url ? (
-                      <img src={rate.logo_url} alt={rate.banka_adi} className="w-8 h-8 rounded object-contain flex-shrink-0 border border-neutral-100" />
-                    ) : (
-                      <div className="w-8 h-8 rounded bg-neutral-100 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-4 h-4 text-neutral-300" />
-                      </div>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setEditingLogoId(rate.id)}
+                      title="Logo ekle / değiştir"
+                      className="w-8 h-8 rounded overflow-hidden border-2 border-dashed border-neutral-200 hover:border-primary-400 flex items-center justify-center flex-shrink-0 transition-colors bg-neutral-50"
+                    >
+                      {rate.logo_url
+                        ? <img src={rate.logo_url} alt={rate.banka_adi} className="w-full h-full object-contain" />
+                        : <Building2 className="w-4 h-4 text-neutral-300" />
+                      }
+                    </button>
                     <input className="border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs flex-1 min-w-0" value={rate.banka_adi} onChange={e => update(rate.id, 'banka_adi', e.target.value)} />
                   </div>
                 </td>
@@ -171,6 +177,13 @@ export default function KomisyonlarAdmin() {
           </tbody>
         </table>
       </AdminCard>
+
+      {editingLogoId && (
+        <MediaLibraryModal
+          onSelect={url => { update(editingLogoId, 'logo_url', url); setEditingLogoId(null) }}
+          onClose={() => setEditingLogoId(null)}
+        />
+      )}
     </div>
   )
 }
