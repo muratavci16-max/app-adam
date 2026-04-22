@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>🥗 Diyet Takip</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+:root {
+  --d-primary: #FF4E7A;
+  --d-secondary: #FF8FA3;
+  --d-light: #FFF0F4;
+  --d-dark: #3D0B1A;
+  --d-mid: #FF2D63;
+  --d-grad: linear-gradient(135deg,#FF4E7A,#FF9040);
+  --d-card: linear-gradient(145deg,#FF4E7A 0%,#FF7849 100%);
+  --m-primary: #3B6FF0;
+  --m-secondary: #6B9AFF;
+  --m-light: #EEF3FF;
+  --m-dark: #0A1F4A;
+  --m-mid: #2254D8;
+  --m-grad: linear-gradient(135deg,#3B6FF0,#06C8D0);
+  --m-card: linear-gradient(145deg,#3B6FF0 0%,#06B6D4 100%);
+  --bg: #F4F6FB;
+  --white: #FFFFFF;
+  --text: #1A1A2E;
+  --sub: #6B7280;
+  --radius: 20px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.10);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.16);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+/* ── PERSON SWITCH ── */
+.top-bar{position:sticky;top:0;z-index:100;background:var(--white);padding:12px 16px 0;box-shadow:0 2px 20px rgba(0,0,0,0.06)}
+.person-tabs{display:flex;gap:0;background:#F0F2F7;border-radius:16px;padding:4px;margin-bottom:12px}
+.person-tab{flex:1;padding:10px 0;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:all .25s cubic-bezier(.34,1.56,.64,1);background:transparent;color:var(--sub)}
+.person-tab.active-d{background:var(--d-grad);color:#fff;box-shadow:0 4px 16px rgba(255,78,122,.35)}
+.person-tab.active-m{background:var(--m-grad);color:#fff;box-shadow:0 4px 16px rgba(59,111,240,.35)}
+.nav-tabs{display:flex;gap:6px;padding-bottom:0}
+.nav-tab{flex:1;padding:8px 0;border:none;border-radius:12px 12px 0 0;font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all .2s;background:transparent;color:var(--sub);border-bottom:3px solid transparent}
+.nav-tab.active{color:var(--active-primary);border-bottom-color:var(--active-primary);background:rgba(0,0,0,0.03)}
+/* ── HERO CARD ── */
+.hero{margin:16px;border-radius:24px;padding:24px 20px;color:#fff;position:relative;overflow:hidden}
+.hero-d{background:var(--d-card);box-shadow:0 8px 32px rgba(255,78,122,.30)}
+.hero-m{background:var(--m-card);box-shadow:0 8px 32px rgba(59,111,240,.30)}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.08)}
+.hero::after{content:'';position:absolute;bottom:-60px;left:-30px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,0.05)}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1}
+.hero-name{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:1px;line-height:1}
+.hero-goal{font-size:13px;opacity:.85;margin-top:4px;font-weight:600}
+.hero-badge{background:rgba(255,255,255,0.22);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;text-align:center;backdrop-filter:blur(8px)}
+.hero-badge span{display:block;font-size:20px;font-weight:900}
+.hero-stats{display:flex;gap:12px;margin-top:18px;position:relative;z-index:1}
+.hero-stat{flex:1;background:rgba(255,255,255,0.18);border-radius:14px;padding:10px 12px;backdrop-filter:blur(8px)}
+.hero-stat-val{font-size:22px;font-weight:900;line-height:1}
+.hero-stat-lbl{font-size:10px;opacity:.8;font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+/* cal bar */
+.cal-bar-wrap{margin-top:14px;position:relative;z-index:1}
+.cal-bar-labels{display:flex;justify-content:space-between;font-size:10px;opacity:.75;font-weight:700;margin-bottom:5px}
+.cal-bar-bg{background:rgba(255,255,255,0.25);border-radius:8px;height:8px;overflow:hidden}
+.cal-bar-fill{height:100%;border-radius:8px;background:#fff;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+/* ── SECTION TITLE ── */
+.section-title{font-size:13px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--sub);margin:20px 16px 10px;display:flex;align-items:center;gap:6px}
+/* ── MEAL CARDS ── */
+.meals-wrap{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.meal-card{background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);transition:all .2s;cursor:pointer;border:2px solid transparent;position:relative;overflow:hidden}
+.meal-card.done{opacity:.65}
+.meal-card.done .meal-title{text-decoration:line-through;color:var(--sub)}
+.meal-card.expanded{border-color:var(--active-primary);box-shadow:0 6px 24px rgba(0,0,0,0.12)}
+.meal-card-top{display:flex;align-items:center;gap:12px}
+.meal-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;transition:all .2s}
+.meal-icon-d{background:linear-gradient(135deg,#FF4E7A,#FF9040)}
+.meal-icon-m{background:linear-gradient(135deg,#3B6FF0,#06C8D0)}
+.meal-done-btn{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;border:2px solid #E5E7EB;background:transparent;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:13px}
+.meal-done-btn.checked-d{background:var(--d-primary);border-color:var(--d-primary);color:#fff}
+.meal-done-btn.checked-m{background:var(--m-primary);border-color:var(--m-primary);color:#fff}
+.meal-info{flex:1;padding-right:36px}
+.meal-title{font-weight:800;font-size:15px;color:var(--text);margin-bottom:3px}
+.meal-items{font-size:13px;color:var(--sub);line-height:1.4}
+.meal-cal{text-align:right;flex-shrink:0}
+.meal-cal-num{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:var(--active-primary)}
+.meal-cal-unit{font-size:10px;font-weight:700;color:var(--sub);text-transform:uppercase}
+.meal-detail{display:none;margin-top:14px;padding-top:14px;border-top:1.5px dashed #E5E7EB}
+.meal-detail.open{display:block;animation:slideDown .2s ease}
+.portion-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--sub);margin-bottom:6px}
+.portion-text{background:var(--bg);border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.6;color:var(--text);font-weight:600}
+/* ── COMPLETE BAR ── */
+.complete-bar{margin:0 16px 16px;background:var(--white);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
+.complete-ring{width:48px;height:48px;flex-shrink:0}
+.complete-info{flex:1}
+.complete-title{font-weight:800;font-size:14px;color:var(--text)}
+.complete-sub{font-size:12px;color:var(--sub);margin-top:2px;font-weight:600}
+/* ── WATER TRACKER ── */
+.water-card{margin:0 16px 16px;background:var(--white);border-radius:var(--radius);padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.water-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.water-title{font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px}
+.water-count{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--active-primary)}
+.water-glasses{display:flex;gap:8px;flex-wrap:wrap}
+.water-glass{width:36px;height:36px;border-radius:10px;border:2px solid #E5E7EB;background:transparent;cursor:pointer;font-size:18px;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.water-glass.filled-d{background:linear-gradient(135deg,#4FC3F7,#0EA5E9);border-color:#0EA5E9;transform:scale(1.05)}
+.water-glass.filled-m{background:linear-gradient(135deg,#4FC3F7,#0EA5E9);border-color:#0EA5E9;transform:scale(1.05)}
+/* ── CALENDAR ── */
+.calendar-wrap{padding:0 16px 16px}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.cal-day-label{text-align:center;font-size:11px;font-weight:800;color:var(--sub);padding:4px 0;text-transform:uppercase}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-day{border:none;border-radius:12px;cursor:pointer;transition:all .2s;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-family:'Nunito',sans-serif;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
+.cal-day-num{font-size:14px;font-weight:800;color:var(--text)}
+.cal-day-cal{font-size:8px;font-weight:700;color:var(--sub)}
+.cal-day.selected-d{background:var(--d-grad);box-shadow:0 4px 16px rgba(255,78,122,.35);transform:scale(1.08)}
+.cal-day.selected-m{background:var(--m-grad);box-shadow:0 4px 16px rgba(59,111,240,.35);transform:scale(1.08)}
+.cal-day.selected-d .cal-day-num,.cal-day.selected-d .cal-day-cal{color:#fff}
+.cal-day.selected-m .cal-day-num,.cal-day.selected-m .cal-day-cal{color:#fff}
+.cal-day.has-complete-d{border:2px solid var(--d-secondary)}
+.cal-day.has-complete-m{border:2px solid var(--m-secondary)}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot-d{background:var(--d-primary)}
+.cal-dot-m{background:var(--m-primary)}
+/* ── WEIGHT CHART ── */
+.weight-card{margin:0 16px 16px;background:var(--white);border-radius:var(--radius);padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.weight-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.weight-title{font-weight:800;font-size:15px;color:var(--text)}
+.weight-current{text-align:right}
+.weight-val{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--active-primary)}
+.weight-target{font-size:11px;font-weight:700;color:var(--sub);margin-top:2px}
+.weight-svg-wrap{overflow:hidden;border-radius:12px;background:#F8F9FF;padding:8px 4px 4px}
+.weight-input-row{display:flex;gap:8px;margin-top:14px}
+.weight-input{flex:1;padding:10px 14px;border:2px solid #E5E7EB;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;color:var(--text);outline:none;transition:border .2s}
+.weight-input:focus{border-color:var(--active-primary)}
+.weight-add-btn{padding:10px 18px;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:#fff;cursor:pointer;background:var(--active-grad);white-space:nowrap}
+/* ── BOTTOM NAV ── */
+.day-nav{position:fixed;bottom:0;left:0;right:0;background:var(--white);padding:12px 24px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -4px 24px rgba(0,0,0,0.08);z-index:90}
+.day-btn{width:48px;height:48px;border-radius:50%;border:none;font-size:22px;font-weight:900;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.day-btn-d{background:var(--d-light);color:var(--d-primary)}
+.day-btn-d:disabled{background:#F0F0F0;color:#CCC;cursor:default}
+.day-btn-m{background:var(--m-light);color:var(--m-primary)}
+.day-btn-m:disabled{background:#F0F0F0;color:#CCC;cursor:default}
+.day-info{text-align:center}
+.day-big{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--active-primary);line-height:1}
+.day-sub{font-size:11px;font-weight:700;color:var(--sub)}
+/* ── ANIMATIONS ── */
+@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.2)}100%{transform:scale(1)}}
+.pop{animation:pop .25s ease}
+/* ── SCROLLPAD ── */
+.scroll-pad{height:90px}
+/* ── HIDDEN ── */
+.view{display:none}.view.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="person-tabs">
+    <button class="person-tab active-d" id="tab-d" onclick="setPerson('d')">🌸 Didem</button>
+    <button class="person-tab" id="tab-m" onclick="setPerson('m')">💪 Murat</button>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="nav-day" onclick="setView('day')">📋 Günlük</button>
+    <button class="nav-tab" id="nav-cal" onclick="setView('cal')">📅 Takvim</button>
+    <button class="nav-tab" id="nav-weight" onclick="setView('weight')">📊 Kilo</button>
+  </div>
+</div>
+
+<!-- DAY VIEW -->
+<div class="view active" id="view-day">
+  <div id="hero-wrap"></div>
+  <div id="complete-bar-wrap"></div>
+  <div id="water-wrap"></div>
+  <div class="section-title" id="meals-title">☀️ BUGÜNKÜ ÖĞÜNLER</div>
+  <div class="meals-wrap" id="meals-wrap"></div>
+  <div class="scroll-pad"></div>
+</div>
+
+<!-- CALENDAR VIEW -->
+<div class="view" id="view-cal">
+  <div style="padding:16px 16px 8px;font-weight:800;font-size:18px;color:var(--text)">📅 30 Günlük Plan</div>
+  <div class="calendar-wrap" id="cal-wrap"></div>
+  <div id="cal-preview" style="padding:0 16px 100px"></div>
+</div>
+
+<!-- WEIGHT VIEW -->
+<div class="view" id="view-weight">
+  <div id="weight-wrap" style="padding-bottom:100px"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="day-nav" id="day-nav">
+  <button class="day-btn day-btn-d" id="btn-prev" onclick="changeDay(-1)">‹</button>
+  <div class="day-info">
+    <div class="day-big" id="day-label">GÜN 1</div>
+    <div class="day-sub" id="day-sub">30 günlük program</div>
+  </div>
+  <button class="day-btn day-btn-d" id="btn-next" onclick="changeDay(1)">›</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const PERSONS = {
+  d: { name:'Didem', emoji:'🌸', goal:'Yag yakimi & form', target:'52 kg hedef',
+       calMin:1300, calMax:1600, startKg:57, targetKg:52,
+       primary:'#FF4E7A', grad:'linear-gradient(135deg,#FF4E7A,#FF9040)',
+       light:'#FFF0F4', dark:'#3D0B1A', cls:'d' },
+  m: { name:'Murat', emoji:'💪', goal:'Kas & protein odakli', target:'70 kg hedef',
+       calMin:2000, calMax:2400, startKg:72, targetKg:70,
+       primary:'#3B6FF0', grad:'linear-gradient(135deg,#3B6FF0,#06C8D0)',
+       light:'#EEF3FF', dark:'#0A1F4A', cls:'m' }
+};
+
+const MEAL_ICONS = {breakfast:'☀️',lunch:'🥗',dinner:'🍽️',snack:'🍎'};
+const MEAL_NAMES = {breakfast:'Kahvalti',lunch:'Ogle Yemegi',dinner:'Aksam Yemegi',snack:'Ara Ogun'};
+
+const DAYS = {
+  d:[
+    {day:1,meals:{breakfast:{i:'2 hasl. yumurta, tam bugday ekmek, salatalik-domates',p:'2 yumurta, 1 ince dilim ekmek, 1 bardak sebze',c:340},lunch:{i:'Izgara tavuk gogsu, mevsim salatasi, zeytinyagi-limon',p:'120g tavuk, buyuk tabak salata, 1 tatlı kaşık zeytinyagi',c:310},dinner:{i:'Sebzeli mercimek corbasi, yogurt',p:'2 bardak corba, 150g yogurt',c:320},snack:{i:'Elma, az yagLı beyaz peynir',p:'1 orta boy elma, 30g peynir',c:170}},cal:1140},
+    {day:2,meals:{breakfast:{i:'Lor peyniri, domates, salatalik, cavdar ekmegi',p:'80g lor, 2 dilim domates, yarim salatalik, 1 dilim ekmek',c:280},lunch:{i:'Firin sebzeli tavuk, bulgur pilavi',p:'120g tavuk, 4 yemek kasigi bulgur',c:390},dinner:{i:'Yesil mercimek salatasi, hasl. yumurta',p:'1.5 bardak mercimek, 1 yumurta, yesillik',c:340},snack:{i:'Yogurt, tatli kirmizi biber',p:'150g yogurt, 1 kirmizi biber',c:130}},cal:1140},
+    {day:3,meals:{breakfast:{i:'Yulaf ezmesi, sut, tarcin, 5 badem',p:'4 kasik yulaf, 150ml sut, 5 badem',c:310},lunch:{i:'Ton balikli sebze salatasi',p:'80g konserve ton, bol yesillik, 1 tatlı kasık zeytinyagi',c:280},dinner:{i:'Firin somon, buharda brokoli, bulgur',p:'120g somon, 1 bardak brokoli, 3 kasik bulgur',c:410},snack:{i:'Muz',p:'1 orta boy muz',c:90}},cal:1090},
+    {day:4,meals:{breakfast:{i:'Menemen (2 yumurta, domates, biber), ekmek',p:'2 yumurta, 1 domates, 1 biber, 1 dilim ekmek',c:360},lunch:{i:'Kirmizi mercimek corbasi, tam bugday ekmek',p:'2 bardak corba, 1 dilim ekmek',c:320},dinner:{i:'Izgara sebzeli tavuk bonfile, yesil salata',p:'130g tavuk, izgara kabak-patlican, tabak salata',c:350},snack:{i:'Sut, 3 tam bugday grisini',p:'150ml sut, 3 grisini',c:160}},cal:1190},
+    {day:5,meals:{breakfast:{i:'2 yumurta sahanda (az yag), domates, yesil zeytin',p:'2 yumurta, 2 domates, 5 zeytin',c:330},lunch:{i:'Sebzeli pirinc pilavi, cacik',p:'5 kasik pilav, 150g cacik',c:370},dinner:{i:'Kofte (az yagLı), buharda ispanak, yogurt',p:'3 kofte (150g), 1 bardak ispanak, 100g yogurt',c:400},snack:{i:'Portakal',p:'1 buyuk portakal',c:80}},cal:1180},
+    {day:6,meals:{breakfast:{i:'Yogurt, yulaf, muz, tarcin',p:'150g yogurt, 3 kasik yulaf, yarim muz',c:290},lunch:{i:'Mercimek koftesi, mevsim salatasi',p:'6 mercimek koftesi, buyuk tabak salata',c:350},dinner:{i:'Firin tavuk but (derisiz), zeytinyagLı taze fasulye',p:'1 kucuk but (120g et), 1 bardak fasulye',c:380},snack:{i:'Havuc, yogurt',p:'2 orta havuc, 100g yogurt',c:120}},cal:1140},
+    {day:7,meals:{breakfast:{i:'Lor peyniri-otlu borek (ev yapımı, ince), domates',p:'1 dilim borek (80g), 2 domates',c:310},lunch:{i:'Izgara balik (levrek), kozlenmis sebze',p:'150g balik, 1 bardak sebze',c:320},dinner:{i:'Sehriyeli tavuk corbasi, yogurt',p:'2 bardak corba, 150g yogurt',c:330},snack:{i:'Elma, 5 ceviz',p:'1 elma, 5 yarim ceviz',c:190}},cal:1150},
+    {day:8,meals:{breakfast:{i:'Tam bugday ekmek, avokado, 2 hasl. yumurta',p:'1 dilim ekmek, ceyrek avokado, 2 yumurta',c:360},lunch:{i:'Nohutlu ispanak yemegi',p:'1 bardak nohut, 1 bardak ispanak',c:340},dinner:{i:'Ton balikLı makarna',p:'60g tam bugday makarna, 60g ton, domates sosu',c:380},snack:{i:'Kefir',p:'200ml kefir',c:110}},cal:1190},
+    {day:9,meals:{breakfast:{i:'Yulaf ezmesi, elma rendesi, tarcin, sut',p:'4 kasik yulaf, yarim elma, 150ml sut',c:290},lunch:{i:'Izgara tavuk salatasi, zeytinyagLı soslu',p:'120g tavuk, bol karisik yesillik',c:300},dinner:{i:'Tarhana corbasi, tam bugday ekmek, beyaz peynir',p:'2 bardak corba, 1 dilim ekmek, 30g peynir',c:350},snack:{i:'Yogurt, yarim muz',p:'150g yogurt, yarim muz',c:140}},cal:1080},
+    {day:10,meals:{breakfast:{i:'2 yumurta peynirli omlet, domates-biber',p:'2 yumurta, 20g peynir, 1 domates, 1 biber',c:330},lunch:{i:'Sebzeli kiymalı bulgur',p:'5 kasik bulgur, 60g kiyma, sebze',c:390},dinner:{i:'Firin balik (palamut), roka salatasi',p:'150g balik, buyuk tabak roka',c:340},snack:{i:'Portakal, 5 badem',p:'1 portakal, 5 badem',c:130}},cal:1190},
+    {day:11,meals:{breakfast:{i:'Cilbir (pose yumurta, yogurt, pul biber), ekmek',p:'2 yumurta, 100g yogurt, 1 dilim ekmek',c:350},lunch:{i:'Kirmizi mercimek corbasi, mevsim salatasi',p:'2 bardak corba, tabak salata',c:310},dinner:{i:'Izgara kofte, sebze garnituru',p:'3 kofte, izgara biber-kabak',c:380},snack:{i:'Kefir',p:'200ml kefir',c:110}},cal:1150},
+    {day:12,meals:{breakfast:{i:'Lor peyniri, salatalik, domates, 5 zeytin, ekmek',p:'80g lor, 2 dilim domates, 5 zeytin',c:290},lunch:{i:'ZeytinyagLı kuru fasulye, az pilav',p:'1 bardak fasulye, 3 kasik pilav',c:410},dinner:{i:'Buharda tavuk, yogurt corbasi',p:'120g tavuk, 2 bardak corba',c:360},snack:{i:'Elma',p:'1 buyuk elma',c:80}},cal:1140},
+    {day:13,meals:{breakfast:{i:'Yulaf-muz-sut smoothie',p:'4 kasik yulaf, yarim muz, 200ml sut',c:300},lunch:{i:'Akdeniz salatasi (ton, zeytinyagi, limon)',p:'70g ton, bol sebze, 1 tatlı kasık zeytinyagi',c:290},dinner:{i:'Firin sebzeli tavuk, tam bugday ekmek',p:'130g tavuk, 1 dilim ekmek',c:390},snack:{i:'Yogurt, cilek',p:'150g yogurt, 80g cilek',c:130}},cal:1110},
+    {day:14,meals:{breakfast:{i:'Sahanda yumurta, domates, biber, az peynir',p:'2 yumurta, 1 domates, 30g peynir',c:340},lunch:{i:'Bulgur pilavi, mercimek salatasi',p:'4 kasik bulgur, 1 bardak pismis mercimek',c:360},dinner:{i:'Izgara levrek, buharda brokoli',p:'160g levrek, 1.5 bardak brokoli',c:310},snack:{i:'1 avuc findik',p:'20g findik',c:130}},cal:1140},
+    {day:15,meals:{breakfast:{i:'Kepekli ekmek, avokado, 1 hasl. yumurta',p:'1 dilim ekmek, ceyrek avokado, 1 yumurta',c:310},lunch:{i:'ZeytinyagLı biber dolmasi (sebzeli)',p:'3 orta dolma',c:280},dinner:{i:'Tavuk sote (sebzeLi), yogurt',p:'120g tavuk, 1 bardak sebze, 150g yogurt',c:380},snack:{i:'Portakal, 3 grisini',p:'1 portakal, 3 grisini',c:140}},cal:1110},
+    {day:16,meals:{breakfast:{i:'Yulaf ezmesi, sut, tarcin',p:'4 kasik yulaf, 150ml sut',c:300},lunch:{i:'Kuru fasulye corbasi, tam bugday ekmek',p:'2 bardak corba, 1 dilim ekmek',c:330},dinner:{i:'Firin somon, zeytinyagLı yesil fasulye',p:'130g somon, 1 bardak fasulye',c:400},snack:{i:'Kefir',p:'200ml kefir',c:110}},cal:1140},
+    {day:17,meals:{breakfast:{i:'Menemen (2 yumurta), cavdar ekmegi',p:'2 yumurta, 1 domates, 1 biber, 1 dilim ekmek',c:350},lunch:{i:'Izgara tavuk bonfile, mevsim salatasi',p:'120g tavuk, 4 kasik quinoa, yesillik',c:380},dinner:{i:'Mercimek corbasi, yogurt',p:'2 bardak corba, 150g yogurt',c:320},snack:{i:'Elma, 5 badem',p:'1 elma, 5 badem',c:140}},cal:1190},
+    {day:18,meals:{breakfast:{i:'Yogurt parfesi: yogurt, yulaf, meyve',p:'150g yogurt, 3 kasik yulaf, 80g cilek',c:280},lunch:{i:'Ton balikLı tam bugday sandvic',p:'2 dilim ekmek, 70g ton, domates, marul',c:340},dinner:{i:'Firin tavuk but (derisiz), izgara patlican',p:'1 but (120g et), 1 orta patlican',c:350},snack:{i:'Muz',p:'1 kucuk muz',c:90}},cal:1060},
+    {day:19,meals:{breakfast:{i:'2 hasl. yumurta, beyaz peynir, domates, zeytin',p:'2 yumurta, 30g peynir, 2 domates, 5 zeytin',c:340},lunch:{i:'Sebzeli nohut yemegi',p:'1 bardak nohut, sebze karisimi',c:360},dinner:{i:'Balik corbasi, tam bugday ekmek',p:'2 bardak corba, 1 dilim ekmek',c:310},snack:{i:'Yogurt, tarcin',p:'200g yogurt',c:120}},cal:1130},
+    {day:20,meals:{breakfast:{i:'Karabuğday lapasi, sut, muz',p:'4 kasik karabuğday, 150ml sut, yarim muz',c:310},lunch:{i:'Izgara tavuk, mevsim salatasi',p:'130g tavuk, buyuk tabak salata',c:300},dinner:{i:'ZeytinyagLı kirmizi mercimek, yogurt',p:'2 bardak yemek, 100g yogurt',c:380},snack:{i:'Portakal',p:'1 buyuk portakal',c:80}},cal:1070},
+    {day:21,meals:{breakfast:{i:'Cilbir, 1 dilim ekmek',p:'2 yumurta, 100g yogurt, 1 dilim ekmek',c:350},lunch:{i:'Bulgur pilavi, domates corbasi',p:'5 kasik bulgur, 2 bardak corba',c:350},dinner:{i:'Izgara kofte, yesil salata, cacik',p:'3 kofte, tabak salata, 100g cacik',c:390},snack:{i:'5 ceviz, elma',p:'5 yarim ceviz, 1 elma',c:190}},cal:1280},
+    {day:22,meals:{breakfast:{i:'Yulaf ezmesi, elma, tarcin, 5 badem',p:'4 kasik yulaf, yarim elma, 5 badem',c:290},lunch:{i:'Tavuk corbasi, bulgur',p:'5 kasik bulgur, 2 bardak corba',c:380},dinner:{i:'Firin sebzeli balik, yogurt',p:'150g balik, 1 bardak sebze, 100g yogurt',c:350},snack:{i:'Kefir',p:'200ml kefir',c:110}},cal:1130},
+    {day:23,meals:{breakfast:{i:'Lor peyniri, mevsim sebzeleri, ekmek',p:'80g lor, bol sebze, 1 dilim ekmek',c:280},lunch:{i:'ZeytinyagLı taze fasulye, bulgur',p:'1.5 bardak fasulye yemegi, 3 kasik bulgur',c:340},dinner:{i:'Tavuk sis, cacik',p:'120g tavuk, 150g cacik',c:320},snack:{i:'Muz, 5 badem',p:'1 kucuk muz, 5 badem',c:150}},cal:1090},
+    {day:24,meals:{breakfast:{i:'2 yumurta omlet (peynirli, otlu), domates',p:'2 yumurta, 20g peynir, 1 domates',c:310},lunch:{i:'Mercimek koftesi, yogurtlu sos, salata',p:'6 kofte, 100g yogurt, tabak salata',c:360},dinner:{i:'Sebzeli pirinc corbasi, tam bugday ekmek',p:'2 bardak corba, 1 dilim ekmek',c:290},snack:{i:'Yogurt, cilek',p:'150g yogurt, 80g cilek',c:130}},cal:1090},
+    {day:25,meals:{breakfast:{i:'Kepekli ekmek, avokado, hasl. yumurta, pul biber',p:'1 dilim ekmek, ceyrek avokado, 2 yumurta',c:360},lunch:{i:'ZeytinyagLı kuru fasulye, az pilav',p:'1 bardak fasulye, 3 kasik pilav',c:400},dinner:{i:'Izgara somon, brokoli, limon',p:'130g somon, 1.5 bardak brokoli',c:370},snack:{i:'Portakal',p:'1 buyuk portakal',c:80}},cal:1210},
+    {day:26,meals:{breakfast:{i:'Yulaf-sut-tarcin karisimi',p:'4 kasik yulaf, 150ml sut, tarcin',c:290},lunch:{i:'Tavuk corbasi, yogurt',p:'2 bardak corba, 150g yogurt',c:300},dinner:{i:'Izgara kofte, taze fasulye yemegi',p:'3 kofte, 1 bardak fasulye',c:390},snack:{i:'Elma, 5 ceviz',p:'1 elma, 5 yarim ceviz',c:190}},cal:1170},
+    {day:27,meals:{breakfast:{i:'Menemen (2 yumurta), cavdar ekmegi',p:'2 yumurta, 1 biber, 1 domates, 1 dilim ekmek',c:350},lunch:{i:'Nohutlu ispanak, yogurt',p:'1 bardak nohut, 1 bardak ispanak, 100g yogurt',c:380},dinner:{i:'Firin balik, mevsim salatasi',p:'150g balik, buyuk tabak salata',c:310},snack:{i:'Kefir',p:'200ml kefir',c:110}},cal:1150},
+    {day:28,meals:{breakfast:{i:'Yogurt parfesi, granola, cilek',p:'150g yogurt, 2 kasik granola, 80g cilek',c:280},lunch:{i:'Ton balikLı salata',p:'80g ton, bol yesillik, 1 kasik zeytinyagi',c:290},dinner:{i:'Firin tavuk bonfile, sebzeli bulgur',p:'130g tavuk, 5 kasik bulgur, sebze',c:410},snack:{i:'Muz',p:'1 kucuk muz',c:90}},cal:1070},
+    {day:29,meals:{breakfast:{i:'2 hasl. yumurta, beyaz peynir, domates, zeytin',p:'2 yumurta, 30g peynir, 2 domates, 5 zeytin',c:340},lunch:{i:'Kirmizi mercimek corbasi, mevsim salatasi',p:'2 bardak corba, tabak salata',c:310},dinner:{i:'Izgara tavuk sis, cacik, yesil salata',p:'130g tavuk, 150g cacik, tabak salata',c:370},snack:{i:'Yogurt, elma',p:'150g yogurt, 1 elma',c:160}},cal:1180},
+    {day:30,meals:{breakfast:{i:'Yulaf ezmesi, sut, muz, tarcin',p:'4 kasik yulaf, 150ml sut, yarim muz',c:300},lunch:{i:'ZeytinyagLı biber dolmasi, yogurt',p:'3 dolma, 150g yogurt',c:310},dinner:{i:'Firin somon, buharda karnabahar, bulgur',p:'130g somon, 1 bardak karnabahar, 3 kasik bulgur',c:400},snack:{i:'Portakal, 5 badem',p:'1 portakal, 5 badem',c:130}},cal:1140}
+  ],
+  m:[
+    {day:1,meals:{breakfast:{i:'4 hasl. yumurta, yulaf ezmesi sutlu, muz',p:'4 yumurta, 6 kasik yulaf, 200ml sut, 1 muz',c:620},lunch:{i:'Tavuk gogsu izgara, bulgur pilavi, yesil salata',p:'180g tavuk, 8 kasik bulgur, buyuk tabak salata',c:610},dinner:{i:'Dana bonfile, zeytinyagLı sebze, pirinc',p:'180g et, 1 bardak sebze, 5 kasik pilav',c:620},snack:{i:'Yogurt, karisik kuruyemis',p:'200g yogurt, 30g karisik kuruyemis',c:260}},cal:2110},
+    {day:2,meals:{breakfast:{i:'Kasarlı-domatesli omlet, yulaf ezmesi',p:'4 yumurta, 30g kasar, 6 kasik yulaf, 200ml sut',c:650},lunch:{i:'Pirzola, mercimek corbasi, tam bugday ekmek',p:'200g pirzola, 2 bardak corba, 2 dilim ekmek',c:680},dinner:{i:'Tavuk gogsu sote (sebzeLi), bulgur',p:'180g tavuk, 7 kasik bulgur',c:570},snack:{i:'Sut-muz-yulaf smoothie',p:'250ml sut, 1 muz, 3 kasik yulaf',c:290}},cal:2190},
+    {day:3,meals:{breakfast:{i:'Sahanda yumurta (4), peynir, zeytin, ekmek',p:'4 yumurta, 40g peynir, 10 zeytin, 2 dilim ekmek',c:600},lunch:{i:'Ton balikLı makarna, bol sebzeli',p:'100g makarna (kuru), 120g ton, sebze',c:650},dinner:{i:'Izgara kofte, pilav, cacik',p:'5 kofte (250g), 6 kasik pilav, 150g cacik',c:680},snack:{i:'2 hasl. yumurta, peynir',p:'2 yumurta, 40g beyaz peynir',c:230}},cal:2160},
+    {day:4,meals:{breakfast:{i:'Yulaf-muz-fisik ezmesi-sut karisimi',p:'6 kasik yulaf, 1 muz, 1 kasik fisik ezmesi, 200ml sut',c:570},lunch:{i:'Firin tavuk but (2 adet), taze fasulye, pilav',p:'2 but (220g et), 1 bardak fasulye, 5 kasik pilav',c:700},dinner:{i:'KiymaLı bulgur, yogurt corbasi',p:'8 kasik bulgur, 60g kiyma, 2 bardak corba',c:620},snack:{i:'Yogurt, granola, muz',p:'200g yogurt, 3 kasik granola, 1 muz',c:320}},cal:2210},
+    {day:5,meals:{breakfast:{i:'4 hasl. yumurta, avokado, tam bugday ekmek',p:'4 yumurta, yarim avokado, 2 dilim ekmek',c:610},lunch:{i:'Izgara somon, bulgur, yesil salata',p:'200g somon, 7 kasik bulgur, buyuk tabak',c:680},dinner:{i:'Dana biftek (az yagLı), izgara sebze, pirinc',p:'180g biftek, 1 bardak sebze, 5 kasik pilav',c:650},snack:{i:'Fisik ezmeli ekmek, sut',p:'1 dilim ekmek, 1 kasik fisik ezmesi, 250ml sut',c:290}},cal:2230},
+    {day:6,meals:{breakfast:{i:'Yulaf ezmesi, sut, 4 yumurta beyazi + 2 tam',p:'6 kasik yulaf, 200ml sut, 4 yumurta beyazi, 2 tam yumurta',c:570},lunch:{i:'Tavuk sis (5 sis), bulgur pilavi, cacik',p:'200g tavuk, 8 kasik bulgur, 150g cacik',c:650},dinner:{i:'Kirmizi mercimek corbasi, kiymaLı makarna az',p:'2 bardak corba, 80g makarna, 60g kiyma',c:620},snack:{i:'Yogurt, badem',p:'200g yogurt, 20g badem',c:260}},cal:2100},
+    {day:7,meals:{breakfast:{i:'Peynirli-sebzeli omlet (4 yumurta), ekmek',p:'4 yumurta, 40g peynir, sebze, 2 dilim ekmek',c:620},lunch:{i:'ZeytinyagLı kuru fasulye, pilav, salata',p:'2 bardak fasulye, 6 kasik pilav, tabak salata',c:680},dinner:{i:'Tavuk gogsu izgara, sebzeli bulgur',p:'200g tavuk, 8 kasik bulgur',c:610},snack:{i:'Sut-muz-yulaf smoothie',p:'250ml sut, 1 muz, 3 kasik yulaf',c:290}},cal:2200},
+    {day:8,meals:{breakfast:{i:'Yulaf-sut-tarcin-meyve kasesi',p:'6 kasik yulaf, 200ml sut, 1 muz, 1 kucuk elma',c:550},lunch:{i:'Firin somon, pirinc pilavi, brokoli',p:'200g somon, 6 kasik pilav, 1.5 bardak brokoli',c:700},dinner:{i:'Tavuk corbasi, peynirli ekmek',p:'2.5 bardak corba, 2 dilim ekmek, 40g peynir',c:560},snack:{i:'4 hasl. yumurta, salatalik',p:'4 yumurta, 1 salatalik',c:280}},cal:2090},
+    {day:9,meals:{breakfast:{i:'4 yumurta sahanda, yulaf ezmesi, portakal',p:'4 yumurta, 6 kasik yulaf, 1 portakal',c:580},lunch:{i:'Izgara kofte, bulgur, yesil salata',p:'5 kofte (250g), 7 kasik bulgur, buyuk salata',c:700},dinner:{i:'Tavuk gogsu firinda, zeytinyagLı ispanak',p:'200g tavuk, 1.5 bardak ispanak',c:520},snack:{i:'Yogurt, granola, findik',p:'200g yogurt, 3 kasik granola, 15g findik',c:300}},cal:2100},
+    {day:10,meals:{breakfast:{i:'Omlet (4 yumurta, kasar, ispanak), ekmek',p:'4 yumurta, 30g kasar, 1 bardak ispanak, 2 dilim ekmek',c:620},lunch:{i:'Sebzeli pirinc + ton baligi',p:'7 kasik pilav, 120g ton, sebze',c:650},dinner:{i:'Dana kiymaLı patlican musakka, yogurt',p:'2 porsiyon (250g), 150g yogurt',c:620},snack:{i:'Sut, muz',p:'300ml sut, 1 buyuk muz',c:260}},cal:2150},
+    {day:11,meals:{breakfast:{i:'Yulaf-sut-tarcin-muz karisimi, 2 hasl. yumurta',p:'6 kasik yulaf, 200ml sut, 1 muz, 2 yumurta',c:590},lunch:{i:'Tavuk sis, bulgur, cacik',p:'200g tavuk, 8 kasik bulgur, 150g cacik',c:670},dinner:{i:'Mercimek corbasi, kiymaLı ekmek',p:'2 bardak corba, 2 dilim pide, 60g kiyma',c:620},snack:{i:'Yogurt, badem, elma',p:'200g yogurt, 20g badem, 1 elma',c:300}},cal:2180},
+    {day:12,meals:{breakfast:{i:'4 hasl. yumurta, avokado, tam ekmek, domates',p:'4 yumurta, yarim avokado, 2 dilim ekmek, 2 domates',c:610},lunch:{i:'Izgara tavuk, sebzeli bulgur',p:'200g tavuk, 8 kasik bulgur',c:640},dinner:{i:'Pirzola (2 adet kucuk), izgara sebze, pilav',p:'200g pirzola, sebze, 5 kasik pilav',c:660},snack:{i:'Fisik ezmeli muz smoothie',p:'1 muz, 1 kasik fisik ezmesi, 200ml sut',c:300}},cal:2210},
+    {day:13,meals:{breakfast:{i:'KasarLı omlet, yulaf ezmesi, muz',p:'4 yumurta, 30g kasar, 6 kasik yulaf, 1 muz',c:660},lunch:{i:'Nohutlu tavuk yemegi, pilav',p:'1 bardak nohut, 150g tavuk, 5 kasik pilav',c:710},dinner:{i:'Balik (palamut) firinda, bulgur',p:'200g balik, 7 kasik bulgur',c:610},snack:{i:'Sut, 2 hasl. yumurta',p:'250ml sut, 2 yumurta',c:270}},cal:2250},
+    {day:14,meals:{breakfast:{i:'Yulaf porridge, sut, findik, kuru uzum',p:'6 kasik yulaf, 200ml sut, 20g findik',c:590},lunch:{i:'Izgara dana bonfile, yesil salata, pilav',p:'180g et, buyuk tabak salata, 6 kasik pilav',c:690},dinner:{i:'Tavuk corbasi, peynirli ekmek',p:'2.5 bardak corba, 2 dilim ekmek, 40g peynir',c:570},snack:{i:'Yogurt, granola, cilek',p:'200g yogurt, 3 kasik granola, 80g cilek',c:290}},cal:2140},
+    {day:15,meals:{breakfast:{i:'4 sahanda yumurta, zeytin, peynir, ekmek',p:'4 yumurta, 10 zeytin, 40g peynir, 2 dilim ekmek',c:630},lunch:{i:'Firin somon, pirinc, brokoli-karnabahar',p:'200g somon, 7 kasik pilav, 1.5 bardak sebze',c:720},dinner:{i:'KiymaLı bulgur koftesi, yogurt',p:'6 kofte (250g), 200g yogurt',c:630},snack:{i:'Muz, badem, sut',p:'1 muz, 20g badem, 200ml sut',c:310}},cal:2290},
+    {day:16,meals:{breakfast:{i:'Yulaf-muz-sut-fisik ezmesi (isitilmis)',p:'6 kasik yulaf, 1 muz, 200ml sut, 1 kasik fisik ezmesi',c:580},lunch:{i:'Tavuk gogsu sote, bulgur, salata',p:'200g tavuk, 8 kasik bulgur, buyuk tabak salata',c:660},dinner:{i:'ZeytinyagLı kuru fasulye, pilav',p:'2 bardak fasulye, 6 kasik pilav',c:620},snack:{i:'4 hasl. yumurta, salatalik-domates',p:'4 yumurta, sebze',c:270}},cal:2130},
+    {day:17,meals:{breakfast:{i:'Menemen (4 yumurta), peynir, ekmek',p:'4 yumurta, 2 domates, 2 biber, 30g peynir, 2 dilim ekmek',c:620},lunch:{i:'Izgara kofte, bulgur, cacik',p:'5 kofte, 8 kasik bulgur, 150g cacik',c:700},dinner:{i:'Firin tavuk but (2), ispanak yemegi',p:'2 but (220g), 1.5 bardak ispanak',c:560},snack:{i:'Sut-yulaf-muz smoothie',p:'250ml sut, 3 kasik yulaf, 1 muz',c:290}},cal:2170},
+    {day:18,meals:{breakfast:{i:'Omlet (4 yumurta, biber-domates), ekmek',p:'4 yumurta, 1 biber, 1 domates, 2 dilim ekmek',c:570},lunch:{i:'Tavuk sis + ton balikLı makarna',p:'120g tavuk, 80g makarna, 60g ton',c:680},dinner:{i:'Dana haslama, pirinc, mevsim sebzesi',p:'180g et, 5 kasik pilav, 1 bardak sebze',c:640},snack:{i:'Yogurt, badem, kuru kayisi',p:'200g yogurt, 20g badem, 3 kayisi',c:290}},cal:2180},
+    {day:19,meals:{breakfast:{i:'Yulaf ezmesi, sut, yumurta beyazi (3), muz',p:'6 kasik yulaf, 200ml sut, 3 yumurta beyazi, 1 muz',c:570},lunch:{i:'Tavuk gogsu firinda, sebzeli bulgur, salata',p:'200g tavuk, 8 kasik bulgur, tabak salata',c:660},dinner:{i:'Mercimek corbasi, kiymaLı makarna, yogurt',p:'2 bardak corba, 80g makarna, 60g kiyma, 100g yogurt',c:640},snack:{i:'Sut, 2 hasl. yumurta',p:'250ml sut, 2 yumurta',c:260}},cal:2130},
+    {day:20,meals:{breakfast:{i:'4 yumurta sahanda, kasar, domates, ekmek',p:'4 yumurta, 30g kasar, 2 domates, 2 dilim ekmek',c:610},lunch:{i:'Izgara somon, bulgur, yesil salata',p:'200g somon, 7 kasik bulgur, buyuk tabak',c:700},dinner:{i:'Tavuk corbasi (zengin), peynirli ekmek',p:'2.5 bardak corba, 2 dilim ekmek, 40g peynir',c:570},snack:{i:'Yogurt, granola, muz',p:'200g yogurt, 3 kasik granola, 1 kucuk muz',c:310}},cal:2190},
+    {day:21,meals:{breakfast:{i:'Protein omlet (4 tam + 3 beyaz, peynir, sebze)',p:'4 tam + 3 beyaz yumurta, 30g peynir, sebze',c:560},lunch:{i:'Kofte, pirinc pilavi, cacik',p:'5 kofte (250g), 7 kasik pilav, 150g cacik',c:720},dinner:{i:'Nohutlu tavuk sote, bulgur',p:'120g tavuk, 1 bardak nohut, 7 kasik bulgur',c:680},snack:{i:'Sut, badem, muz',p:'250ml sut, 20g badem, 1 muz',c:330}},cal:2290},
+    {day:22,meals:{breakfast:{i:'Yulaf ezmesi, sut, fisik ezmesi, elma',p:'6 kasik yulaf, 200ml sut, 1 kasik fisik ezmesi, 1 elma',c:580},lunch:{i:'Firin tavuk gogsu, sebzeli pirinc',p:'200g tavuk, 7 kasik pilav, bol sebze',c:660},dinner:{i:'Ton balikLı tam bugday makarna',p:'100g makarna, 120g ton, domates sosu',c:620},snack:{i:'4 hasl. yumurta, domates',p:'4 yumurta, 2 domates',c:270}},cal:2130},
+    {day:23,meals:{breakfast:{i:'4 sahanda yumurta, peynir, zeytin, cavdar ekmek',p:'4 yumurta, 40g peynir, 10 zeytin, 2 dilim ekmek',c:620},lunch:{i:'Izgara kofte, bulgur, yogurt',p:'5 kofte, 8 kasik bulgur, 150g yogurt',c:700},dinner:{i:'Tavuk sis, sebzeli pilav',p:'200g tavuk, 7 kasik pilav, sebze',c:620},snack:{i:'Yogurt-granola-badem karisimi',p:'200g yogurt, 3 kasik granola, 20g badem',c:300}},cal:2240},
+    {day:24,meals:{breakfast:{i:'Yulaf-muz-sut porridge, 2 hasl. yumurta',p:'6 kasik yulaf, 200ml sut, 1 muz, 2 yumurta',c:610},lunch:{i:'Dana bonfile, izgara sebze, pilav',p:'180g et, 1 bardak sebze, 6 kasik pilav',c:700},dinner:{i:'Tavuk corbasi, mercimek salatasi',p:'2.5 bardak corba, 1 bardak mercimek, yesillik',c:560},snack:{i:'Sut, fisik ezmeli muz',p:'250ml sut, 1 muz, 1 kasik fisik ezmesi',c:300}},cal:2170},
+    {day:25,meals:{breakfast:{i:'KasarLı-ispanikLı omlet (4 yumurta), ekmek',p:'4 yumurta, 30g kasar, 1 bardak ispanak, 2 dilim ekmek',c:620},lunch:{i:'Firin balik (palamut), bulgur, brokoli',p:'220g balik, 7 kasik bulgur, 1 bardak brokoli',c:680},dinner:{i:'ZeytinyagLı kuru fasulye, pilav, yogurt',p:'2 bardak fasulye, 5 kasik pilav, 100g yogurt',c:620},snack:{i:'Muz, badem, sut',p:'1 muz, 20g badem, 200ml sut',c:300}},cal:2220},
+    {day:26,meals:{breakfast:{i:'Yulaf ezmesi, sut, tarcin, 4 hasl. yumurta',p:'6 kasik yulaf, 200ml sut, 4 yumurta',c:630},lunch:{i:'Tavuk sis, bulgur pilavi, cacik',p:'200g tavuk, 8 kasik bulgur, 150g cacik',c:680},dinner:{i:'KiymaLı biber dolmasi, yogurt',p:'4 dolma, 100g yogurt',c:580},snack:{i:'Yogurt, granola, cilek',p:'200g yogurt, 3 kasik granola, 80g cilek',c:290}},cal:2180},
+    {day:27,meals:{breakfast:{i:'4 yumurta sahanda, domates, peynir, ekmek',p:'4 yumurta, 2 domates, 30g peynir, 2 dilim ekmek',c:580},lunch:{i:'Izgara somon, sebzeli bulgur',p:'200g somon, 8 kasik bulgur, sebze',c:720},dinner:{i:'Mercimek corbasi, kiymaLı ekmek, yogurt',p:'2 bardak corba, 2 dilim ekmek, 60g kiyma, 100g yogurt',c:620},snack:{i:'Sut, 2 hasl. yumurta, badem',p:'250ml sut, 2 yumurta, 15g badem',c:300}},cal:2220},
+    {day:28,meals:{breakfast:{i:'Yulaf-muz-fisik ezmesi-sut karisimi',p:'6 kasik yulaf, 1 muz, 1 kasik fisik ezmesi, 200ml sut',c:580},lunch:{i:'Tavuk gogsu firinda, pirinc pilavi, salata',p:'200g tavuk, 7 kasik pilav, buyuk tabak salata',c:680},dinner:{i:'Dana kiymaLı sebze yemegi, bulgur',p:'80g kiyma, 1 bardak sebze, 7 kasik bulgur',c:620},snack:{i:'Yogurt, badem, elma',p:'200g yogurt, 20g badem, 1 elma',c:290}},cal:2170},
+    {day:29,meals:{breakfast:{i:'Omlet (4 yumurta, peynir, biber, domates), ekmek',p:'4 yumurta, 30g peynir, 2 biber, 1 domates, 2 dilim ekmek',c:620},lunch:{i:'Izgara kofte, bulgur, yesil salata, cacik',p:'5 kofte (250g), 7 kasik bulgur, tabak salata, 100g cacik',c:720},dinner:{i:'Tavuk corbasi, nohutlu ispanak',p:'2 bardak corba, 1 bardak nohut, 1 bardak ispanak',c:560},snack:{i:'Sut, muz, findik',p:'250ml sut, 1 muz, 15g findik',c:300}},cal:2200},
+    {day:30,meals:{breakfast:{i:'Yulaf ezmesi, sut, 4 hasl. yumurta, muz',p:'6 kasik yulaf, 200ml sut, 4 yumurta, 1 muz',c:640},lunch:{i:'Firin somon, pilav, brokoli',p:'200g somon, 7 kasik pilav, 1.5 bardak brokoli',c:720},dinner:{i:'Tavuk sis, sebzeli bulgur, yogurt',p:'200g tavuk, 7 kasik bulgur, 150g yogurt',c:640},snack:{i:'Yogurt-granola-muz-badem karisimi',p:'200g yogurt, 3 kasik granola, yarim muz, 20g badem',c:320}},cal:2320}
+  ]
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let person = 'd';
+let currentDay = 1;
+let currentView = 'day';
+
+function lsKey(k){ return `diet_${person}_${k}`; }
+
+function getDone(day){
+  try { return JSON.parse(localStorage.getItem(lsKey(`done_${day}`))) || {}; }
+  catch(e){ return {}; }
+}
+function setDone(day,obj){
+  localStorage.setItem(lsKey(`done_${day}`), JSON.stringify(obj));
+}
+function getWater(day){
+  return parseInt(localStorage.getItem(lsKey(`water_${day}`)))||0;
+}
+function setWater(day,n){
+  localStorage.setItem(lsKey(`water_${day}`), n);
+}
+function getWeights(){
+  try { return JSON.parse(localStorage.getItem(lsKey('weights'))) || []; }
+  catch(e){ return []; }
+}
+function setWeights(arr){
+  localStorage.setItem(lsKey('weights'), JSON.stringify(arr));
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function p(){ return PERSONS[person]; }
+function days(){ return DAYS[person]; }
+
+function setPerson(id){
+  person = id;
+  // update tabs
+  document.getElementById('tab-d').className = 'person-tab' + (id==='d' ? ' active-d':'');
+  document.getElementById('tab-m').className = 'person-tab' + (id==='m' ? ' active-m':'');
+  // update CSS vars
+  const pr = p();
+  document.documentElement.style.setProperty('--active-primary', pr.primary);
+  document.documentElement.style.setProperty('--active-grad', pr.grad);
+  document.documentElement.style.setProperty('--active-light', pr.light);
+  // update nav btn classes
+  document.getElementById('btn-prev').className = `day-btn day-btn-${id}`;
+  document.getElementById('btn-next').className = `day-btn day-btn-${id}`;
+  render();
+}
+
+function setView(v){
+  currentView = v;
+  ['day','cal','weight'].forEach(x=>{
+    document.getElementById('view-'+x).className = 'view' + (x===v?' active':'');
+    document.getElementById('nav-'+x).className = 'nav-tab' + (x===v?' active':'');
+  });
+  document.getElementById('day-nav').style.display = (v==='day') ? 'flex':'none';
+  if(v==='day') renderDay();
+  else if(v==='cal') renderCal();
+  else if(v==='weight') renderWeight();
+}
+
+function changeDay(d){
+  currentDay = Math.min(30, Math.max(1, currentDay+d));
+  renderDay();
+}
+
+function render(){
+  if(currentView==='day') renderDay();
+  else if(currentView==='cal') renderCal();
+  else renderWeight();
+}
+
+// ── HERO ──
+function renderHero(dayData){
+  const pr = p();
+  const cal = dayData.cal;
+  const pct = Math.min(100, Math.max(0, ((cal - pr.calMin)/(pr.calMax-pr.calMin))*100));
+  const done = getDone(currentDay);
+  const doneCount = Object.values(done).filter(Boolean).length;
+  const totalMeals = Object.keys(dayData.meals).length;
+
+  document.getElementById('hero-wrap').innerHTML = `
+    <div class="hero hero-${person}">
+      <div class="hero-top">
+        <div>
+          <div class="hero-name">${pr.emoji} ${pr.name}</div>
+          <div class="hero-goal">${pr.goal} &nbsp;·&nbsp; ${pr.target}</div>
+        </div>
+        <div class="hero-badge">
+          <span>${cal.toLocaleString()}</span>
+          kcal / gun
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-val">GUN ${currentDay}</div>
+          <div class="hero-stat-lbl">30 gunluk plan</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">${doneCount}/${totalMeals}</div>
+          <div class="hero-stat-lbl">Tamamlanan</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">${pr.calMin}-${pr.calMax}</div>
+          <div class="hero-stat-lbl">Hedef kcal</div>
+        </div>
+      </div>
+      <div class="cal-bar-wrap">
+        <div class="cal-bar-labels"><span>${pr.calMin} kcal</span><span>${pr.calMax} kcal</span></div>
+        <div class="cal-bar-bg"><div class="cal-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>`;
+}
+
+// ── COMPLETE RING ──
+function renderCompleteBar(dayData){
+  const done = getDone(currentDay);
+  const total = Object.keys(dayData.meals).length;
+  const count = Object.values(done).filter(Boolean).length;
+  const pct = count/total;
+  const r = 20, cx=24, cy=24;
+  const circ = 2*Math.PI*r;
+  const dash = pct*circ;
+  const msgs = ['Baslamak icin tikla!','Iyi gidiyorsun!','Yarim kaldi!','Neredeyse tamam!','Tum ogunler tamam! 🎉'];
+  const msgIdx = count===0?0:count===1?1:count===2?2:count===3?3:4;
+
+  document.getElementById('complete-bar-wrap').innerHTML = `
+    <div class="complete-bar">
+      <svg class="complete-ring" viewBox="0 0 48 48">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EEE" stroke-width="5"/>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${p().primary}" stroke-width="5"
+          stroke-dasharray="${dash} ${circ}" stroke-dashoffset="${circ/4}"
+          stroke-linecap="round" style="transition:stroke-dasharray .5s"/>
+        <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle"
+          font-size="12" font-weight="900" fill="${p().primary}">${count}/${total}</text>
+      </svg>
+      <div class="complete-info">
+        <div class="complete-title">Gunluk ilerleme</div>
+        <div class="complete-sub">${msgs[msgIdx]}</div>
+      </div>
+    </div>`;
+}
+
+// ── WATER ──
+function renderWater(){
+  const w = getWater(currentDay);
+  let html = '<div class="water-card"><div class="water-top"><div class="water-title">💧 Su Takibi</div><div class="water-count">'+w+'/8</div></div><div class="water-glasses">';
+  for(let i=0;i<8;i++){
+    const filled = i<w;
+    html += `<button class="water-glass ${filled?'filled-'+person:''}" onclick="toggleWater(${i})">${filled?'💧':'○'}</button>`;
+  }
+  html += '</div></div>';
+  document.getElementById('water-wrap').innerHTML = html;
+}
+
+function toggleWater(idx){
+  const w = getWater(currentDay);
+  const newW = (idx < w) ? idx : idx+1;
+  setWater(currentDay, newW);
+  renderWater();
+}
+
+// ── MEALS ──
+let expandedMeal = null;
+function renderMeals(dayData){
+  const done = getDone(currentDay);
+  const order = ['breakfast','lunch','dinner','snack'];
+  let html = '';
+  order.forEach(key => {
+    const meal = dayData.meals[key];
+    if(!meal) return;
+    const isDone = !!done[key];
+    const isExp = expandedMeal === key;
+    html += `
+      <div class="meal-card ${isDone?'done':''} ${isExp?'expanded':''}" onclick="toggleMeal('${key}')">
+        <div class="meal-card-top">
+          <div class="meal-icon meal-icon-${person}">${MEAL_ICONS[key]}</div>
+          <div class="meal-info">
+            <div class="meal-title">${MEAL_NAMES[key]}</div>
+            <div class="meal-items">${meal.i}</div>
+          </div>
+          <div class="meal-cal">
+            <div class="meal-cal-num">${meal.c}</div>
+            <div class="meal-cal-unit">kcal</div>
+          </div>
+        </div>
+        <button class="meal-done-btn ${isDone?'checked-'+person:''}"
+          onclick="event.stopPropagation();toggleDone('${key}')">${isDone?'✓':''}</button>
+        <div class="meal-detail ${isExp?'open':''}">
+          <div class="portion-label">📏 Porsiyonlar</div>
+          <div class="portion-text">${meal.p}</div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('meals-wrap').innerHTML = html;
+}
+
+function toggleMeal(key){
+  expandedMeal = (expandedMeal===key) ? null : key;
+  renderMeals(days()[currentDay-1]);
+}
+
+function toggleDone(key){
+  const done = getDone(currentDay);
+  done[key] = !done[key];
+  setDone(currentDay, done);
+  renderCompleteBar(days()[currentDay-1]);
+  renderMeals(days()[currentDay-1]);
+  // pop animation on button
+  setTimeout(()=>{},50);
+}
+
+// ── DAY NAV ──
+function renderDayNav(){
+  document.getElementById('day-label').textContent = `GUN ${currentDay}`;
+  document.getElementById('day-sub').textContent = '30 gunluk program';
+  document.getElementById('btn-prev').disabled = currentDay<=1;
+  document.getElementById('btn-next').disabled = currentDay>=30;
+}
+
+// ── FULL DAY ──
+function renderDay(){
+  const dayData = days()[currentDay-1];
+  renderHero(dayData);
+  renderCompleteBar(dayData);
+  renderWater();
+  renderMeals(dayData);
+  renderDayNav();
+  expandedMeal = null;
+}
+
+// ── CALENDAR ──
+function renderCal(){
+  const labels = ['Pzt','Sal','Car','Per','Cum','Cmt','Paz'];
+  let html = '<div class="cal-header">';
+  labels.forEach(l=>{ html+=`<div class="cal-day-label">${l}</div>`; });
+  html += '</div><div class="cal-grid"><div></div>'; // offset: start Tuesday
+
+  const doneMap = {};
+  days().forEach((_,i)=>{
+    const done = getDone(i+1);
+    doneMap[i+1] = Object.values(done).filter(Boolean).length;
+  });
+
+  for(let d=1;d<=30;d++){
+    const sel = d===currentDay;
+    const hasDone = doneMap[d]>0;
+    const dayData = days()[d-1];
+    html += `<button class="cal-day ${sel?'selected-'+person:''} ${hasDone&&!sel?'has-complete-'+person:''}"
+      onclick="calSelectDay(${d})">
+      <span class="cal-day-num">${d}</span>
+      <span class="cal-day-cal">${dayData.cal}</span>
+      ${hasDone&&!sel?`<div class="cal-dot cal-dot-${person}"></div>`:''}
+    </button>`;
+  }
+  html += '</div>';
+  document.getElementById('cal-wrap').innerHTML = html;
+  renderCalPreview();
+}
+
+function calSelectDay(d){
+  currentDay = d;
+  renderCal();
+  renderCalPreview();
+}
+
+function renderCalPreview(){
+  const dayData = days()[currentDay-1];
+  const done = getDone(currentDay);
+  let html = `<div style="margin-top:16px;background:#fff;border-radius:20px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,0.07)">
+    <div style="font-weight:800;font-size:16px;color:var(--text);margin-bottom:4px">Gun ${currentDay} — ${dayData.cal} kcal</div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:14px;font-weight:600">${p().name} icin ${p().goal}</div>`;
+  const order = ['breakfast','lunch','dinner','snack'];
+  order.forEach(key=>{
+    const meal = dayData.meals[key];
+    if(!meal) return;
+    const isDone = !!done[key];
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F3F4F6">
+      <span style="font-size:20px;width:28px">${MEAL_ICONS[key]}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px;${isDone?'text-decoration:line-through;color:var(--sub)':'color:var(--text)'}">${MEAL_NAMES[key]}</div>
+        <div style="font-size:12px;color:var(--sub)">${meal.i.split(',')[0]}...</div>
+      </div>
+      <div style="font-weight:800;font-size:13px;color:var(--active-primary)">${meal.c} kcal</div>
+      ${isDone?`<span style="color:var(--active-primary);font-size:16px">✓</span>`:''}
+    </div>`;
+  });
+  html += `<button onclick="currentDay=${currentDay};setView('day')" style="margin-top:14px;width:100%;padding:13px;background:var(--active-grad);border:none;border-radius:14px;color:#fff;font-weight:800;font-size:14px;cursor:pointer;font-family:'Nunito',sans-serif">
+    Tam Detay Goster →</button></div>`;
+  document.getElementById('cal-preview').innerHTML = html;
+}
+
+// ── WEIGHT CHART ──
+function renderWeight(){
+  const pr = p();
+  const weights = getWeights();
+  const latest = weights.length ? weights[weights.length-1].kg : pr.startKg;
+  const diff = (latest - pr.startKg).toFixed(1);
+  const diffStr = diff > 0 ? '+'+diff : diff;
+
+  // SVG chart
+  const W=340, H=140, PAD=30;
+  let svgLines='', svgDots='', svgLabels='';
+
+  if(weights.length >= 2){
+    const kgs = weights.map(w=>w.kg);
+    const minKg = Math.min(...kgs, pr.targetKg)-0.5;
+    const maxKg = Math.max(...kgs, pr.startKg)+0.5;
+    const toX = i => PAD + (i/(weights.length-1))*(W-PAD*2);
+    const toY = kg => PAD + (1-(kg-minKg)/(maxKg-minKg))*(H-PAD*2);
+
+    // target line
+    const ty = toY(pr.targetKg);
+    svgLines += `<line x1="${PAD}" y1="${ty}" x2="${W-PAD}" y2="${ty}" stroke="${pr.primary}" stroke-width="1" stroke-dasharray="4,4" opacity=".4"/>`;
+    svgLabels += `<text x="${W-PAD+4}" y="${ty+4}" font-size="9" fill="${pr.primary}" font-weight="700">${pr.targetKg}kg</text>`;
+
+    // area fill
+    let pathD = `M${toX(0)},${toY(weights[0].kg)}`;
+    weights.forEach((w,i)=>{ if(i>0) pathD+=` L${toX(i)},${toY(w.kg)}`; });
+    const areaD = pathD + ` L${toX(weights.length-1)},${H-PAD} L${PAD},${H-PAD} Z`;
+    svgLines += `<path d="${areaD}" fill="${pr.primary}" opacity=".10"/>`;
+    svgLines += `<path d="${pathD}" fill="none" stroke="${pr.primary}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+    weights.forEach((w,i)=>{
+      const x=toX(i), y=toY(w.kg);
+      svgDots += `<circle cx="${x}" cy="${y}" r="5" fill="#fff" stroke="${pr.primary}" stroke-width="2.5"/>`;
+      if(i===0||i===weights.length-1||weights.length<=6){
+        svgLabels += `<text x="${x}" y="${y-10}" text-anchor="middle" font-size="9" fill="${pr.primary}" font-weight="800">${w.kg}</text>`;
+      }
+    });
+  } else if(weights.length===1){
+    const x=W/2, y=H/2;
+    svgDots += `<circle cx="${x}" cy="${y}" r="6" fill="${pr.primary}"/>`;
+    svgLabels += `<text x="${x}" y="${y-14}" text-anchor="middle" font-size="10" fill="${pr.primary}" font-weight="800">${weights[0].kg} kg</text>`;
+  }
+
+  const emptyMsg = weights.length===0 ? `<text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="#CCC">Henuz olcum eklenmedi</text>`:''
+
+  document.getElementById('weight-wrap').innerHTML = `
+    <div style="padding:16px 16px 0">
+      <div class="weight-card">
+        <div class="weight-top">
+          <div>
+            <div class="weight-title">📊 Kilo Takibi</div>
+            <div style="font-size:12px;color:var(--sub);margin-top:4px;font-weight:600">Baslangic: ${pr.startKg} kg</div>
+          </div>
+          <div class="weight-current">
+            <div class="weight-val">${latest} kg</div>
+            <div class="weight-target">Hedef: ${pr.targetKg} kg &nbsp; (${diffStr} kg)</div>
+          </div>
+        </div>
+        <div class="weight-svg-wrap">
+          <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+            ${svgLines}${svgDots}${svgLabels}${emptyMsg}
+          </svg>
+        </div>
+        <div class="weight-input-row">
+          <input class="weight-input" id="weight-inp" type="number" step="0.1" min="40" max="150"
+            placeholder="${latest} kg" inputmode="decimal">
+          <button class="weight-add-btn" onclick="addWeight()" style="background:var(--active-grad)">+ Ekle</button>
+        </div>
+        ${weights.length>0?`<div style="margin-top:10px;text-align:right"><button onclick="undoWeight()" style="background:none;border:none;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">↩ Son olcumu sil</button></div>`:''}
+      </div>
+
+      <!-- history -->
+      ${weights.length>0 ? `
+      <div style="background:#fff;border-radius:20px;padding:16px 18px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06)">
+        <div style="font-weight:800;font-size:14px;color:var(--text);margin-bottom:12px">📋 Gecmis Olcumler</div>
+        ${[...weights].reverse().slice(0,10).map((w,i,arr)=>{
+          const prev = arr[i+1];
+          const delta = prev ? (w.kg - prev.kg).toFixed(1) : null;
+          const col = delta===null?'var(--sub)':delta<0?'#22C55E':delta>0?'#EF4444':'var(--sub)';
+          const arrow = delta===null?'':delta<0?'↓':delta>0?'↑':'→';
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #F3F4F6">
+            <span style="font-size:20px">⚖️</span>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px;color:var(--text)">${w.kg} kg</div>
+              <div style="font-size:11px;color:var(--sub);font-weight:600">${w.date}</div>
+            </div>
+            ${delta!==null?`<span style="font-weight:800;font-size:13px;color:${col}">${arrow} ${Math.abs(delta)} kg</span>`:''}
+          </div>`;
+        }).join('')}
+      </div>`:
+      `<div style="background:#fff;border-radius:20px;padding:24px;margin-top:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.06)">
+        <div style="font-size:40px;margin-bottom:8px">⚖️</div>
+        <div style="font-weight:800;color:var(--text);font-size:15px">Ilk olcumunu ekle</div>
+        <div style="color:var(--sub);font-size:13px;margin-top:4px">Kilo degisimini grafik olarak takip et</div>
+      </div>`}
+    </div>`;
+}
+
+function addWeight(){
+  const inp = document.getElementById('weight-inp');
+  const kg = parseFloat(inp.value);
+  if(isNaN(kg)||kg<30||kg>200){ inp.style.borderColor='#EF4444'; setTimeout(()=>inp.style.borderColor='',1000); return; }
+  const weights = getWeights();
+  const now = new Date();
+  const date = now.toLocaleDateString('tr-TR',{day:'2-digit',month:'short',year:'numeric'});
+  weights.push({kg, date});
+  setWeights(weights);
+  inp.value='';
+  renderWeight();
+}
+
+function undoWeight(){
+  const weights = getWeights();
+  if(weights.length>0){ weights.pop(); setWeights(weights); renderWeight(); }
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+setPerson('d');
+setView('day');
+</script>
+</body>
+</html>
