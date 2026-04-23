@@ -24,6 +24,7 @@ import { parseKarsilastirmaUrl, resolveInitialState } from '@/lib/url-params'
 import { StatCard } from '@/components/ui/Card'
 import AdBanner from '@/components/ui/AdBanner'
 import YasalBilgiPaneli from './YasalBilgiPaneli'
+import OptimizerBanner from '@/components/optimizer/OptimizerBanner'
 
 // SSR hatası almamak için dinamik import
 const KarsilastirmaChart = dynamic(() => import('./KarsilastirmaChart'), { ssr: false })
@@ -428,6 +429,16 @@ export default function KarsilastirmaClient() {
           {/* RIGHT — Sonuçlar */}
           {sonuc && (
             <div className="space-y-5">
+              {/* Optimizer entry banner */}
+              <OptimizerBanner
+                tutar={formState.tutar}
+                pesinat={formState.pesinat}
+                varlikTuru={formState.varlikTuru}
+                orgPct={otherParams.orgPct}
+                krFaizAylik={otherParams.krFaizAylik}
+                mevduatYillik={otherParams.mevduatYillik}
+              />
+
               {/* Verdict — etkin faiz vs banka faizi (rate-bazlı) */}
               <div className={`flex items-center gap-4 p-5 rounded-2xl border-2 ${sonuc.tfDahaAvantajli ? 'bg-success-50 border-success-300' : 'bg-blue-50 border-blue-300'}`}>
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${sonuc.tfDahaAvantajli ? 'bg-success-100' : 'bg-blue-100'}`}>

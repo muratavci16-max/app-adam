@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { BarChart2, TrendingUp, ChevronRight, Zap } from 'lucide-react'
+import { BarChart2, TrendingUp, ChevronRight, Zap, Sparkles } from 'lucide-react'
 import type { HeroSlide } from '@/types'
 import { numericOnlyBeforeInput } from '@/lib/input-filter'
 import { useNumericInputState } from '@/lib/useNumericInputState'
@@ -150,6 +150,13 @@ export default function HeroSection({ slides }: HeroSectionProps) {
               >
                 <BarChart2 className="w-4 h-4" />
                 Karşılaştır
+              </Link>
+              <Link
+                href={`/optimizasyon?varlikTuru=${formState.varlikTuru}&kr_faiz=${faiz.replace(',', '.')}`}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white font-medium text-sm hover:bg-white/15 transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                En Uygun Vadeyi Bul
               </Link>
               <Link
                 href="/tasarruf-finansmani"
