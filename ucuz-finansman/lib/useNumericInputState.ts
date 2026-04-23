@@ -17,16 +17,19 @@ interface NumericInputProps {
  * - Commits the parsed numeric value to the caller immediately if valid.
  * - Reformats canonical form on blur.
  * - Syncs display from external state changes (but never when the user is actively focused).
+ *
+ * Accepts `numericValue: number | undefined` — undefined renders an empty
+ * input (used by /optimizasyon for the derived field and pre-fill state).
  */
 export function useNumericInputState(
-  numericValue: number,
+  numericValue: number | undefined,
   onCommit: (val: number) => void,
   opts: { rounded?: boolean } = {}
 ): NumericInputProps {
   const { rounded = true } = opts
 
-  const formatFromNumber = (n: number): string => {
-    if (!Number.isFinite(n)) return ''
+  const formatFromNumber = (n: number | undefined): string => {
+    if (n === undefined || !Number.isFinite(n)) return ''
     if (rounded) {
       return formatCurrencyDisplay(String(Math.round(n)))
     }

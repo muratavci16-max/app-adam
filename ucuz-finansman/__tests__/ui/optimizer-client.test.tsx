@@ -52,11 +52,10 @@ describe('OptimizerClient — empty state when inputs missing', () => {
 
 describe('OptimizerClient — result rendering', () => {
   async function fillModeB(user: ReturnType<typeof userEvent.setup>) {
-    // Mode B default: need tutar + peşinat
-    const inputs = screen.getAllByRole('textbox') as HTMLInputElement[]
-    // Inputs are: Tutar, Peşinat, Taksit (disabled), Org%, Kredi%, Mevduat%
-    const tutar = inputs[0]
-    const pesinat = inputs[1]
+    // Mode B default: need tutar + peşinat (both text inputs via useNumericInputState)
+    const textInputs = screen.getAllByRole('textbox') as HTMLInputElement[]
+    const tutar = textInputs[0]
+    const pesinat = textInputs[1]
     await user.clear(tutar)
     await user.type(tutar, '1800000')
     await user.clear(pesinat)
@@ -76,13 +75,14 @@ describe('OptimizerClient — result rendering', () => {
 
   it('High r_b / low r_m market produces the favorable-market UX with 3 cards', async () => {
     const user = userEvent.setup()
-    render(<OptimizerClient />)
+    const { container } = render(<OptimizerClient />)
     await fillModeB(user)
 
-    // Flip mevduat to 10% and kredi to 4.5% to make TF favorable
-    const inputs = screen.getAllByRole('textbox') as HTMLInputElement[]
-    const krFaiz = inputs[4]
-    const mevduat = inputs[5]
+    // Market inputs are type=number (spinbutton role). Grab them by DOM order.
+    const numberInputs = container.querySelectorAll<HTMLInputElement>('input[type="number"]')
+    // Order: orgPct, krFaizAylik, mevduatYillik
+    const krFaiz = numberInputs[1]
+    const mevduat = numberInputs[2]
     await user.clear(krFaiz)
     await user.type(krFaiz, '4.5')
     await user.clear(mevduat)
@@ -99,11 +99,11 @@ describe('OptimizerClient — "Detaylı incele" push to /karsilastirma', () => {
     const user = userEvent.setup()
     render(<OptimizerClient />)
 
-    const inputs = screen.getAllByRole('textbox') as HTMLInputElement[]
-    await user.clear(inputs[0])
-    await user.type(inputs[0], '1800000')
-    await user.clear(inputs[1])
-    await user.type(inputs[1], '300000')
+    const textInputs = screen.getAllByRole('textbox') as HTMLInputElement[]
+    await user.clear(textInputs[0])
+    await user.type(textInputs[0], '1800000')
+    await user.clear(textInputs[1])
+    await user.type(textInputs[1], '300000')
     // Keep it in tfAlwaysExpensive — cards are inside <details> but still rendered.
     const clickables = screen.getAllByText(/Detaylı incele/)
     expect(clickables.length).toBeGreaterThan(0)

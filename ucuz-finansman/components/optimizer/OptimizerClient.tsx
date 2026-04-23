@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Sparkles, BarChart2, Info, AlertTriangle, ChevronDown } from 'lucide-react'
@@ -9,7 +9,6 @@ import {
   resolveOptimizerInitialState,
 } from '@/lib/url-params'
 import {
-  DEFAULT_OPTIMIZER_STATE,
   handleOptimizeForChange,
   handleTutarChange,
   handlePesinatChange,
@@ -22,6 +21,7 @@ import {
 import { optimizeTF, type OptimizeCase, type OptimizeInput } from '@/lib/tf-optimize'
 import { VADE_CAPS } from '@/lib/karsilastirma-state'
 import { numericOnlyBeforeInput } from '@/lib/input-filter'
+import { useNumericInputState } from '@/lib/useNumericInputState'
 import OptionCard from './OptionCard'
 import FlipConditions from './FlipConditions'
 import OptimizerYasalPaneli from './OptimizerYasalPaneli'
@@ -59,6 +59,19 @@ export default function OptimizerClient() {
 
   const [form, setForm] = useState<OptimizerFormState>(initial.form)
   const [market, setMarket] = useState<OptimizerMarketState>(initial.market)
+
+  // Currency inputs use the shared useNumericInputState hook (same behavior
+  // as /karsilastirma and hero form: TR thousand separators, cursor
+  // preservation, 2-decimal cap, format-on-type).
+  const tutarInput = useNumericInputState(form.tutar, val =>
+    setForm(prev => handleTutarChange(prev, val)),
+  )
+  const pesinatInput = useNumericInputState(form.pesinat, val =>
+    setForm(prev => handlePesinatChange(prev, val)),
+  )
+  const taksitInput = useNumericInputState(form.taksit, val =>
+    setForm(prev => handleTaksitChange(prev, val)),
+  )
 
   const optimizeInput = useMemo<OptimizeInput | null>(
     () => toOptimizeInput(form, market),
@@ -176,31 +189,25 @@ export default function OptimizerClient() {
                   </p>
                 </div>
 
-                <NumericInputRow
+                <CurrencyField
                   label="Toplam Finansman Tutarı"
-                  suffix="₺"
-                  value={form.tutar}
-                  onChange={val => setForm(prev => handleTutarChange(prev, val))}
+                  inputProps={tutarInput}
                   disabled={form.optimizeFor === 'tutar'}
                   derivedLabel="Optimizer hesaplıyor"
                   inputClass={inputClass}
                   labelClass={labelClass}
                 />
-                <NumericInputRow
+                <CurrencyField
                   label="Peşinat"
-                  suffix="₺"
-                  value={form.pesinat}
-                  onChange={val => setForm(prev => handlePesinatChange(prev, val))}
+                  inputProps={pesinatInput}
                   disabled={form.optimizeFor === 'pesinat'}
                   derivedLabel="Optimizer hesaplıyor"
                   inputClass={inputClass}
                   labelClass={labelClass}
                 />
-                <NumericInputRow
+                <CurrencyField
                   label="Aylık Taksit"
-                  suffix="₺"
-                  value={form.taksit}
-                  onChange={val => setForm(prev => handleTaksitChange(prev, val))}
+                  inputProps={taksitInput}
                   disabled={form.optimizeFor === 'taksit'}
                   derivedLabel="Optimizer hesaplıyor"
                   inputClass={inputClass}
@@ -209,36 +216,36 @@ export default function OptimizerClient() {
               </div>
             </div>
 
-            {/* Market params */}
+            {/* Market params — plain number inputs, same pattern as /karsilastirma */}
             <div className="bg-white rounded-2xl shadow-card border border-neutral-100 p-5">
               <h2 className="font-bold text-neutral-800 text-sm mb-3">Piyasa Parametreleri</h2>
               <div className="space-y-3.5">
-                <NumericInputRow
+                <PercentField
                   label="Organizasyon Ücreti Oranı"
                   suffix="%"
+                  step={0.1}
                   value={market.orgPct}
                   onChange={val => setMarket(prev => ({ ...prev, orgPct: val }))}
                   inputClass={inputClass}
                   labelClass={labelClass}
-                  allowDecimal
                 />
-                <NumericInputRow
+                <PercentField
                   label="Banka Aylık Kredi Faizi"
                   suffix="%/ay"
+                  step={0.01}
                   value={market.krFaizAylik}
                   onChange={val => setMarket(prev => ({ ...prev, krFaizAylik: val }))}
                   inputClass={inputClass}
                   labelClass={labelClass}
-                  allowDecimal
                 />
-                <NumericInputRow
+                <PercentField
                   label="Mevduat Yıllık Faizi"
                   suffix="%/yıl"
+                  step={0.5}
                   value={market.mevduatYillik}
                   onChange={val => setMarket(prev => ({ ...prev, mevduatYillik: val }))}
                   inputClass={inputClass}
                   labelClass={labelClass}
-                  allowDecimal
                 />
               </div>
             </div>
@@ -326,36 +333,26 @@ export default function OptimizerClient() {
   )
 }
 
-function NumericInputRow({
+/**
+ * Currency field — wires the shared useNumericInputState hook (TR thousand
+ * separators, cursor preservation, 2-decimal cap). Handles the disabled-
+ * but-visible state for the optimizer's derived field.
+ */
+function CurrencyField({
   label,
-  suffix,
-  value,
-  onChange,
+  inputProps,
   disabled = false,
   derivedLabel,
   inputClass,
   labelClass,
-  allowDecimal = false,
 }: {
   label: string
-  suffix: string
-  value: number | undefined
-  onChange: (val: number) => void
+  inputProps: ReturnType<typeof useNumericInputState>
   disabled?: boolean
   derivedLabel?: string
   inputClass: string
   labelClass: string
-  allowDecimal?: boolean
 }) {
-  const [local, setLocal] = useState<string>(value != null ? String(value) : '')
-
-  // Keep local string in sync when external state changes (e.g. mode switch).
-  useEffect(() => {
-    if (value == null) setLocal('')
-    else if (parseFloat(local) !== value) setLocal(String(value))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-
   return (
     <div>
       <label className={labelClass}>
@@ -367,23 +364,62 @@ function NumericInputRow({
       <div className="relative">
         <input
           type="text"
-          inputMode={allowDecimal ? 'decimal' : 'numeric'}
+          inputMode="decimal"
           onBeforeInput={numericOnlyBeforeInput}
           className={inputClass}
-          value={disabled ? '' : local}
           placeholder={disabled ? '—' : undefined}
           disabled={disabled}
+          {...inputProps}
+          // When disabled, suppress the hook's value to render as empty/placeholder.
+          value={disabled ? '' : inputProps.value}
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Percent field — plain HTML number input matching the pattern used in
+ * /karsilastirma for market rate inputs (orgPct, krFaizAylik, mevduatYillik).
+ * These are small-magnitude decimals where thousand-separator formatting
+ * would be awkward.
+ */
+function PercentField({
+  label,
+  suffix,
+  step,
+  value,
+  onChange,
+  inputClass,
+  labelClass,
+}: {
+  label: string
+  suffix: string
+  step: number
+  value: number
+  onChange: (val: number) => void
+  inputClass: string
+  labelClass: string
+}) {
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+      <div className="relative">
+        <input
+          type="number"
+          step={step}
+          min={0}
+          className={inputClass}
+          value={value}
           onChange={e => {
-            const v = e.target.value
-            setLocal(v)
-            // Normalize TR decimal comma to dot before parsing.
-            const parsed = parseFloat(v.replace(',', '.'))
-            if (Number.isFinite(parsed) && parsed >= 0) {
-              onChange(parsed)
-            }
+            const parsed = parseFloat(e.target.value)
+            onChange(Number.isFinite(parsed) && parsed >= 0 ? parsed : 0)
           }}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">{suffix}</span>
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">
+          {suffix}
+        </span>
       </div>
     </div>
   )

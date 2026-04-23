@@ -22,19 +22,23 @@ describe('Optimizer — E2E happy path', () => {
     // 1. Default mode is Taksit'i bul — confirm via disabled-field label
     expect(screen.getByText(/Aylık Taksit/).textContent).toMatch(/Optimizer hesaplıyor/)
 
-    // 2. Fill inputs via DOM order: [tutar, peşinat, taksit(disabled), org%, kr%, mevduat%]
-    const inputs = screen.getAllByRole('textbox') as HTMLInputElement[]
-    await user.clear(inputs[0])
-    await user.type(inputs[0], '1800000')
-    await user.clear(inputs[1])
-    await user.type(inputs[1], '300000')
+    // 2. Fill currency inputs (type=text via useNumericInputState):
+    //    [tutar, peşinat, (taksit disabled)]
+    const textInputs = screen.getAllByRole('textbox') as HTMLInputElement[]
+    await user.clear(textInputs[0])
+    await user.type(textInputs[0], '1800000')
+    await user.clear(textInputs[1])
+    await user.type(textInputs[1], '300000')
 
-    // 3. Bend market to favorable regime (high kredi, low mevduat)
-    //    so we exercise the "not tfAlwaysExpensive" branch.
-    await user.clear(inputs[4])  // kr faiz
-    await user.type(inputs[4], '4.5')
-    await user.clear(inputs[5])  // mevduat yıllık
-    await user.type(inputs[5], '10')
+    // 3. Bend market (type=number inputs) to favorable regime.
+    //    Order: orgPct, krFaizAylik, mevduatYillik.
+    const numberInputs = document.querySelectorAll<HTMLInputElement>('input[type="number"]')
+    const krFaiz = numberInputs[1]
+    const mevduat = numberInputs[2]
+    await user.clear(krFaiz)
+    await user.type(krFaiz, '4.5')
+    await user.clear(mevduat)
+    await user.type(mevduat, '10')
 
     // 4. "En Uygun 3 Yapılandırma" headline must appear
     expect(screen.getByText(/En Uygun 3 Yapılandırma/)).toBeTruthy()
