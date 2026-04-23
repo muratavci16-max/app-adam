@@ -47,6 +47,14 @@ export default function KomisyonlarAdmin() {
   }
 
   const createRate = async () => {
+    if (newRate.min_vade <= 0 || newRate.max_vade <= 0) {
+      showToast('Vade değerleri 0’dan büyük olmalıdır.', 'error')
+      return
+    }
+    if (newRate.min_vade > newRate.max_vade) {
+      showToast('Min vade, max vadeden büyük olamaz.', 'error')
+      return
+    }
     const yillik = ((Math.pow(1 + newRate.aylik_faiz / 100, 12) - 1) * 100)
     const { data, error } = await supabase.from('bank_rates').insert({ ...newRate, yillik_faiz: yillik }).select().single()
     if (error) { showToast('Hata: ' + error.message, 'error'); return }
@@ -65,6 +73,18 @@ export default function KomisyonlarAdmin() {
       }
       return updated
     }))
+  }
+
+  const saveRateValidated = async (rate: BankRate) => {
+    if (rate.min_vade <= 0 || rate.max_vade <= 0) {
+      showToast('Vade değerleri 0’dan büyük olmalıdır.', 'error')
+      return
+    }
+    if (rate.min_vade > rate.max_vade) {
+      showToast('Min vade, max vadeden büyük olamaz.', 'error')
+      return
+    }
+    await saveRate(rate)
   }
 
   if (loading) return <div className="text-center py-20 text-neutral-400 text-sm">Yükleniyor...</div>
@@ -88,15 +108,38 @@ export default function KomisyonlarAdmin() {
             </div>
             <div>
               <label className={labelCls}>Aylık Faiz (%)</label>
-              <input type="number" step="0.01" className={inputCls} value={newRate.aylik_faiz} onChange={e => setNewRate(p => ({ ...p, aylik_faiz: parseFloat(e.target.value) || 0 }))} />
+              <input
+                type="number"
+                step="0.01"
+                min={0}
+                max={50}
+                className={inputCls}
+                value={newRate.aylik_faiz}
+                onChange={e => {
+                  const parsed = Math.max(0, Math.min(50, parseFloat(e.target.value) || 0))
+                  setNewRate(p => ({ ...p, aylik_faiz: parsed }))
+                }}
+              />
             </div>
             <div>
               <label className={labelCls}>Min Vade (ay)</label>
-              <input type="number" className={inputCls} value={newRate.min_vade} onChange={e => setNewRate(p => ({ ...p, min_vade: parseInt(e.target.value) || 1 }))} />
+              <input
+                type="number"
+                min={1}
+                className={inputCls}
+                value={newRate.min_vade}
+                onChange={e => setNewRate(p => ({ ...p, min_vade: Math.max(1, parseInt(e.target.value) || 1) }))}
+              />
             </div>
             <div>
               <label className={labelCls}>Max Vade (ay)</label>
-              <input type="number" className={inputCls} value={newRate.max_vade} onChange={e => setNewRate(p => ({ ...p, max_vade: parseInt(e.target.value) || 1 }))} />
+              <input
+                type="number"
+                min={1}
+                className={inputCls}
+                value={newRate.max_vade}
+                onChange={e => setNewRate(p => ({ ...p, max_vade: Math.max(1, parseInt(e.target.value) || 1) }))}
+              />
             </div>
             <div>
               <label className={labelCls}>Sıra</label>
@@ -142,14 +185,37 @@ export default function KomisyonlarAdmin() {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <input type="number" step="0.01" className="border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs w-20 text-center" value={rate.aylik_faiz} onChange={e => update(rate.id, 'aylik_faiz', parseFloat(e.target.value) || 0)} />
+                  <input
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    max={50}
+                    className="border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs w-20 text-center"
+                    value={rate.aylik_faiz}
+                    onChange={e => {
+                      const parsed = Math.max(0, Math.min(50, parseFloat(e.target.value) || 0))
+                      update(rate.id, 'aylik_faiz', parsed)
+                    }}
+                  />
                 </td>
                 <td className="px-4 py-3 text-center text-xs text-neutral-500">%{rate.yillik_faiz.toFixed(2)}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1 justify-center">
-                    <input type="number" className="border border-neutral-200 rounded-lg px-2 py-1.5 text-xs w-16 text-center" value={rate.min_vade} onChange={e => update(rate.id, 'min_vade', parseInt(e.target.value) || 1)} />
+                    <input
+                      type="number"
+                      min={1}
+                      className="border border-neutral-200 rounded-lg px-2 py-1.5 text-xs w-16 text-center"
+                      value={rate.min_vade}
+                      onChange={e => update(rate.id, 'min_vade', Math.max(1, parseInt(e.target.value) || 1))}
+                    />
                     <span className="text-neutral-300 text-xs">—</span>
-                    <input type="number" className="border border-neutral-200 rounded-lg px-2 py-1.5 text-xs w-16 text-center" value={rate.max_vade} onChange={e => update(rate.id, 'max_vade', parseInt(e.target.value) || 1)} />
+                    <input
+                      type="number"
+                      min={1}
+                      className="border border-neutral-200 rounded-lg px-2 py-1.5 text-xs w-16 text-center"
+                      value={rate.max_vade}
+                      onChange={e => update(rate.id, 'max_vade', Math.max(1, parseInt(e.target.value) || 1))}
+                    />
                   </div>
                 </td>
                 <td className="px-4 py-3">
@@ -161,7 +227,7 @@ export default function KomisyonlarAdmin() {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5 justify-end">
                     <button onClick={() => deleteRate(rate.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50"><Trash2 className="w-3.5 h-3.5" /></button>
-                    <button onClick={() => saveRate(rate)} disabled={saving === rate.id} className="p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 disabled:opacity-50">
+                    <button onClick={() => saveRateValidated(rate)} disabled={saving === rate.id} className="p-1.5 rounded-lg text-primary-600 hover:bg-primary-50 disabled:opacity-50">
                       <Save className="w-3.5 h-3.5" />
                     </button>
                   </div>

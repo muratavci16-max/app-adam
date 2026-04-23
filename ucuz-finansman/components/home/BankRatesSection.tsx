@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowRight, Building2, RefreshCw } from 'lucide-react'
+import { formatPct } from '@/lib/hesaplamalar'
 import type { BankRate } from '@/types'
 
 interface BankRatesSectionProps {
@@ -55,17 +56,22 @@ export default function BankRatesSection({ rates }: BankRatesSectionProps) {
                           }
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-neutral-800">{rate.banka_adi}</p>
+                          <p
+                            className="text-sm font-semibold text-neutral-800 max-w-[180px] truncate"
+                            title={rate.banka_adi}
+                          >
+                            {rate.banka_adi}
+                          </p>
                           {idx === 0 && <span className="text-xs text-success-600 font-medium">En Düşük</span>}
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <span className="text-sm font-bold text-neutral-800">%{rate.aylik_faiz.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-neutral-800">{formatPct(rate.aylik_faiz)}</span>
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <span className="text-sm font-semibold text-neutral-600">
-                        %{((Math.pow(1 + rate.aylik_faiz / 100, 12) - 1) * 100).toFixed(1)}
+                        {formatPct((Math.pow(1 + rate.aylik_faiz / 100, 12) - 1) * 100)}
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-right text-sm text-neutral-600">{rate.min_vade} ay</td>

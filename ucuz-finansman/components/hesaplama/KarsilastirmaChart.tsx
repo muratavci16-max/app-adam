@@ -24,35 +24,32 @@ interface Props {
 }
 
 export default function KarsilastirmaChart({ params, sonuc }: Props) {
-  const vade = sonuc.vade
-  const labels = Array.from({ length: vade + 1 }, (_, i) => i)
+  // "Kümülatif Ödeme" = actual cash user has paid out so far (out-of-pocket).
+  // - TF: peşinat + org + all taksits paid to TF = sonuc.rows[i].tfKumul
+  // - Alt: peşinat + org + pre-delivery taksits (deposited to mevduat) + post-delivery loan payments
+  //   Both have the same starting point. Pre-delivery they grow together (same taksit
+  //   whether it goes to TF or mevduat). Post-delivery they may diverge (bank taksit ≠ TF taksit).
+  //
+  // Note: we do NOT use sonuc.rows[i].altKumul here — that column represents mevduat
+  // BALANCE (investment value including interest earned) during the pre-delivery period,
+  // which is a different quantity (market value of savings, not cash laid out).
+  const start = params.pesinat + sonuc.orgBedeli
+  const tfCumulative: number[] = [start, ...sonuc.rows.map(r => r.tfKumul)]
 
-  // TF kümülatif
-  const getTaksit = (ay: number) => {
-    if (params.takTuru === 'artisli' && ay > params.artisAy) return params.yeniTaksit
-    return params.taksit0
+  const altCumulative: number[] = [start]
+  let altSoFar = start
+  for (const row of sonuc.rows) {
+    if (row.ay < sonuc.teslimAy) {
+      // Pre-delivery: user pays the same taksit into mevduat as TF would collect.
+      altSoFar += row.tfTaksit
+    } else {
+      // Post-delivery: user pays bank loan installment.
+      altSoFar += sonuc.krTaksit
+    }
+    altCumulative.push(altSoFar)
   }
 
-  const tfCumulative: number[] = [params.pesinat + sonuc.orgBedeli]
-  let kalanTF = params.tutar - params.pesinat
-  for (let t = 1; t <= vade; t++) {
-    const tak = Math.min(getTaksit(t), kalanTF)
-    kalanTF -= tak
-    tfCumulative.push(tfCumulative[t - 1] + tak)
-  }
-
-  // Alt kümülatif
-  const altCumulative: number[] = [params.pesinat + sonuc.orgBedeli]
-  let kalanAlt = params.tutar - params.pesinat
-  for (let t = 1; t <= sonuc.teslimAy; t++) {
-    const tak = Math.min(getTaksit(t), kalanAlt)
-    kalanAlt -= tak
-    altCumulative.push(altCumulative[t - 1] + tak)
-  }
-  const krTaksit = sonuc.krTaksit
-  for (let t = sonuc.teslimAy + 1; t <= vade; t++) {
-    altCumulative.push(altCumulative[altCumulative.length - 1] + (krTaksit > 0 ? krTaksit : 0))
-  }
+  const labels = Array.from({ length: tfCumulative.length }, (_, i) => i)
 
   const data = {
     labels,
@@ -107,7 +104,8 @@ export default function KarsilastirmaChart({ params, sonuc }: Props) {
         title: { display: true, text: 'Kümülatif Ödeme (bin ₺)', font: { size: 11 } },
         ticks: {
           font: { size: 10 },
-          callback: (v: number | string) => `${typeof v === 'number' ? Math.round(v).toLocaleString('tr-TR') : v}K`,
+          callback: (v: number | string) =>
+            typeof v === 'number' ? Math.round(v).toLocaleString('tr-TR') : v,
         },
         grid: { color: 'rgba(0,0,0,.04)' },
       },

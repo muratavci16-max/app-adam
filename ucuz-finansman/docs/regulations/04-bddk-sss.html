@@ -1,0 +1,1394 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>SSS Listesi</title>
+    <link rel="shortcut icon" type="image/png" href="/Content/TemplateAssets/layout_images/favicon.ico" />
+
+    <link href="/Content/TemplateAssets/css/bootstrap.css" rel="stylesheet" />
+    <link href="/Content/TemplateAssets/css/fontawesome.min.css" rel="stylesheet" />
+    <link href="/Content/TemplateDefault/defaultLess2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/navbar2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/liste2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/detay2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/organizasyon2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/veri2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateAssets/css/brands.min.css" rel="stylesheet" />
+
+    <script src="/Scripts/jquery-3.6.0.min.js"></script>
+    <script src="/Scripts/bootstrap.js"></script>
+    <script src="/Scripts/fontawesome-all.js"></script>
+    <script src="/Scripts/less.min.js"></script>
+    <script src="/Scripts/brands.js"></script>
+
+    <script>
+
+        function SearchFunction() {
+            var metin = document.getElementById('searchText').value.toLocaleLowerCase('tr-TR');
+            if (metin.length > 3) {
+
+                /* Duyuru, Güncel */
+                $(".kategoriList ul li").hide();
+                $(".kategoriList ul li .text").filter(function (index) {
+                    return $(this).text().toLocaleLowerCase('tr-TR').indexOf(metin) >= 0;
+                }).parent().parent().parent().show();
+
+
+                /* Mevzuat, Kuruluş */
+                if ($("#accordion > div").hasClass("card")) {
+                    $("#accordion div.card").hide(); //hide div.card (hide accordion)
+                    $("#accordion div.card .accordionBody ul li").hide(); //hide li
+                    $("#accordion div.card .accordionBody table tbody tr ").hide(); //hide li
+
+                    var list_baslikContainer = $("#accordion div.card .accordionBody ul li .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    });
+
+                    var list_baslikContainer2 = $("#accordion div.card .accordionBody table tbody tr td .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    });
+
+                    list_baslikContainer.parent().show(); //show li
+                    list_baslikContainer2.parent().parent().show(); //show li
+                    var list_accoridon = list_baslikContainer.parent().parent().parent().parent().parent();
+                    var list_accoridon2 = list_baslikContainer2.parent().parent().parent().parent().parent().parent().parent();
+                    list_accoridon.show();
+                    list_accoridon2.show();
+                    list_accoridon.find("h5 button small").hide();
+                    list_accoridon2.find("h5 button small").hide();
+                }
+                else {
+                    $(".accordionBody ul li").hide();
+                    $(".accordionBody ul li .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    }).parent().show();
+
+                    $(".accordionBody table tbody tr ").hide();
+                    $(".accordionBody table tbody tr td .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    }).parent().parent().show();
+                }
+
+
+                /* Sss */
+                $(".accordionSss div.card").hide();
+                $(".accordionSss div.card h5 button").filter(function (index) {
+                    return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                }).parent().parent().parent().show();
+            }
+            else {
+                /* Duyuru, Güncel */
+                $(".kategoriList ul li").show();
+                /* Mevzuat, Kuruluş (accordion yokken) */
+                $(".accordionBody ul li").show();
+                $(".accordionBody table tbody tr ").show();
+
+                /* Sss (her zaman), Mevzuat, Kuruluş (accordion varken) */
+                $("#accordion div.card").show();
+                $("#accordion div.card h5 button small").show();
+            }
+        }
+
+        $(document).ready(function () {
+
+            //Detay sayfası galeri resimlerini görüntülemek için
+            $("ul.resimList .imgContainer img").click(function () {
+                var srcData = $(this).attr("src");
+                $('#showImgModal img').attr("src", srcData);
+                $('#showImgModal').modal('show')
+            });
+
+
+            //Organizasyon Şeması sayfalarında (IsSema == true) şema resim, ad, ünvan görüntülemek için
+            var listHiyerarsi = [
+                { BagliBirimler: ["Hukuk İşleri Daire Başkanlığı", "Ekonomik Değerlendirmeler Daire Başkanlığı"] },
+                { BagliBirimler: ["Denetim I Daire Başkanlığı", "Denetim II Daire Başkanlığı", "Denetim III Daire Başkanlığı", "Denetim V Daire Başkanlığı"] },
+                { BagliBirimler: ["Uygulama I Daire Başkanlığı", "Uygulama II Daire Başkanlığı", "Uygulama III Daire Başkanlığı", "Uygulama IV Daire Başkanlığı"] },
+                { BagliBirimler: ["Bilgi Sistemleri Uyum Daire Başkanlığı", "Veri ve Sistem Yönetimi Daire Başkanlığı", "Finansal Tüketici İlişkileri Daire Başkanlığı"] },
+                { BagliBirimler: ["Denetim IV Daire Başkanlığı", "Düzenleme Daire Başkanlığı", "Risk Yönetimi Daire Başkanlığı"] },
+                { BagliBirimler: ["Strateji Geliştirme Daire Başkanlığı", "Kurumsal İletişim ve Dış İlişkiler Daire Başkanlığı", "Uygulama V Daire Başkanlığı", "Destek Hizmetleri Daire Başkanlığı"] },
+            ];
+            $("ul.isSema .imgContainer img").click(function () {
+                var srcData = $(this).attr("src");
+                var ad = $(this).attr("data-ad");
+                var unvan = $(this).attr("data-unvan");
+                var hiyerarsiSiraNo = $(this).attr("data-hiyerarsiSiraNo");
+                $('#showIsSemaModal img').attr("src", srcData);
+                $('#showIsSemaModal h4').text(ad);
+                $('#showIsSemaModal p').text(unvan);
+
+                var bagliBirimler = listHiyerarsi[hiyerarsiSiraNo].BagliBirimler;
+                
+                var $ul = $("<ul>");
+                for (var i = 0; i < bagliBirimler.length; i++) {
+                    var $li = $("<li>", { "text": bagliBirimler[i] });
+                    $ul.append($li);
+                }
+                $("#divBagliBirimler").empty();
+                //$("#divBagliBirimler").append($ul);
+                $('#showIsSemaModal').modal('show');
+            });
+
+
+            //Mevzuat Liste sayfasında satırları gezerken default button'ları belirginleştirmek için
+            $("a.mevzuatBaslik").hover(function () {
+                var detayTuru = $(this).attr("data-detayTuru"); //a elementi
+                var oncelikliDetayTuru = $(this).parent().children("div.divMevzuatDetay[data-detayTuru  = '" + detayTuru + "']").children("a");
+                oncelikliDetayTuru.addClass("detayliGorHover");
+            });
+            $("a.mevzuatBaslik").mouseout(function () {
+                $(this).parent().children().children().removeClass("detayliGorHover");
+            });
+
+
+            //Kuruluş liste sayfasında kuruluş detaylarını görüntülemek için
+            $("button.detayliGor").click(function () {
+                var ad = $(this).attr("data-ad");
+                var aciklama = $(this).attr("data-aciklama");
+                var isFaaliyette = $(this).attr("data-isFaaliyette");
+                var eftKodu = $(this).attr("data-eftKodu");
+                var isDijital = $(this).attr("data-isDijital");
+                var telefon = $(this).attr("data-telefon");
+                var faks = $(this).attr("data-faks");
+                var adres = $(this).attr("data-adres");
+                var webAdresi = $(this).attr("data-webAdresi");
+
+                var sektordenCikisTarihi = $(this).attr("data-sektordenCikisTarihi");
+                var kurulKarari = $(this).attr("data-kurulKarari");
+
+                $("#kurulusDetayModal h4").text("");
+                $("#kurulusDetayModal p > span").text("");
+
+                $("#kurulusDetayModal h4").text(ad);
+                $("#kurulusDetayModal p.pAciklama > span").text(aciklama);
+
+                if (isFaaliyette == 1) {
+                    if (eftKodu != null && eftKodu != '') {
+                        $("#kurulusDetayModal p.pEftKodu").show();
+                        $("#kurulusDetayModal p.pEftKodu > span").text(eftKodu);
+                        $("#kurulusDetayModal p.pEftKodu > small").text(isDijital);
+                        //$("#kurulusDetayModal p.pEftKodu > span").text(eftKodu);
+                    }
+                    else {
+                        $("#kurulusDetayModal p.pEftKodu").hide();
+                    }
+                    $("#kurulusDetayModal p.pTelefon").show();
+                    $("#kurulusDetayModal p.pFaks").show();
+                    $("#kurulusDetayModal p.pAdres").show();
+                    $("#kurulusDetayModal p.pWebAdresi").show();
+                    $("#kurulusDetayModal p.pSektordenCikisTarihi").hide();
+                    $("#kurulusDetayModal p.pKurulKarari").hide();
+
+                    $("#kurulusDetayModal p.pTelefon > span").text(telefon);
+                    $("#kurulusDetayModal p.pFaks > span").text(faks);
+                    $("#kurulusDetayModal p.pAdres > span").text(adres);
+                    $("#kurulusDetayModal p.pWebAdresi > span").text(webAdresi);
+                }
+                else {
+                    $("#kurulusDetayModal p.pEftKodu").hide();
+                    $("#kurulusDetayModal p.pTelefon").hide();
+                    $("#kurulusDetayModal p.pFaks").hide();
+                    $("#kurulusDetayModal p.pAdres").hide();
+                    $("#kurulusDetayModal p.pWebAdresi").hide();
+                    $("#kurulusDetayModal p.pSektordenCikisTarihi").show();
+                    $("#kurulusDetayModal p.pKurulKarari").show();
+
+                    $("#kurulusDetayModal p.pSektordenCikisTarihi > span").text(sektordenCikisTarihi);
+                    $("#kurulusDetayModal p.pKurulKarari > span").text(kurulKarari);
+                }
+
+
+
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="showImgModal">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="showImg" style="width:100%;" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" tabindex="-1" role="dialog" id="showIsSemaModal">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img />
+                    <h4 class="text-center"></h4>
+                    <p class="text-center"></p>
+                    <!-- divBagliBirimler içinde Organizasyon Şeması içindeki daire başkanlıkları görüntüleniyor. Hiyerarşide değişiklik olursa bu sayfadaki "listHiyerarsi" json list düzenlenmeli. -->
+                    <div id="divBagliBirimler"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    
+
+
+
+<header class="container-fluid">
+    
+    <div id="bannerBar" class="container-fluid">
+        <div class="container" style="padding:0;">
+            <a href="/">
+                    <img class="float-left" src="/Content/TemplateDefault/layout_images/banner_sol_tr_eski.png" />
+            </a>
+            <img class="float-right" src="/Content/TemplateDefault/layout_images/banner_sag.png" />
+            
+
+
+        </div>
+    </div>
+</header>
+<!-- NOT: sticky-top menüler mobilde scroll edilemiyor. Bu yüzden kaldırdık. -->
+
+<div id="mainBar" class="container-fluid" >
+
+    
+
+<style>
+    .dropdown-toggle::after {
+        display: none !important;
+    }
+</style>
+
+<div class="container navbar-container vertical-menu">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand d-lg-none" href="/">
+            <img src="/Content/TemplateDefault/layout_images/son/bddk_logo.png" style="background:#fff;height:48px;" />
+            
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Hakkımızda
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/kurumHakkinda.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/19">Tarih&#231;e</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/20">Misyon ve Vizyon</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/21">Başkan ve Kurul &#220;yeleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/22">Organizasyon Şeması</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/23">Faaliyet Raporları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/37">Stratejik Planlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/25">Uluslararası İlişkiler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/26">BDDK Bankacılık ve Finansal Piyasalar Dergisi</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/195">İnsan Kaynakları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/35">S&#252;rd&#252;r&#252;lebilir Bankacılık</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/24">Etik Komisyonu</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/198">Kurumsal Kimlik</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Duyurular
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/duyurular.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/39">Basın Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/40">Mevzuat Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/48">Kuruluş Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/42">Veri Yayımlama Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/41">İnsan Kaynakları Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/197">G&#252;ncel Duyurular</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/43">Duyuru Arşivi</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Mevzuat
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/mevzuat.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/49">Kanunlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/50">Bankacılık Kanununa İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/51">Banka Kartları ve Kredi Kartları Kanununa İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/52">Finansal Kiralama, Faktoring, Finansman ve Tasarruf Finansman Şirketleri Kanununa İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/54">Bankacılık D&#252;zenleme ve Denetleme Kurumuna İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/55">Resmi Gazetede Yayımlanan Kurul Kararları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/56">Resmi Gazetede Yayımlanmayan Kurul Kararları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/58">D&#252;zenleme Taslakları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/63">M&#252;lga D&#252;zenlemeler</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Veriler
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/veriler.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Index/69">Bankacılık Sekt&#246;r&#252; Verileri</a>
+                                                                        <ul>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/157">G&#252;nl&#252;k B&#252;lten</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/158">Haftalık B&#252;lten</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/159">Aylık B&#252;lten</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/160">FinT&#252;rk - İllere G&#246;re</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/161">Kredi Kartı Bilgileri Uygulaması</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/162">&#220;&#231;er Aylık Temel G&#246;stergeler</a></li>
+                                                                        </ul>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Index/70">Banka Dışı Mali Kuruluş Verileri</a>
+                                                                        <ul>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/163">Faktoring</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/164">Finansal Kiralama</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/165">Finansman Şirketleri</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/166">Varlık Y&#246;netim</a></li>
+                                                                        </ul>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Detay/75">Bağımsız Denetim Raporları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Detay/71">VERİ YAYIMLAMA TAKVİMİ</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Kuruluşlar
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/kuruluslar.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/77">Bankalar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/78">Finansal Kiralama Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/79">Faktoring Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/80">Finansman Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/89">Tasarruf Finansman Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/81">Finansal Holding Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/82">Varlık Y&#246;netim Şirketleri</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/83">Yabancı Bankaların T&#252;rkiye Temsilcilikleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/84">Bankalarda Bağımsız Denetim Yapmaya Yetkili Kuruluşlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/85">Bankalara Değerleme Hizmeti Vermeye Yetkili Kuruluşlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/86">Yetkili Derecelendirme Kuruluşları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/88">5464 sayılı Banka Kartları ve Kredi Kartları Kanunu Kapsamında Faaliyet İzni Verilen Kuruluşlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/87">Meslek Birlikleri</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item position-static">
+                            <a class="nav-link" href="/Sss">
+                                SSS
+                            </a>
+                        </li>
+                        <li class="nav-item position-static">
+                            <a class="nav-link" href="/Iletisim">
+                                İletişim
+                            </a>
+                        </li>
+
+            </ul>
+            
+
+            <div id="mainSearch2" class="form-inline col-lg-3 d-lg-block d-none">
+                <form method="get" action="/Home/Ara">
+                    <input type="search" id="tags" placeholder="Ara" name="metin">
+                    <button type="submit"><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+
+            
+                <div id="ustMenu" class="col-lg-1">
+                    <nav class="nav float-right">
+                        <a class="nav-link" style="color:white" href="/Home/DilDegistir">EN</a>
+                    </nav>
+                </div>
+
+            </div>
+    </nav>
+</div>
+
+</div>
+
+
+    <div id="main-container">
+        <div id="upperImage-container">
+            <div id="inner-container" class="container">
+                <div class="row">
+
+                        <div id="content-container" class="col-md-9">
+                            
+
+
+
+<h2>
+    Tasarruf Finansman
+    <span class="title-under"></span>
+</h2>
+
+
+<div id="inPageSearch" class="">
+    <input type="search" id="searchText" placeholder="Ara" name="metin" oninput="SearchFunction()">
+</div>
+
+<div id="partialContainer">
+    
+
+<div class="accordionContainer">
+    <div id="accordion" class="accordionSss">
+            <div class="card">
+                <div id="heading_193" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_193" aria-expanded="true" aria-controls="collapse_193">
+                            Kurum tarafından lisans almış şirketleri nasıl g&#246;rebilirim?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_193" class="collapse" aria-labelledby="heading_193" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kurul tarafından tasarruf finansman faaliyeti uygun görülen şirketler Resmî Gazetede yayınlandıktan sonra Kurum internet sitesi üzerinden de kamuoyuna duyurulacaktır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_192" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_192" aria-expanded="true" aria-controls="collapse_192">
+                            M&#252;şteri kendisi i&#231;in &#246;ng&#246;r&#252;len tasarruf &#246;demelerini geciktirdiği veya durdurduğu durumda ne olur?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_192" class="collapse" aria-labelledby="heading_192" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Müşterinin sözleşme kapsamındaki tasarruf ödemelerini yerine getirmemesi durumunda, şirket tasarruf finansman sözleşmesinde yer alan hükümlere göre; müşterinin finansman ödemesini (tahsisat) öteleyebilir veya sözleşmeyi sözleşmede belirlenen esaslar çerçevesinde tek taraflı olarak feshedebilir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_191" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_191" aria-expanded="true" aria-controls="collapse_191">
+                            Tasarruf finansman s&#246;zleşmesine ilişkin &#246;n bilgilendirme formu nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_191" class="collapse" aria-labelledby="heading_191" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasarruf finansman şirketi, sözleşmenin kurulmasından en az bir gün önce, sözleşmede yer alması gereken asgari hususları içeren bir ön bilgilendirme formunu müşteriye iletmekle yükümlüdür. Ön bilgilendirme, şirketten hizmet alacak müşterinin imza edeceği sözleşmenin kendisi için uygunluğu hakkında yeterli kanaate ulaşabilmesi amacıyla yapılmaktadır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_190" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_190" aria-expanded="true" aria-controls="collapse_190">
+                            Tasarruf finansman s&#246;zleşmesine taraf olan m&#252;şterilerin hakları nelerdir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_190" class="collapse" aria-labelledby="heading_190" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kanunun 39/A maddesi ve Kurul tarafından belirlenecek alt düzenlemeler kapsamında tasarruf finansman müşterileri;
+<ul>
+<li>Sözleşmenin tahsisattan önce sona ermesi halinde, sekizinci fıkra uyarınca belirlenen geri ödeme süreleri saklı kalmak kaydıyla, müşterilerin şirket nezdindeki tasarruflarını geri alma hakları hiçbir suretle sınırlandırılamayacağı,</li>
+<li>Şirketlerin müşterilerini tasarruf finansman sisteminin işleyişi, tasarruf finansman sözleşmelerinde yer alan hükümler, cayma ve fesih hakları konusunda etkin bir şekilde bilgilendirileceği,</li>
+<li>Çekilişli gruplarda, grubun toplam tasarruf ay sayısının asgari yüzde kırkı kadar sözleşme ilişkisi kurulmuş müşteri bulunması zorunlu olduğu belirtilmiş olup bu oranı henüz karşılamayan gruplarda tasarruf dönemi başlatılamayacağı ve müşterilerden tasarruf ödemesi ve organizasyon ücreti alınamayacağı</li>
+<li>Cayma veya fesih hakkının kullanımı dolayısıyla müşteri sayısı bu oranın altına düşen gruplarda şirket kendi özkaynaklarını kullanarak asgari müşteri sayısını tamamlayacağı</li>
+<li>Şirketlerin verilen hizmetlerden kaynaklanan sorulara cevap verecek bir sistem kurmakla ve bu hizmetle ilgili olarak müşterilerini bilgilendirmekle yükümlü olduğu,</li>
+<li>Şirketlerin taraflar arasında kurulan sözleşmenin bir örneğini müşterilerine teslim etmek zorunda olduğu ve talepleri hâlinde müşteri ile yapılan işlemlere ilişkin her türlü belgenin örneği, ücret talep etmeksizin müşterilere verileceği,</li>
+<li>Şirketler, tasarruf finansman faaliyetleri kapsamında yeni müşteri kazanımı amacıyla mevcut müşterilerine yönelik tasarruf fon havuzu kaynaklarından teşvik edici herhangi bir uygulamada bulunamayacağı,</li>
+<li>Tasarruf dönemine ilişkin olarak, sözleşme kapsamında müşteriden ipotek, rehin veya senet gibi teminatlar alınamayacağı, organizasyon ücreti dışında müşteriyi ödeme yükümlülüğü altına sokacak herhangi bir işlem yapılamayacağı,</li>
+<li>Müşterinin sözleşmeden cayma hakkını kullanması durumunda organizasyon ücreti de dâhil hiçbir kesinti yapılmaksızın yaptığı tüm ödemeler cayma kararının şirkete bildirilmesinden itibaren on dört gün içinde müşteriye iade edileceği, müşterinin sözleşmede fesih hakkını kullanması durumunda tasarrufunun ve varsa tahakkuk etmiş getirisinin iadesi, iade talep tarihinden itibaren azami altı ay içerisinde müşterinin göstereceği kendi adına açılmış banka hesabına defaten yapılacağı</li>
+</ul>
+şeklinde haklara sahiptir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_189" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_189" aria-expanded="true" aria-controls="collapse_189">
+                            Kimler, hangi t&#252;r varlıkların edinimi i&#231;in tasarruf finansman hizmeti alabilir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_189" class="collapse" aria-labelledby="heading_189" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tüm gerçek ve tüzel kişiler yalnızca yurt içinde tescil edilmiş konut, çatılı iş yeri veya taşıt alımlarını finanse etmek üzere tasarruf finansman şirketlerinden bu hizmeti satın alabilirler.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_188" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_188" aria-expanded="true" aria-controls="collapse_188">
+                            Organizasyon &#252;creti nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_188" class="collapse" aria-labelledby="heading_188" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Organizasyon ücreti; müşterilerin tasarruf finansman sözleşmesi kapsamında tasarruf finansman faaliyeti ve tasarruf fon havuzunun yönetimi karşılığında tasarruf finansman şirketine ödeyecekleri tutardır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_187" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_187" aria-expanded="true" aria-controls="collapse_187">
+                            Tasarruf finansman şirketlerine yatırılan fonlar i&#231;in mevduat sigortası benzeri bir g&#252;vence sistemi var mıdır?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_187" class="collapse" aria-labelledby="heading_187" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasarruf finansman şirketlerinin yetkilendirilmesi ve faaliyetlerinin denetimi Kanun ve Yönetmelik hükümleri kapsamında kamu erki vasıtasıyla yürütülecek olup, şirketlerin müşterilerine karşı yükümlülüklerin yerine getirebilmesini sağlamaya yönelik koruyucu mekanizmalar oluşturulmasına ilişkin Kanun ve Yönetmelik hükümleri ihdas edilmiştir. Bununla birlikte tasfiye sürecine giren şirketlerde de bu süreçte müşteri hak ve menfaatlerine aykırı iş ve işlemlerin önlenmesine yönelik olarak gerekli durumlarda tasfiyenin Kanunun 50/A maddesi kapsamında Kurulun atayacağı tasfiye komisyonu tarafından yerine getirilmesine karar verilebilecektir. Buna karşılık müşterilerin tasarruf finansman şirketleri nezdindeki tasarrufları, herhangi kamusal bir sigorta mekanizması kapsamına alınmamıştır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_186" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_186" aria-expanded="true" aria-controls="collapse_186">
+                            İradi tasfiye veya tasfiye s&#252;recine giren şirketlerde tasarruf veya finansman d&#246;neminde olan m&#252;şterilerin durumu ne olacaktır?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_186" class="collapse" aria-labelledby="heading_186" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Faaliyetini sona erdiren bir şirkette iradi tasfiye veya tasfiye komisyonu vasıtası ile tasfiye süreci uygulanacaktır. İradi tasfiye halinde şirket bir plan çerçevesinde müşterilerine karşı olan yükümlülüklerini yerine getirecektir. Ancak bu tasfiye sürecinde müşterilerin hak ve menfaatlerinin zarara uğratıldığının tespit edilmesi halinde iradi tasfiye izni iptal edilerek bir tasfiye komisyonu atanacaktır. Bu uygulama intibak sürecindeki şirketler için de geçerlidir. Tasfiye komisyonu şirket genel kurulunun tüm yetkilerine sahip olarak şirket varlıklarının en etkin şekilde nakde çevrilmesi, alacaklarının tahsil edilmesi ve borçlarının ödenmesi konusunda görevlendirilecektir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_185" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_185" aria-expanded="true" aria-controls="collapse_185">
+                            Cayma/fesih hakkını kullanan m&#252;şterilerin yatırdığı tasarrufların geri &#246;denmesini sağlamak &#252;zere veya geri &#246;denmemesi durumunda mevzuatın &#246;ng&#246;rd&#252;ğ&#252; koruyucu h&#252;k&#252;mler nelerdir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_185" class="collapse" aria-labelledby="heading_185" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Olağan şekilde faaliyetini sürdüren bir tasarruf finansman şirketinde müşterinin cayma hakkını kullanılması durumunda organizasyon ücreti de dâhil olmak üzere yaptığı tüm ödemeler hiçbir kesinti olmaksızın, cayma talebini takip eden 14 gün içinde müşteriye iade edilir. Sözleşmenin feshi hakkının kullanılması durumunda ise müşterilerden tahsil edilen tasarruflar fesih talebini takip eden Kurulca belirlenecek süre içerisinde müşteriye ödenir. Bu sürelere uyum sağlanmadığı durumda ise tasarrufların çekilmesinin engellenmesine ilişkin adli cezalar da dâhil olmak üzere şirkete verilecek idari para cezaları ve işlemin gereğini yerine getirmesi yönünde talimat verilmesi şeklinde yaptırımlar uygulanacaktır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_184" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_184" aria-expanded="true" aria-controls="collapse_184">
+                            S&#246;zleşmenin m&#252;şteri tarafından feshi m&#252;mk&#252;n m&#252;d&#252;r?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_184" class="collapse" aria-labelledby="heading_184" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Müşteri, tasarruf finansman sözleşmesinin tasarruf dönemi bitimine kadar sözleşmede fesih hakkına sahiptir. Tasarruf finansman şirketi, müşterinin sözleşmede fesih hakkını kullanması hâlinde organizasyon ücreti bedeli dışında kalan toplam birikim tutarını Kurulca belirlenecek süre içerisinde müşteriye iade etmekle yükümlüdür.</p>
+<p>Diğer taraftan müşterinin talebi ile tahsisat ileriki bir tarihe ertelenebilir, erteleme hâlinde müşterinin sözleşmedeki hak ve yükümlülükleri saklı kalır. Tasarruf finansman sözleşmeleri, müşterinin sözleşme kapsamındaki yükümlülüklerini yerine getirmemesi durumu haricinde, şirket tarafından tek taraflı olarak feshedilemez.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_183" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_183" aria-expanded="true" aria-controls="collapse_183">
+                            M&#252;şterinin s&#246;zleşmeden cayması m&#252;mk&#252;n m&#252;d&#252;r?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_183" class="collapse" aria-labelledby="heading_183" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Müşteri, tasarruf finansman sözleşmesi imzalanmasını takip eden on dört gün içinde herhangi bir gerekçe göstermeksizin ve cezai şart ödemeksizin sözleşmeden cayma hakkına sahiptir. Söz konusu cayma hakkının kullanılması halinde tasarruf finansman şirketi, organizasyon ücreti dâhil, müşteriden aldığı tutarın tamamını cayma kararının bildirilmesinden itibaren on dört gün içinde iade etmekle yükümlüdür.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_182" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_182" aria-expanded="true" aria-controls="collapse_182">
+                            Tasarruf finansman s&#246;zleşmesi nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_182" class="collapse" aria-labelledby="heading_182" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasarruf finansman sözleşmesi, Kanun’un 39/A maddesinin birinci fıkrasında; <i>"Belirli bir tasarruf tutarı ve dönemine bağlı olarak önceden belirlenmiş koşulların gerçekleşmesi şartıyla konut, çatılı iş yeri veya taşıt edinimi için müşteriye finansman kullanma hakkı veren, şirkete ise müşteriye ait birikmiş tasarruf tutarını yönetme, geri ödeme ve finansman kullandırma yükümlülüğü ile organizasyon ücreti alma hakkı veren, faizsiz finansman esaslarına göre düzenlenen sözleşme"</i> olarak açıklanmıştır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_181" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_181" aria-expanded="true" aria-controls="collapse_181">
+                            Tasarruf finansman faaliyeti nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_181" class="collapse" aria-labelledby="heading_181" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasarruf finansman faaliyeti, Kanunun 3’üncü maddesinde <i>""Bir sözleşme kapsamında önceden belirlenmiş koşulların gerçekleşmesi şartıyla konut, çatılı iş yeri veya taşıtın edinimi için faizsiz finansman esaslarına göre belirli bir süre tasarruf edilmesi, müşterilere finansman kullandırılması ve toplanan tasarrufların yönetimi""</i> olarak tanımlanmıştır.</p>
+<p>Günümüzde Almanya ve Fransa başta olmak üzere dünyanın birçok ülkesinde yaygın şekilde uygulanmaktadır. Finansman elde etme hakkının bir tasarruf dönemine bağlı olması bu faaliyeti diğer finansman ürünlerinden ayıran en temel özelliktir. Bu şekilde sistemdeki müşterilerin bir kısmı tasarruf sağlarken diğer bir kısmı finansman elde etmektedir. Dolayısıyla bu uygulamada temel olarak müşteriler birbirlerini finanse etmektedir. Şirket ise bu işlemlerin organizasyonunu ve tasarruf havuzunda biriken fonun yönetimini gerçekleştirmektedir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_180" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_180" aria-expanded="true" aria-controls="collapse_180">
+                            Tasfiye komisyonu nedir, hangi durumlarda tasfiye işlemlerini y&#252;r&#252;tmek &#252;zere g&#246;revlendirilmektedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_180" class="collapse" aria-labelledby="heading_180" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasfiye komisyonu Kurul tarafından atanacak en az 3 kişilik üyeden müteşekkil olup söz konusu üyeler Kurum ve TMSF tarafından bildirilecek kişilerden oluşur. Tasfiyesine karar verilen şirketler hakkında 5411 sayılı Bankacılık Kanunu’nun TMSF için öngörülen yetki ve görevleri, oluşturulan tasfiye komisyonu tarafından yerine getirilir.</p>
+<p>İradi tasfiye haricinde tasfiyesine Kurul tarafından karar verilen, iradi tasfiyeye karar verilmekle birlikte tasfiye planına uygun hareket etmeyen veya müşterilerin hak ve menfaatlerinin zarara uğratılmasına neden olduğu tespit edilen, likiditeye ilişkin yükümlülüklerini yerine getiremeyen, Kanun’un 15 nci maddesi kapsamında Kurum tarafından alınması istenen tedbirleri süresi içinde almayan, faaliyet izni kaldırılan şirketler ile izinsiz faaliyette bulunanlar hakkında tasfiye işlemlerinin Kanunun 50/A maddesi kapsamında tasfiye komisyonu tarafından yürütülmesine karar verilebilir.</p>
+<p><b>İletişim:</b> Tasarruf finansman faaliyetine ilişkin ilave bilgi taleplerinizi <u>tasarruffinansman@bddk.org.tr</u> adresinden Kurumumuza iletebilirsiniz.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_179" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_179" aria-expanded="true" aria-controls="collapse_179">
+                            Sermaye şartı veya diğer gereksinimler doğrultusunda mevcut şirketlerin birleşmesi, b&#246;l&#252;nmesi veya devri m&#252;mk&#252;n m&#252;d&#252;r?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_179" class="collapse" aria-labelledby="heading_179" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Hâlihazırda faaliyette bulunan tasarruf finansmanı şirketleri için birleşme, bölünme veya devir, Kurumun denetimi ve Kurulun iznine tabi olarak Kanunun 12’nci maddesinin üçüncü fıkrası ile Yönetmeliğin 9’uncu maddesinde belirtilen esaslara uyulması şartıyla mümkündür. Ancak verilen izin, birleşme, devir veya bölünme sürecine ilişkin sunulan plana şirket tarafından uyulmaması veya söz konusu işlemlerin müşteri hak ve menfaatlerini zarara uğratacağının tespit edilmesi hâlinde Kurul tarafından iptal edilebilir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_178" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_178" aria-expanded="true" aria-controls="collapse_178">
+                            M&#252;şteriler ile şirketler arasında Kanun &#246;ncesinde akdedilmiş s&#246;zleşmeler ve bu s&#246;zleşmelere dayalı olarak yatırılan tasarrufların Kanun h&#252;k&#252;mleri karşısındaki durumu nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_178" class="collapse" aria-labelledby="heading_178" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Durumlarını Kanun hükümlerine uygun hâle getirerek intibak eden tasarruf finansman şirketlerinin Kanunun yürürlük tarihi öncesinde akdettikleri tasarruf finansman faaliyeti kapsamındaki sözleşmeler, Kanun ve ilgili mevzuat hükümlerine göre tadil olmaksızın uygulanmaya devam olunur.</p>
+<p>Kanunun yürürlük tarihinden önce düzenlenen sözleşmeler kapsamında tahsil edilmiş birikim tutarları hakkında da tasarruf fon havuzuna ilişkin Kanunun 39/B maddesinin ikinci fıkrasında düzenlenen koruyucu hükümler geçerlidir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_177" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_177" aria-expanded="true" aria-controls="collapse_177">
+                            İzinsiz faaliyet ve yaptırımı nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_177" class="collapse" aria-labelledby="heading_177" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kanuna göre alınması gereken izinleri almaksızın tasarruf finansman faaliyetlerinde bulunan kişiler, iki yıldan beş yıla kadar hapis ve beş bin güne kadar adli para cezası ile cezalandırılır. Bu suçun yararına olarak işlendiği tüzel kişi hakkında tüzel kişilere özgü güvenlik tedbirlerine hükmolunur. Ayrıca, bu suçun bir iş yeri bünyesinde işlenmesi hâlinde bu iş yerlerinin bir aydan bir yıla kadar, tekerrür hâlinde ise sürekli olarak kapatılmasına karar verilebilir.</p>
+<p>Kanuna göre alınması gereken izinleri almaksızın ticaret unvanlarında, her türlü belge, ilan ve reklamlarında veya kamuoyuna yaptıkları açıklamalarda şirket gibi faaliyet gösterdikleri izlenimini uyandıracak söz ve deyimleri kullanan kişiler, üç aydan bir yıla kadar hapis ve bin güne kadar adli para cezası ile cezalandırılır. Ayrıca, bu iş yerlerinin bir aydan bir yıla kadar, tekerrür hâlinde ise sürekli olarak kapatılmasına karar verilebilir.</p>
+<p>Ayrıca, izinsiz tasarruf finansman faaliyetinde bulunan şirketler hakkında Kurul, Kanun’un 50/A maddesinin birinci fıkrası kapsamında tasfiye kararı verebilir.</p>
+<p>Bu kapsamda, Kanunun öngördüğü sürenin bitim tarihi olan 07.04.2021 tarihi sonrasında “tasarruf finansmanı” faaliyeti yürüten, bu faaliyetin yürütüldüğüne dair izlenim uyandıracak ifade ve ibareleri kullanan şirket yetkilileri hakkında Kanunun ilgili hükümleri uyarınca adli işlemler başlatılacaktır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_176" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_176" aria-expanded="true" aria-controls="collapse_176">
+                            Tasarruf fon havuzunun y&#246;netilmesi kapsamında şirketlere ne t&#252;r sınırlamalar getirilmektedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_176" class="collapse" aria-labelledby="heading_176" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasarruf fon havuzu Kanunda; <i>""Belirli bir dönemde tasarruf finansman şirketi nezdindeki birikmiş tasarruflar ve finansman geri ödemelerinden oluşan tutarlar toplamından, tahsisat olarak verilmiş tutarlar ile tasarruf geri ödemelerinin düşülmesinden sonra kalan tutar""</i> olarak tanımlanmış olup, Kanunun 39/B maddesinin ikinci fıkrasında; <i>""Tasarruf finansman şirketleri, tasarruf fon havuzu hesaplarını diğer hesaplarından ayırmak zorundadır. Tasarruf fon havuzu varlıkları, şirketlerin tasarruf finansman sözleşmelerinden kaynaklanan yükümlülüklerinin yerine getirilmesi dışında başka bir amaçla kullanılamaz, hapis hakkına, alacağın devir ve temlikine ve takasa konu edilemez, rehnedilemez, teminat gösterilemez, müşterilerin tasarruf finansman sözleşmelerinden kaynaklanan alacakları müstesna, kamu alacaklarının tahsili amacı da dâhil olmak üzere haczedilemez, üzerine ihtiyati tedbir, ihtiyati haciz konulamaz veya iflas masasına dâhil edilemez.""</i> hükmü yer almaktadır.</p>
+<p>Ayrıca, tasarruf fon havuzunda toplanan tutarlar, şirket tarafından aşağıda belirtilen faizsiz yatırım araçlarında değerlendirilmek zorundadır;
+<ul>
+<li>Hazine ve Maliye Bakanlığının ihraç etmiş olduğu yurt içi kira sertifikalarının alımında</li>
+<li>Türkiye’de faaliyet gösteren katılım bankalarında açılacak vadeli ve vadesiz katılma hesaplarında</li>
+<li>Türkiye’de faaliyet gösteren varlık kiralama şirketleri tarafından ihraç edilen yurt içi kira sertifikalarının alımında</li>
+<li>Kurulca uygun görülecek diğer faizsiz yatırım araçlarında</li>
+</ul>
+</p>
+<p>Diğer taraftan, tasarruf fon havuzunda biriken tutarların tutulduğu hesaplar, şirketin kendi hesaplarından ayrılır. Bu hesaplar, sözleşmelerini finansman döneminden önce sona erdiren veya cayma hakkını kullanan müşterilere yapılacak geri ödemeler ile tahsisat ödemeleri ve bu madde kapsamındaki yatırım faaliyetleri dışında kullanılamaz.</p>
+<p>Bununla birlikte, şirketler, müşteri giriş veya çıkışları dolayısıyla karşı karşıya kalabilecekleri öngörülmeyen yükümlülüklerini karşılamak üzere tasarruf fon havuzu toplamının asgari yüzde üçü kadarını ihtiyat fonu olarak ayırmak zorunda olup ihtiyat fonunun tutulabileceği yatırım araçları, yalnızca katılma hesaplarından veya en fazla iki gün valörlü olarak nakde dönüştürülebilir faizsiz yatırım araçlarından oluşabilir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_175" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_175" aria-expanded="true" aria-controls="collapse_175">
+                            Kanunun y&#252;r&#252;rl&#252;k tarihi sonrasında ilk defa tasarruf finansman faaliyetinde bulunmak &#252;zere yeni başvuru yapacak şirketler i&#231;in aranan şartlar nelerdir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_175" class="collapse" aria-labelledby="heading_175" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kanunun 5’inci maddesinde tasarruf finansman şirketlerinin kuruluş şartları belirlenmiş olup, bu şirketlerin kurucuları ile tüzel kişi kurucularında yüzde on ve daha fazla paya sahip veya kontrolü elinde bulunduran gerçek ve tüzel kişilerin taşımaları gereken nitelikler Kanun’un ‘Kurucularda Aranan Şartlar’ başlıklı 6’ncı maddesinde yer almaktadır. Kanun’un 4’üncü maddesinde ise, Türkiye’de bir şirketin kurulmasına Kanunda öngörülen şartların yerine getirilmesi kaydıyla Kurulun en az beş üyesinin aynı yöndeki oyuyla alınacak kararla izin verileceği hükme bağlanmıştır. Kanunun 4’üncü maddesinde çerçevesinde kuruluş izni alan şirketin, Kuruldan ayrıca faaliyet izni alması şarttır. Faaliyet izni alınmasına yönelik sağlanması gereken şartlar Kanunun 7’inci maddesinin üçüncü fıkrasında yer almaktadır.</p>
+<p>Bu çerçevede, tasarruf finansmanı faaliyetinde bulunmak isteyen şirketlerin Kanun kapsamında önce kuruluş izni, akabinde de faaliyet izni alması gerekmektedir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_174" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_174" aria-expanded="true" aria-controls="collapse_174">
+                            Tasarruf finansman faaliyetinde aranan asgari sermaye ayni olarak &#246;denebilir mi?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_174" class="collapse" aria-labelledby="heading_174" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kanun’un 5’inci maddesinin birinci fıkrasının (e) bendi uyarınca tasarruf finansmanı faaliyetinde bulunacak şirketlerin ödenmiş sermayelerinin nakden ve her türlü muvazaadan ari olarak nakden ödenmiş olması zorunludur. Dolayısıyla tasarruf finansman şirketlerinde nakit dışında gayrimenkul veya menkul bir varlık ödenmiş sermaye olarak dikkate alınmayacaktır.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_173" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_173" aria-expanded="true" aria-controls="collapse_173">
+                            Tasarruf finansmanı faaliyetinde bulunmak isteyen şirketler i&#231;in aranan asgari sermaye tutarı ne kadardır?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_173" class="collapse" aria-labelledby="heading_173" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Tasarruf finansmanı faaliyetinde bulunacak kuruluşların nakden ve her türlü muvazaadan ari olarak ödenmiş sermayelerinin Kanunun 5’inci maddesinin birinci fıkrasının (e) bendi uyarınca en az yüz milyon TL olması şarttır. Söz konusu tutarın intibak sürecinde olan şirketler için başvuru tarihinden itibaren altı aylık süre içerisinde tamamlanması zorunludur. Bu süre şirket bazında Kurul tarafından 6 ayı geçmemek üzere en fazla bir kez daha uzatılabilecektir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_172" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_172" aria-expanded="true" aria-controls="collapse_172">
+                            H&#226;lihazırda faaliyet g&#246;steren ancak Kuruma intibak veya iradi tasfiye talebinde bulunmayan şirketler i&#231;in hangi yaptırım uygulanacaktır?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_172" class="collapse" aria-labelledby="heading_172" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Hâlihazırda tasarruf finansman faaliyetinden kaynaklanan borç ve/veya alacakları bulunan ancak Kanunun Resmî Gazete’de yayımlandığı 07.03.2021 tarihinden itibaren bir ay içerisinde Kuruma intibak veya iradi tasfiye başvuru yapmamış olanlar hakkında Kanun’un 46’ncı maddesi hükümleri uyarınca izinsiz faaliyette bulunmak suçundan adli işlem uygulanma talebiyle ilgili Cumhuriyet Başsavcılığına başvuruda bulunulacaktır. Ayrıca, izinsiz tasarruf finansman faaliyetinde bulunan şirketler hakkında Kurul, Kanun’un 50/A maddesinin birinci fıkrası kapsamında tasfiye kararı verebilir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_171" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_171" aria-expanded="true" aria-controls="collapse_171">
+                            İntibak veya iradi tasfiyede bulunmak &#252;zere Kuruma yapılacak başvuru s&#252;resi nedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_171" class="collapse" aria-labelledby="heading_171" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Hâlihazırda tasarruf finansman faaliyeti yürüten tüm kişi ve kuruluşların Kanunun Resmî Gazete’de yayımlandığı tarih olan 07.03.2021 tarihinden itibaren bir ay içerisinde Kanun hükümlerine intibak etmek veya tasfiye olmak üzere Kurumumuza başvuru yapmaları zorunludur.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_170" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_170" aria-expanded="true" aria-controls="collapse_170">
+                            H&#226;lihazırda faaliyet g&#246;steren şirketlerin iradi tasfiye veya intibak talebine ilişkin Kuruma sunması gereken bilgi/belgeler nelerdir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_170" class="collapse" aria-labelledby="heading_170" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kanun’un Geçici 7’nci maddesi kapsamında Kurumumuza başvuracak şirketlerin verecekleri dilekçe ile birlikte noter onaylı olarak;
+<ul>
+<li>İntibak veya iradi tasfiye planını,</li>
+<li>Bilgi formunu,</li>
+<li>Tasarruf finansman faaliyetinde bulunduklarına dair beyanı,</li>
+<li>Sürecin tamamlanacağına ilişkin yönetim kurulu taahhüdünü,</li>
+<li>Ortaklara ait beyanname ve taahhütleri,</li>
+<li>Üst düzey yöneticilerine ait beyannameyi,</li>
+<li>Kamu Gözetimi, Muhasebe ve Denetim Standartları Kurumu tarafından kamu yararını ilgilendiren kuruluşların denetimi ile yetkilendirilmiş bir bağımsız denetim kuruluşu ile yapılan bağımsız denetim sözleşmesini,</li>
+<li>İntibak için başvuran şirketler için ayrıca, Finansal Kiralama, Faktoring ve Finansman Şirketlerinin Bilgi Sistemlerinin Yönetimine ve Denetimine İlişkin Tebliğ kapsamında şirketin bağımsız denetim kuruluşlarınca yapılacak yerinde incelemesi neticesinde hazırlanacak rapora ilişkin bağımsız denetim sözleşmesini</li>
+</ul>
+Kuruma sunmaları gerekmektedir.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_169" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_169" aria-expanded="true" aria-controls="collapse_169">
+                            H&#226;lihazırda faaliyet g&#246;steren ve iradi tasfiye talebinde bulunacak şirketlerin tasfiye s&#252;reci nasıl işlemektedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_169" class="collapse" aria-labelledby="heading_169" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>Kanunun ""Tasarruf Finansmanı Şirketlerinin İntibak Süreci"" başlıklı Geçici 7’nci maddesi uyarınca hâlihazırda tasarruf finansman faaliyeti yürütenler Kanun’un yürürlük tarihinden itibaren (07.03.2021) bir ay içinde ilgili düzenlemelerde yer alan genel hükümlere göre iradi tasfiye yürüteceklerine ilişkin Kuruma başvuruda bulunarak müşteri hak ve menfaatlerini zarara uğratmadan tasfiye olacaklarına dair bir plan sunmak ve planın uygun görülmesi hâlinde gereken işlemleri planda belirlenen süreler içerisinde yerine getirmek zorundadır.</p>
+<p>Şirketlerin iradi tasfiyeleri Kurulun iznine tabi olup söz konusu iradi tasfiye için Yönetim Kurulu kararı ile Kuruma başvuruda bulunulması gerekir. Kurul tarafından iradi tasfiyeye ilişkin izin verilmesinden itibaren on beş gün içerisinde tasfiye işlemlerine başlanır. Tasfiye sürecinde tahsisat ödemeleri başta olmak üzere şirketlerin yükümlülüklerini yerine getirmesini engelleyecek işlemlere izin verilmez.</p>
+<p>Şirketler iradi tasfiye iznini almalarını müteakip, durumlarını Türkiye çapında basımı ve dağıtımı yapılan en az iki gazete ile ilân ve şirket müşterileri ile diğer alacaklılarına veya bu durumda sayılabilecek kişi ve kurumlara tebliğ ederler.</p>
+<p>Şirketlerin tasfiyesi, yükümlülüklerinin yerine getirilmesi ve alacaklarının tahsili bizzat şirket tarafından yapılarak gerçekleştirilir. Bu durumdaki şirketler, vadelerine göre varlık ve yükümlülükleri sona erene kadar faaliyetine devam eder, ancak tasfiye izni verilmesinden sonra yeni müşteri edinemez ve yükümlülüklerini yerine getirmesini engelleyecek hiçbir yeni taahhüt altına giremez.</p>
+<p>Bu süreçte tasfiye planına uygun hareket etmeyen veya müşterilerin hak ve menfaatlerinin zarara uğratılmasına neden olduğu tespit edilen şirketler hakkında tasfiye işlemleri Kanun’un 50/A maddesi kapsamında yürütülür.
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="heading_168" class="card-header accordionHeader">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" style="font-size: 11pt;" data-toggle="collapse" data-target="#collapse_168" aria-expanded="true" aria-controls="collapse_168">
+                            H&#226;lihazırda faaliyet g&#246;steren şirketler i&#231;in intibak s&#252;reci nasıl işlemektedir?
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapse_168" class="collapse" aria-labelledby="heading_168" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>6361 sayılı Finansal Kiralama, Faktoring, Finansman ve Tasarruf Finansman Şirketleri Kanunu’nun (Kanun) ""Tasarruf Finansman Şirketlerinin İntibak Süreci"" başlıklı Geçici 7’nci maddesi uyarınca hâlihazırda tasarruf finansman faaliyeti yürütenler Kanun’un yürürlük tarihinden itibaren (07.03.2021) bir ay içinde (07.04.2021 tarihine kadar) Kurum’a başvuruda bulunmak, başvuru sırasında durumlarını en geç altı ay içinde Kanun hükümlerine uygun hâle getireceklerine veya müşteri hak ve menfaatlerini zarara uğratmadan tasfiye olacaklarına dair bir plan sunmak ve planın uygun görülmesi hâlinde gereken işlemleri planda belirlenen süreler içerisinde yerine getirmek zorundadır.</p>
+<p>Yukarıda belirtilen altı aylık süre, Kanun hükümlerine uyum sağlanmasına ilişkin intibak sürecinde olan şirket tarafından ilave bir plan sunulması ve söz konusu planın Bankacılık Düzenleme ve Denetleme Kurulunca (Kurul) uygun görülmesi hâlinde altı ayı geçmemek üzere şirket bazında uzatılabilecektir. Söz konusu süre uzatımına, Kurulca uygun görülmesi halinde asgari ödenmiş sermaye şartı da dâhildir. Ayrıca Kurul, Kanun’un 5’inci maddenin birinci fıkrasının (e) bendi (asgari sermaye şartı) dışındaki mevzuat hükümlerine uyum için intibak süresini altışar ayı geçmemek üzere iki defa daha uzatmaya yetkilidir.</p>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+
+
+</div>
+
+                        </div>
+                        <div id="yanMenuContainer" class="col-md-3">
+                            <ul>
+                                <li class="liUstKategori">
+                                    <a class="aUstKategori" href="/Sss/Index/7">SSS</a>
+                                    <ul>                                        
+                                            <li>
+                                                    <a href="/Sss/Liste/107">Kurum Hakkında</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/108">Basel D&#252;zenlemeleri</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/109">Denetim ve G&#246;zetim Faaliyetleri</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/111">Kurum ve Banka Uygulamalarına İlişkin Diğer Sorunlar</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/114">Bireysel M&#252;şterilere İlişkin &#220;cretler</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/115">Ticari M&#252;şteri Sorunları</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/117">Tasarruf Finansman</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/126">eDevlet - Mevduat/Katılım Fonu Hesabı Bulunan Banka Sorgulama</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Sss/Liste/110">Veri Yayınları</a>
+                                            </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+<style>
+
+    ul.honk {
+        list-style: none;
+        padding-left: 0;
+    }
+
+        ul.honk > li {
+            float: left;
+            padding: 1em;
+        }
+
+        ul.honk a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        ul.honk > li > ul {
+            list-style: none;
+            padding-left: 0;
+            border-top: 1px solid #fff;
+            font-size: 10pt;
+        }
+
+            ul.honk > li > ul > li {
+                padding-top: 1em;
+            }
+</style>
+
+
+    <footer>
+        <div class="container">
+            <div class="row">
+
+                <div class="col-lg-8 col-md-12">
+                    <ul class="row honk">
+                            <li class="col-lg-3 col-md-6 text-center">
+                                <a href="/KurumHakkinda">
+                                    Hakkımızda
+                                </a>
+
+                            <ul>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/21">Başkan ve Kurul &#220;yeleri</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/22">Organizasyon Şeması</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/23">Faaliyet Raporları</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/195">İnsan Kaynakları</a>
+
+                                            </li>
+
+                            </ul>
+
+                            </li>
+                            <li class="col-lg-3 col-md-6 text-center">
+                                <a href="/Duyuru">
+                                    Duyurular
+                                </a>
+
+                            <ul>
+                                            <li class="text-left">
+
+
+                                                <a href="/Duyuru/Liste/39">Basın Duyuruları</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/Duyuru/Liste/42">Veri Yayımlama Duyuruları</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/Duyuru/Liste/41">İnsan Kaynakları Duyuruları</a>
+
+                                            </li>
+
+                            </ul>
+
+                            </li>
+                            <li class="col-lg-3 col-md-6 text-center">
+                                <a href="/Veri">
+                                    Veriler
+                                </a>
+
+                            <ul>
+                                            <li class="text-left">
+
+
+                                                <a href="/Veri/Index/69">Bankacılık Sekt&#246;r&#252; Verileri</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/Veri/Index/70">Banka Dışı Mali Kuruluş Verileri</a>
+
+                                            </li>
+
+                            </ul>
+
+                            </li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12 iletisimContainer">
+                    <p class="text-right">
+                        <a target="_blank" class="text-white ml-2" href="https://twitter.com/BDDKResmi"><i class="fa-brands fa-square-x-twitter fa-2x " ></i></a>
+                        <a target="_blank" class="text-white ml-2" href="https://www.instagram.com/bddkresmi"><i class="fab fa-instagram fa-2x"></i></a>
+                        <a target="_blank" class="text-white ml-2" href="https://www.linkedin.com/company/bddkresmi"><i class="fab fa-linkedin fa-2x"></i></a>
+                    </p>
+                    <table>
+                        <tr><td colspan="2" class="lead" style="font-size:12pt">Bankacılık Düzenleme ve Denetleme Kurumu</td></tr>
+                        <tr><td class="text-left" style="font-size:10pt"><strong>Telefon:</strong></td><td style="font-size:10pt">(212) 214 50 00</td></tr>
+                        <tr><td class="text-left" style="font-size:10pt"><strong>Çağrı Merkezi:</strong></td><td style="font-size:10pt">0850 222 23 35</td></tr>
+                        <tr>
+                            <td class="text-left" style="font-size:10pt"><strong>Adres:</strong></td>
+                            <td style="font-size:10pt">
+                                Finanskent Mahallesi Finans Caddesi No:42/1
+                                34760 Ümraniye/İSTANBUL
+                            </td>
+                        </tr>
+                    </table>
+                    
+
+                    <!--<p class="text-left">
+                        Kurumumuzun internet adresi "www.bddk.org.tr" ve "www.bddk.gov.tr"dir. Kurumumuzun mobil uygulaması bulunmamaktadır.
+                        Kurumumuz hiçbir şekilde telefon, e-posta, internet sitesi veya başka ortamlarda kişisel bilgi talep etmemektedir!
+                    </p>
+                    <button type="button" class="btn btn-light" data-toggle="modal" data-target=".modalKullanimSartlari">Kullanım Şartları</button>-->
+                    <!-- Modal Kullanım Şartları (Begin) -->
+                    <!--<div class="modal fade modalKullanimSartlari" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title text-center">Kullanım Şartları</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-center font-weight-bold">
+                                        BDDK web sitesine hoş geldiniz.<br />
+                                        Bu siteyi kullandığınız takdirde aşağıdaki koşulları kabul etmiş sayılacaksınız.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK web sitesinin yayınlanması, hiçbir kişi ve/veya kuruluşa herhangi bir konuda herhangi bir taahhüdü içermemektedir.
+                                        Sitede yer alan bilgiler, kişi ve kuruluşlara yönelik talimat verilmesi, hukuken onların herhangi bir doğrultuya yönlendirmesi amaçlarını
+                                        ve tebligat niteliğini taşımamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Web sitemizde yayınlanan çalışmalardan, kaynak gösterilmek suretiyle kısmen alıntı yapılabilir ancak bu bilgilerin ticari amaçlarla kullanımı BDDK'nın yazılı iznine tabidir.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK, web sitesinde yayınlanan bilgilerin güncel ve doğru bilgilerle yayınlanmasını temin etmek amacıyla elinden gelen çabayı
+                                        göstermekle birlikte, BDDK'nın bu bilgilerin doğruluğu ve tamlığı konusunda açık veya zımni şekilde kefalet veya garanti verdiği yolunda hiçbir taahhüdü bulunmamaktadır.
+                                        Kullanıcılar sisteme girmeleri ile birlikte; BDDK tarafından yayınlanan bilgilerin kullanımı sonucunda doğrudan veya dolaylı bir kayıp veya zarar doğması halinde,
+                                        bu durumun BDDK'na hiçbir borç, sorumluluk veya mükellefiyet yüklemeyeceğini açık olarak kabul etmiş sayılırlar.
+                                    </p>
+                                    <p class="text-justify">
+                                        Sitede yer alan bütün metinler ve/veya hizmetler, önceden kullanıcılara bildirimde bulunmaksızın BDDK tarafından değiştirilebilir.
+                                        BDDK web sitesi ön bilgi verilmeden kullanım dışı bırakılabilir. BDDK web sitesinde yayınlanmış bilgiler, ya da bilgilere dayanılarak
+                                        yapılan işlemlerden veya siteye ulaşılamamasından doğan veya doğacak zarar ve/veya kayıplardan dolayı sorumluluk kabul etmez.
+                                    </p>
+                                    <p class="text-justify">
+                                        Site özenle hazırlanılmış olmasına rağmen, site ziyaretçileri; sitedeki bilgilerin, konuyla ilgili profesyonel danışmanlığın yerini alacağını düşünmemelidirler.
+                                        Bu nedenle, sitede yer alan bilgileri herhangi bir şekil ve surette kullanmadan önce, konuyla ilgili profesyonel danışmanınızla görüşmenizi tavsiye ederiz.
+                                    </p>
+                                    <p class="text-justify">
+                                        İnsan hataları, teknik veya diğer faktörler nedeniyle hata veya bilgi eksikliği/yanlışlığının veya güncellik yitirmesinin vuku bulabileceği tabiidir.
+                                        BDDK, sistemde yer alan bilgilerdeki hata ve eksikliklerden hiçbir şekilde sorumlu bulunmamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Bu site BDDK'na ait olup site içerisindeki bilgilerin bir kısmı Kurum, bir kısmı da diğer kaynaklardan sağlanarak Kurum tarafından yayınlanmaktadır.
+                                        Sitemizden bağlantı yapılarak ulaşılan diğer sitelerdeki bilgiler, ilgili kuruluşlar tarafından yayınlanmakta olup, BDDK'nu bağlamamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Kurumumuz web sitesi Temmuz 2018 itibarıyla güncellenmiştir. Bu tarihten öncesine ait duyurularda güncel olmayan linkler yer alabilir.
+                                        Bu konuda sorun yaşanması durumunda kullanıcılarımız Kurumumuz ile iletişime geçebilirler.
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-12">
+                    <p class="text-center">
+                        Kurumumuzun internet adresi "www.bddk.gov.tr"dir. ("www.bddk.org.tr" adresi de kullanılmaya devam etmektedir.)
+                        Kurumumuzun mobil uygulaması bulunmamaktadır.<br />
+                        Kurumumuz hiçbir şekilde telefon, e-posta, internet sitesi veya başka ortamlarda kişisel bilgi talep etmemektedir!
+                    </p>
+
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light d-block mr-2" data-toggle="modal" data-target=".modalKullanimSartlari">Kullanım Şartları</button>
+
+                        <a href="/Content/docs/bddkImages/KVKK_Aydinlatma_Metni.pdf" target="_blank" class="btn btn-light d-block">
+                            Kişisel Verilerin İşlenmesi ve Korunması
+                        </a>
+                    </div>
+
+
+
+
+
+                    <!-- Modal Kullanım Şartları (Begin) -->
+                    <div class="modal fade modalKullanimSartlari" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title text-center">Kullanım Şartları</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-center font-weight-bold">
+                                        BDDK web sitesine hoş geldiniz.<br />
+                                        Bu siteyi kullandığınız takdirde aşağıdaki koşulları kabul etmiş sayılacaksınız.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK web sitesinin yayınlanması, hiçbir kişi ve/veya kuruluşa herhangi bir konuda herhangi bir taahhüdü içermemektedir.
+                                        Sitede yer alan bilgiler, kişi ve kuruluşlara yönelik talimat verilmesi, hukuken onların herhangi bir doğrultuya yönlendirmesi amaçlarını
+                                        ve tebligat niteliğini taşımamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Web sitemizde yayınlanan çalışmalardan, kaynak gösterilmek suretiyle kısmen alıntı yapılabilir ancak bu bilgilerin ticari amaçlarla kullanımı BDDK'nın yazılı iznine tabidir.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK, web sitesinde yayınlanan bilgilerin güncel ve doğru bilgilerle yayınlanmasını temin etmek amacıyla elinden gelen çabayı
+                                        göstermekle birlikte, BDDK'nın bu bilgilerin doğruluğu ve tamlığı konusunda açık veya zımni şekilde kefalet veya garanti verdiği yolunda hiçbir taahhüdü bulunmamaktadır.
+                                        Kullanıcılar sisteme girmeleri ile birlikte; BDDK tarafından yayınlanan bilgilerin kullanımı sonucunda doğrudan veya dolaylı bir kayıp veya zarar doğması halinde,
+                                        bu durumun BDDK'na hiçbir borç, sorumluluk veya mükellefiyet yüklemeyeceğini açık olarak kabul etmiş sayılırlar.
+                                    </p>
+                                    <p class="text-justify">
+                                        Sitede yer alan bütün metinler ve/veya hizmetler, önceden kullanıcılara bildirimde bulunmaksızın BDDK tarafından değiştirilebilir.
+                                        BDDK web sitesi ön bilgi verilmeden kullanım dışı bırakılabilir. BDDK web sitesinde yayınlanmış bilgiler, ya da bilgilere dayanılarak
+                                        yapılan işlemlerden veya siteye ulaşılamamasından doğan veya doğacak zarar ve/veya kayıplardan dolayı sorumluluk kabul etmez.
+                                    </p>
+                                    <p class="text-justify">
+                                        Site özenle hazırlanılmış olmasına rağmen, site ziyaretçileri; sitedeki bilgilerin, konuyla ilgili profesyonel danışmanlığın yerini alacağını düşünmemelidirler.
+                                        Bu nedenle, sitede yer alan bilgileri herhangi bir şekil ve surette kullanmadan önce, konuyla ilgili profesyonel danışmanınızla görüşmenizi tavsiye ederiz.
+                                    </p>
+                                    <p class="text-justify">
+                                        İnsan hataları, teknik veya diğer faktörler nedeniyle hata veya bilgi eksikliği/yanlışlığının veya güncellik yitirmesinin vuku bulabileceği tabiidir.
+                                        BDDK, sistemde yer alan bilgilerdeki hata ve eksikliklerden hiçbir şekilde sorumlu bulunmamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Bu site BDDK'na ait olup site içerisindeki bilgilerin bir kısmı Kurum, bir kısmı da diğer kaynaklardan sağlanarak Kurum tarafından yayınlanmaktadır.
+                                        Sitemizden bağlantı yapılarak ulaşılan diğer sitelerdeki bilgiler, ilgili kuruluşlar tarafından yayınlanmakta olup, BDDK'nu bağlamamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Kurumumuz web sitesi Temmuz 2018 itibarıyla güncellenmiştir. Bu tarihten öncesine ait duyurularda güncel olmayan linkler yer alabilir.
+                                        Bu konuda sorun yaşanması durumunda kullanıcılarımız Kurumumuz ile iletişime geçebilirler.
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+        
+    </footer>
+
+
+
+
+</body>
+</html>

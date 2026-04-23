@@ -1,0 +1,1166 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Mevzuat Listesi</title>
+    <link rel="shortcut icon" type="image/png" href="/Content/TemplateAssets/layout_images/favicon.ico" />
+
+    <link href="/Content/TemplateAssets/css/bootstrap.css" rel="stylesheet" />
+    <link href="/Content/TemplateAssets/css/fontawesome.min.css" rel="stylesheet" />
+    <link href="/Content/TemplateDefault/defaultLess2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/navbar2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/liste2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/detay2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/organizasyon2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateDefault/veri2.less" rel="stylesheet/less" type="text/css" />
+    <link href="/Content/TemplateAssets/css/brands.min.css" rel="stylesheet" />
+
+    <script src="/Scripts/jquery-3.6.0.min.js"></script>
+    <script src="/Scripts/bootstrap.js"></script>
+    <script src="/Scripts/fontawesome-all.js"></script>
+    <script src="/Scripts/less.min.js"></script>
+    <script src="/Scripts/brands.js"></script>
+
+    <script>
+
+        function SearchFunction() {
+            var metin = document.getElementById('searchText').value.toLocaleLowerCase('tr-TR');
+            if (metin.length > 3) {
+
+                /* Duyuru, Güncel */
+                $(".kategoriList ul li").hide();
+                $(".kategoriList ul li .text").filter(function (index) {
+                    return $(this).text().toLocaleLowerCase('tr-TR').indexOf(metin) >= 0;
+                }).parent().parent().parent().show();
+
+
+                /* Mevzuat, Kuruluş */
+                if ($("#accordion > div").hasClass("card")) {
+                    $("#accordion div.card").hide(); //hide div.card (hide accordion)
+                    $("#accordion div.card .accordionBody ul li").hide(); //hide li
+                    $("#accordion div.card .accordionBody table tbody tr ").hide(); //hide li
+
+                    var list_baslikContainer = $("#accordion div.card .accordionBody ul li .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    });
+
+                    var list_baslikContainer2 = $("#accordion div.card .accordionBody table tbody tr td .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    });
+
+                    list_baslikContainer.parent().show(); //show li
+                    list_baslikContainer2.parent().parent().show(); //show li
+                    var list_accoridon = list_baslikContainer.parent().parent().parent().parent().parent();
+                    var list_accoridon2 = list_baslikContainer2.parent().parent().parent().parent().parent().parent().parent();
+                    list_accoridon.show();
+                    list_accoridon2.show();
+                    list_accoridon.find("h5 button small").hide();
+                    list_accoridon2.find("h5 button small").hide();
+                }
+                else {
+                    $(".accordionBody ul li").hide();
+                    $(".accordionBody ul li .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    }).parent().show();
+
+                    $(".accordionBody table tbody tr ").hide();
+                    $(".accordionBody table tbody tr td .baslikContainer").filter(function (index) {
+                        return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                    }).parent().parent().show();
+                }
+
+
+                /* Sss */
+                $(".accordionSss div.card").hide();
+                $(".accordionSss div.card h5 button").filter(function (index) {
+                    return $(this).text().toLowerCase().indexOf(metin) >= 0;
+                }).parent().parent().parent().show();
+            }
+            else {
+                /* Duyuru, Güncel */
+                $(".kategoriList ul li").show();
+                /* Mevzuat, Kuruluş (accordion yokken) */
+                $(".accordionBody ul li").show();
+                $(".accordionBody table tbody tr ").show();
+
+                /* Sss (her zaman), Mevzuat, Kuruluş (accordion varken) */
+                $("#accordion div.card").show();
+                $("#accordion div.card h5 button small").show();
+            }
+        }
+
+        $(document).ready(function () {
+
+            //Detay sayfası galeri resimlerini görüntülemek için
+            $("ul.resimList .imgContainer img").click(function () {
+                var srcData = $(this).attr("src");
+                $('#showImgModal img').attr("src", srcData);
+                $('#showImgModal').modal('show')
+            });
+
+
+            //Organizasyon Şeması sayfalarında (IsSema == true) şema resim, ad, ünvan görüntülemek için
+            var listHiyerarsi = [
+                { BagliBirimler: ["Hukuk İşleri Daire Başkanlığı", "Ekonomik Değerlendirmeler Daire Başkanlığı"] },
+                { BagliBirimler: ["Denetim I Daire Başkanlığı", "Denetim II Daire Başkanlığı", "Denetim III Daire Başkanlığı", "Denetim V Daire Başkanlığı"] },
+                { BagliBirimler: ["Uygulama I Daire Başkanlığı", "Uygulama II Daire Başkanlığı", "Uygulama III Daire Başkanlığı", "Uygulama IV Daire Başkanlığı"] },
+                { BagliBirimler: ["Bilgi Sistemleri Uyum Daire Başkanlığı", "Veri ve Sistem Yönetimi Daire Başkanlığı", "Finansal Tüketici İlişkileri Daire Başkanlığı"] },
+                { BagliBirimler: ["Denetim IV Daire Başkanlığı", "Düzenleme Daire Başkanlığı", "Risk Yönetimi Daire Başkanlığı"] },
+                { BagliBirimler: ["Strateji Geliştirme Daire Başkanlığı", "Kurumsal İletişim ve Dış İlişkiler Daire Başkanlığı", "Uygulama V Daire Başkanlığı", "Destek Hizmetleri Daire Başkanlığı"] },
+            ];
+            $("ul.isSema .imgContainer img").click(function () {
+                var srcData = $(this).attr("src");
+                var ad = $(this).attr("data-ad");
+                var unvan = $(this).attr("data-unvan");
+                var hiyerarsiSiraNo = $(this).attr("data-hiyerarsiSiraNo");
+                $('#showIsSemaModal img').attr("src", srcData);
+                $('#showIsSemaModal h4').text(ad);
+                $('#showIsSemaModal p').text(unvan);
+
+                var bagliBirimler = listHiyerarsi[hiyerarsiSiraNo].BagliBirimler;
+                
+                var $ul = $("<ul>");
+                for (var i = 0; i < bagliBirimler.length; i++) {
+                    var $li = $("<li>", { "text": bagliBirimler[i] });
+                    $ul.append($li);
+                }
+                $("#divBagliBirimler").empty();
+                //$("#divBagliBirimler").append($ul);
+                $('#showIsSemaModal').modal('show');
+            });
+
+
+            //Mevzuat Liste sayfasında satırları gezerken default button'ları belirginleştirmek için
+            $("a.mevzuatBaslik").hover(function () {
+                var detayTuru = $(this).attr("data-detayTuru"); //a elementi
+                var oncelikliDetayTuru = $(this).parent().children("div.divMevzuatDetay[data-detayTuru  = '" + detayTuru + "']").children("a");
+                oncelikliDetayTuru.addClass("detayliGorHover");
+            });
+            $("a.mevzuatBaslik").mouseout(function () {
+                $(this).parent().children().children().removeClass("detayliGorHover");
+            });
+
+
+            //Kuruluş liste sayfasında kuruluş detaylarını görüntülemek için
+            $("button.detayliGor").click(function () {
+                var ad = $(this).attr("data-ad");
+                var aciklama = $(this).attr("data-aciklama");
+                var isFaaliyette = $(this).attr("data-isFaaliyette");
+                var eftKodu = $(this).attr("data-eftKodu");
+                var isDijital = $(this).attr("data-isDijital");
+                var telefon = $(this).attr("data-telefon");
+                var faks = $(this).attr("data-faks");
+                var adres = $(this).attr("data-adres");
+                var webAdresi = $(this).attr("data-webAdresi");
+
+                var sektordenCikisTarihi = $(this).attr("data-sektordenCikisTarihi");
+                var kurulKarari = $(this).attr("data-kurulKarari");
+
+                $("#kurulusDetayModal h4").text("");
+                $("#kurulusDetayModal p > span").text("");
+
+                $("#kurulusDetayModal h4").text(ad);
+                $("#kurulusDetayModal p.pAciklama > span").text(aciklama);
+
+                if (isFaaliyette == 1) {
+                    if (eftKodu != null && eftKodu != '') {
+                        $("#kurulusDetayModal p.pEftKodu").show();
+                        $("#kurulusDetayModal p.pEftKodu > span").text(eftKodu);
+                        $("#kurulusDetayModal p.pEftKodu > small").text(isDijital);
+                        //$("#kurulusDetayModal p.pEftKodu > span").text(eftKodu);
+                    }
+                    else {
+                        $("#kurulusDetayModal p.pEftKodu").hide();
+                    }
+                    $("#kurulusDetayModal p.pTelefon").show();
+                    $("#kurulusDetayModal p.pFaks").show();
+                    $("#kurulusDetayModal p.pAdres").show();
+                    $("#kurulusDetayModal p.pWebAdresi").show();
+                    $("#kurulusDetayModal p.pSektordenCikisTarihi").hide();
+                    $("#kurulusDetayModal p.pKurulKarari").hide();
+
+                    $("#kurulusDetayModal p.pTelefon > span").text(telefon);
+                    $("#kurulusDetayModal p.pFaks > span").text(faks);
+                    $("#kurulusDetayModal p.pAdres > span").text(adres);
+                    $("#kurulusDetayModal p.pWebAdresi > span").text(webAdresi);
+                }
+                else {
+                    $("#kurulusDetayModal p.pEftKodu").hide();
+                    $("#kurulusDetayModal p.pTelefon").hide();
+                    $("#kurulusDetayModal p.pFaks").hide();
+                    $("#kurulusDetayModal p.pAdres").hide();
+                    $("#kurulusDetayModal p.pWebAdresi").hide();
+                    $("#kurulusDetayModal p.pSektordenCikisTarihi").show();
+                    $("#kurulusDetayModal p.pKurulKarari").show();
+
+                    $("#kurulusDetayModal p.pSektordenCikisTarihi > span").text(sektordenCikisTarihi);
+                    $("#kurulusDetayModal p.pKurulKarari > span").text(kurulKarari);
+                }
+
+
+
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="showImgModal">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img id="showImg" style="width:100%;" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" tabindex="-1" role="dialog" id="showIsSemaModal">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <img />
+                    <h4 class="text-center"></h4>
+                    <p class="text-center"></p>
+                    <!-- divBagliBirimler içinde Organizasyon Şeması içindeki daire başkanlıkları görüntüleniyor. Hiyerarşide değişiklik olursa bu sayfadaki "listHiyerarsi" json list düzenlenmeli. -->
+                    <div id="divBagliBirimler"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    
+
+
+
+<header class="container-fluid">
+    
+    <div id="bannerBar" class="container-fluid">
+        <div class="container" style="padding:0;">
+            <a href="/">
+                    <img class="float-left" src="/Content/TemplateDefault/layout_images/banner_sol_tr_eski.png" />
+            </a>
+            <img class="float-right" src="/Content/TemplateDefault/layout_images/banner_sag.png" />
+            
+
+
+        </div>
+    </div>
+</header>
+<!-- NOT: sticky-top menüler mobilde scroll edilemiyor. Bu yüzden kaldırdık. -->
+
+<div id="mainBar" class="container-fluid" >
+
+    
+
+<style>
+    .dropdown-toggle::after {
+        display: none !important;
+    }
+</style>
+
+<div class="container navbar-container vertical-menu">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <a class="navbar-brand d-lg-none" href="/">
+            <img src="/Content/TemplateDefault/layout_images/son/bddk_logo.png" style="background:#fff;height:48px;" />
+            
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Hakkımızda
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/kurumHakkinda.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/19">Tarih&#231;e</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/20">Misyon ve Vizyon</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/21">Başkan ve Kurul &#220;yeleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/22">Organizasyon Şeması</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/23">Faaliyet Raporları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/37">Stratejik Planlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/25">Uluslararası İlişkiler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/26">BDDK Bankacılık ve Finansal Piyasalar Dergisi</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/195">İnsan Kaynakları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/35">S&#252;rd&#252;r&#252;lebilir Bankacılık</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/24">Etik Komisyonu</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/KurumHakkinda/Detay/198">Kurumsal Kimlik</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Duyurular
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/duyurular.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/39">Basın Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/40">Mevzuat Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/48">Kuruluş Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/42">Veri Yayımlama Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/41">İnsan Kaynakları Duyuruları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/197">G&#252;ncel Duyurular</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Duyuru/Liste/43">Duyuru Arşivi</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Mevzuat
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/mevzuat.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/49">Kanunlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/50">Bankacılık Kanununa İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/51">Banka Kartları ve Kredi Kartları Kanununa İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/52">Finansal Kiralama, Faktoring, Finansman ve Tasarruf Finansman Şirketleri Kanununa İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/54">Bankacılık D&#252;zenleme ve Denetleme Kurumuna İlişkin D&#252;zenlemeler</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/55">Resmi Gazetede Yayımlanan Kurul Kararları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/56">Resmi Gazetede Yayımlanmayan Kurul Kararları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/58">D&#252;zenleme Taslakları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Mevzuat/Liste/63">M&#252;lga D&#252;zenlemeler</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Veriler
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/veriler.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Index/69">Bankacılık Sekt&#246;r&#252; Verileri</a>
+                                                                        <ul>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/157">G&#252;nl&#252;k B&#252;lten</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/158">Haftalık B&#252;lten</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/159">Aylık B&#252;lten</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/160">FinT&#252;rk - İllere G&#246;re</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/161">Kredi Kartı Bilgileri Uygulaması</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/162">&#220;&#231;er Aylık Temel G&#246;stergeler</a></li>
+                                                                        </ul>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Index/70">Banka Dışı Mali Kuruluş Verileri</a>
+                                                                        <ul>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/163">Faktoring</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/164">Finansal Kiralama</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/165">Finansman Şirketleri</a></li>
+                                                                                <li><a class="dropdown-item" href="/Veri/Detay/166">Varlık Y&#246;netim</a></li>
+                                                                        </ul>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Detay/75">Bağımsız Denetim Raporları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Veri/Detay/71">VERİ YAYIMLAMA TAKVİMİ</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown position-static">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Kuruluşlar
+                            </a>
+                            <div class="dropdown-menu w-100" aria-labelledby="navbarDropdown">
+                                <div class="row">
+                                    <div class="col-lg-3 d-lg-block d-none">
+                                        <img src="/Content/TemplateDefault/layout_images/icons/kuruluslar.jpg" class="img-fluid"  />
+                                    </div>
+                                    <div class="col-lg-9 col-12">
+                                        <div class="row">
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/77">Bankalar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/78">Finansal Kiralama Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/79">Faktoring Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/80">Finansman Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/89">Tasarruf Finansman Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/81">Finansal Holding Şirketleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/82">Varlık Y&#246;netim Şirketleri</a>
+                                                                    </li>
+
+                                                </ul>
+                                            </div>
+                                            <div class="col-lg-6 col-12">
+                                                <ul>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/83">Yabancı Bankaların T&#252;rkiye Temsilcilikleri</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/84">Bankalarda Bağımsız Denetim Yapmaya Yetkili Kuruluşlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/85">Bankalara Değerleme Hizmeti Vermeye Yetkili Kuruluşlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/86">Yetkili Derecelendirme Kuruluşları</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/88">5464 sayılı Banka Kartları ve Kredi Kartları Kanunu Kapsamında Faaliyet İzni Verilen Kuruluşlar</a>
+                                                                    </li>
+                                                                    <li>
+                                                                            <a class="dropdown-item" href="/Kurulus/Liste/87">Meslek Birlikleri</a>
+                                                                    </li>
+
+
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="nav-item position-static">
+                            <a class="nav-link" href="/Sss">
+                                SSS
+                            </a>
+                        </li>
+                        <li class="nav-item position-static">
+                            <a class="nav-link" href="/Iletisim">
+                                İletişim
+                            </a>
+                        </li>
+
+            </ul>
+            
+
+            <div id="mainSearch2" class="form-inline col-lg-3 d-lg-block d-none">
+                <form method="get" action="/Home/Ara">
+                    <input type="search" id="tags" placeholder="Ara" name="metin">
+                    <button type="submit"><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+
+            
+                <div id="ustMenu" class="col-lg-1">
+                    <nav class="nav float-right">
+                        <a class="nav-link" style="color:white" href="/Home/DilDegistir">EN</a>
+                    </nav>
+                </div>
+
+            </div>
+    </nav>
+</div>
+
+</div>
+
+
+    <div id="main-container">
+        <div id="upperImage-container">
+            <div id="inner-container" class="container">
+                <div class="row">
+
+                        <div id="content-container" class="col-md-9">
+                            
+
+
+
+<h2>
+    Finansal Kiralama, Faktoring, Finansman ve Tasarruf Finansman Şirketleri Kanununa İlişkin D&#252;zenlemeler
+    <span class="title-under"></span>
+</h2>
+
+
+<div id="inPageSearch" class="">
+    <input type="search" id="searchText" placeholder="Ara" name="metin" oninput="SearchFunction()">
+</div>
+
+<div id="partialContainer">
+    
+
+<style>
+    .divMevzuatDetay {
+        width: 40px;
+        height: 20px;
+        margin-top: 4px;
+    }
+</style>
+
+
+
+
+<div class="accordionContainer">
+    <div id="accordion">
+            <!-- 3'ncü seviye kategoriler (accordion) olmadan mevzuat liste -->
+            <div class="accordionBody">
+                <table class="table table-hover">
+                    <tbody>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="https://www.resmigazete.gov.tr/eskiler/2025/11/20251128-5.htm" target="_blank" data-detayTuru="webLink">Tasarruf Finansman Şirketlerinin Likidite Yeterlilik Oranının Hesaplanmasına İlişkin Tebliğ (Y&#252;r&#252;rl&#252;k tarihi: 1/1/2026)</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="https://www.resmigazete.gov.tr/eskiler/2025/11/20251128-5.htm" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="/Mevzuat/Detay/1319" data-detayTuru="info">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-10.png" />
+                                        </a>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=39368&amp;MevzuatTur=7&amp;MevzuatTertip=5" target="_blank" data-detayTuru="webLink">Finansal Kiralama, Faktoring, Finansman ve Tasarruf Finansman Şirketlerince Kullanılacak Uzaktan  Kimlik Tespiti Y&#246;ntemlerine ve Elektronik Ortamda  S&#246;zleşme  İlişkisinin  Kurulmasına  İlişkin Y&#246;netmelik</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=39368&amp;MevzuatTur=7&amp;MevzuatTertip=5" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=38500&amp;MevzuatTur=7&amp;MevzuatTertip=5" target="_blank" data-detayTuru="webLink">Tasarruf Finansman Şirketlerinin Kuruluş ve Faaliyet Esasları Hakkında Y&#246;netmelik</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=38500&amp;MevzuatTur=7&amp;MevzuatTertip=5" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="http://www.mevzuat.gov.tr/Metin1.Aspx?MevzuatKod=1.5.6361&amp;MevzuatIliski=0&amp;sourceXmlSearch=Finansal%20Kiralama&amp;Tur=1&amp;Tertip=5&amp;No=6361" target="_blank" data-detayTuru="webLink">Finansal Kiralama, Faktoring, Finansman Ve Tasarruf Finansman Şirketleri Kanunu</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="http://www.mevzuat.gov.tr/Metin1.Aspx?MevzuatKod=1.5.6361&amp;MevzuatIliski=0&amp;sourceXmlSearch=Finansal%20Kiralama&amp;Tur=1&amp;Tertip=5&amp;No=6361" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="http://www.mevzuat.gov.tr/Metin.Aspx?MevzuatKod=7.5.20506&amp;MevzuatIliski=0&amp;sourceXmlSearch=faktoring" target="_blank" data-detayTuru="webLink">Faktoring İşlemlerinde Uygulanacak Usul ve Esaslar Hakkında Y&#246;netmelik</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="http://www.mevzuat.gov.tr/Metin.Aspx?MevzuatKod=7.5.20506&amp;MevzuatIliski=0&amp;sourceXmlSearch=faktoring" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="http://www.mevzuat.gov.tr/Metin.Aspx?MevzuatKod=7.5.19152&amp;MevzuatIliski=0&amp;sourceXmlSearch=finansal%20kiralama" target="_blank" data-detayTuru="webLink">Finansal Kiralama ,Faktoring ve Finansman Şirketlerinin Muhasebe Uygulamaları ile Finansal Tabloları Hakkında Y&#246;netmelik</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="http://www.mevzuat.gov.tr/Metin.Aspx?MevzuatKod=7.5.19152&amp;MevzuatIliski=0&amp;sourceXmlSearch=finansal%20kiralama" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="/Mevzuat/DokumanGetir/24" target="_blank" data-detayTuru="dokuman">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-08.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="http://www.mevzuat.gov.tr/Metin.Aspx?MevzuatKod=7.5.18312&amp;MevzuatIliski=0&amp;sourceXmlSearch=finansal kiralama" target="_blank" data-detayTuru="webLink">Finansal Kiralama ,Faktoring ve Finansman Şirketlerinin Kuruluş ve Faaliyet Esasları Hakkında Y&#246;netmelik</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="http://www.mevzuat.gov.tr/Metin.Aspx?MevzuatKod=7.5.18312&amp;MevzuatIliski=0&amp;sourceXmlSearch=finansal kiralama" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td>
+                                        <a class="mevzuatBaslik baslikContainer" href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=31395&amp;MevzuatTur=9&amp;MevzuatTertip=5" target="_blank" data-detayTuru="webLink">Finansal Kiralama, Faktoring ve Finansman Şirketlerinin Bilgi Sistemlerinin Y&#246;netimine ve Denetimine İlişkin Tebliğ</a>
+                                </td>
+
+                                <td style="width: 40px; padding: 0px;">
+                                        <a class="btn float-right detayliGor" href="https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=31395&amp;MevzuatTur=9&amp;MevzuatTertip=5" target="_blank" data-detayTuru="webLink">
+                                            <img src="/Content/TemplateDefault/layout_images/icons/icos-09.png" />
+                                        </a>
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+
+                                <td style="width: 40px; padding: 0px;">
+                                </td>
+
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+
+    </div>
+</div>
+</div>
+
+                        </div>
+                        <div id="yanMenuContainer" class="col-md-3">
+                            <ul>
+                                <li class="liUstKategori">
+                                    <a class="aUstKategori" href="/Mevzuat/Index/4">Mevzuat</a>
+                                    <ul>                                        
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/49">Kanunlar</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/50">Bankacılık Kanununa İlişkin D&#252;zenlemeler</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/51">Banka Kartları ve Kredi Kartları Kanununa İlişkin D&#252;zenlemeler</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/52">Finansal Kiralama, Faktoring, Finansman ve Tasarruf Finansman Şirketleri Kanununa İlişkin D&#252;zenlemeler</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/54">Bankacılık D&#252;zenleme ve Denetleme Kurumuna İlişkin D&#252;zenlemeler</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/55">Resmi Gazetede Yayımlanan Kurul Kararları</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/56">Resmi Gazetede Yayımlanmayan Kurul Kararları</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/58">D&#252;zenleme Taslakları</a>
+                                            </li>
+                                            <li>
+                                                    <a href="/Mevzuat/Liste/63">M&#252;lga D&#252;zenlemeler</a>
+                                            </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+<style>
+
+    ul.honk {
+        list-style: none;
+        padding-left: 0;
+    }
+
+        ul.honk > li {
+            float: left;
+            padding: 1em;
+        }
+
+        ul.honk a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        ul.honk > li > ul {
+            list-style: none;
+            padding-left: 0;
+            border-top: 1px solid #fff;
+            font-size: 10pt;
+        }
+
+            ul.honk > li > ul > li {
+                padding-top: 1em;
+            }
+</style>
+
+
+    <footer>
+        <div class="container">
+            <div class="row">
+
+                <div class="col-lg-8 col-md-12">
+                    <ul class="row honk">
+                            <li class="col-lg-3 col-md-6 text-center">
+                                <a href="/KurumHakkinda">
+                                    Hakkımızda
+                                </a>
+
+                            <ul>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/21">Başkan ve Kurul &#220;yeleri</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/22">Organizasyon Şeması</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/23">Faaliyet Raporları</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/KurumHakkinda/Detay/195">İnsan Kaynakları</a>
+
+                                            </li>
+
+                            </ul>
+
+                            </li>
+                            <li class="col-lg-3 col-md-6 text-center">
+                                <a href="/Duyuru">
+                                    Duyurular
+                                </a>
+
+                            <ul>
+                                            <li class="text-left">
+
+
+                                                <a href="/Duyuru/Liste/39">Basın Duyuruları</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/Duyuru/Liste/42">Veri Yayımlama Duyuruları</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/Duyuru/Liste/41">İnsan Kaynakları Duyuruları</a>
+
+                                            </li>
+
+                            </ul>
+
+                            </li>
+                            <li class="col-lg-3 col-md-6 text-center">
+                                <a href="/Veri">
+                                    Veriler
+                                </a>
+
+                            <ul>
+                                            <li class="text-left">
+
+
+                                                <a href="/Veri/Index/69">Bankacılık Sekt&#246;r&#252; Verileri</a>
+
+                                            </li>
+                                            <li class="text-left">
+
+
+                                                <a href="/Veri/Index/70">Banka Dışı Mali Kuruluş Verileri</a>
+
+                                            </li>
+
+                            </ul>
+
+                            </li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12 iletisimContainer">
+                    <p class="text-right">
+                        <a target="_blank" class="text-white ml-2" href="https://twitter.com/BDDKResmi"><i class="fa-brands fa-square-x-twitter fa-2x " ></i></a>
+                        <a target="_blank" class="text-white ml-2" href="https://www.instagram.com/bddkresmi"><i class="fab fa-instagram fa-2x"></i></a>
+                        <a target="_blank" class="text-white ml-2" href="https://www.linkedin.com/company/bddkresmi"><i class="fab fa-linkedin fa-2x"></i></a>
+                    </p>
+                    <table>
+                        <tr><td colspan="2" class="lead" style="font-size:12pt">Bankacılık Düzenleme ve Denetleme Kurumu</td></tr>
+                        <tr><td class="text-left" style="font-size:10pt"><strong>Telefon:</strong></td><td style="font-size:10pt">(212) 214 50 00</td></tr>
+                        <tr><td class="text-left" style="font-size:10pt"><strong>Çağrı Merkezi:</strong></td><td style="font-size:10pt">0850 222 23 35</td></tr>
+                        <tr>
+                            <td class="text-left" style="font-size:10pt"><strong>Adres:</strong></td>
+                            <td style="font-size:10pt">
+                                Finanskent Mahallesi Finans Caddesi No:42/1
+                                34760 Ümraniye/İSTANBUL
+                            </td>
+                        </tr>
+                    </table>
+                    
+
+                    <!--<p class="text-left">
+                        Kurumumuzun internet adresi "www.bddk.org.tr" ve "www.bddk.gov.tr"dir. Kurumumuzun mobil uygulaması bulunmamaktadır.
+                        Kurumumuz hiçbir şekilde telefon, e-posta, internet sitesi veya başka ortamlarda kişisel bilgi talep etmemektedir!
+                    </p>
+                    <button type="button" class="btn btn-light" data-toggle="modal" data-target=".modalKullanimSartlari">Kullanım Şartları</button>-->
+                    <!-- Modal Kullanım Şartları (Begin) -->
+                    <!--<div class="modal fade modalKullanimSartlari" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title text-center">Kullanım Şartları</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-center font-weight-bold">
+                                        BDDK web sitesine hoş geldiniz.<br />
+                                        Bu siteyi kullandığınız takdirde aşağıdaki koşulları kabul etmiş sayılacaksınız.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK web sitesinin yayınlanması, hiçbir kişi ve/veya kuruluşa herhangi bir konuda herhangi bir taahhüdü içermemektedir.
+                                        Sitede yer alan bilgiler, kişi ve kuruluşlara yönelik talimat verilmesi, hukuken onların herhangi bir doğrultuya yönlendirmesi amaçlarını
+                                        ve tebligat niteliğini taşımamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Web sitemizde yayınlanan çalışmalardan, kaynak gösterilmek suretiyle kısmen alıntı yapılabilir ancak bu bilgilerin ticari amaçlarla kullanımı BDDK'nın yazılı iznine tabidir.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK, web sitesinde yayınlanan bilgilerin güncel ve doğru bilgilerle yayınlanmasını temin etmek amacıyla elinden gelen çabayı
+                                        göstermekle birlikte, BDDK'nın bu bilgilerin doğruluğu ve tamlığı konusunda açık veya zımni şekilde kefalet veya garanti verdiği yolunda hiçbir taahhüdü bulunmamaktadır.
+                                        Kullanıcılar sisteme girmeleri ile birlikte; BDDK tarafından yayınlanan bilgilerin kullanımı sonucunda doğrudan veya dolaylı bir kayıp veya zarar doğması halinde,
+                                        bu durumun BDDK'na hiçbir borç, sorumluluk veya mükellefiyet yüklemeyeceğini açık olarak kabul etmiş sayılırlar.
+                                    </p>
+                                    <p class="text-justify">
+                                        Sitede yer alan bütün metinler ve/veya hizmetler, önceden kullanıcılara bildirimde bulunmaksızın BDDK tarafından değiştirilebilir.
+                                        BDDK web sitesi ön bilgi verilmeden kullanım dışı bırakılabilir. BDDK web sitesinde yayınlanmış bilgiler, ya da bilgilere dayanılarak
+                                        yapılan işlemlerden veya siteye ulaşılamamasından doğan veya doğacak zarar ve/veya kayıplardan dolayı sorumluluk kabul etmez.
+                                    </p>
+                                    <p class="text-justify">
+                                        Site özenle hazırlanılmış olmasına rağmen, site ziyaretçileri; sitedeki bilgilerin, konuyla ilgili profesyonel danışmanlığın yerini alacağını düşünmemelidirler.
+                                        Bu nedenle, sitede yer alan bilgileri herhangi bir şekil ve surette kullanmadan önce, konuyla ilgili profesyonel danışmanınızla görüşmenizi tavsiye ederiz.
+                                    </p>
+                                    <p class="text-justify">
+                                        İnsan hataları, teknik veya diğer faktörler nedeniyle hata veya bilgi eksikliği/yanlışlığının veya güncellik yitirmesinin vuku bulabileceği tabiidir.
+                                        BDDK, sistemde yer alan bilgilerdeki hata ve eksikliklerden hiçbir şekilde sorumlu bulunmamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Bu site BDDK'na ait olup site içerisindeki bilgilerin bir kısmı Kurum, bir kısmı da diğer kaynaklardan sağlanarak Kurum tarafından yayınlanmaktadır.
+                                        Sitemizden bağlantı yapılarak ulaşılan diğer sitelerdeki bilgiler, ilgili kuruluşlar tarafından yayınlanmakta olup, BDDK'nu bağlamamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Kurumumuz web sitesi Temmuz 2018 itibarıyla güncellenmiştir. Bu tarihten öncesine ait duyurularda güncel olmayan linkler yer alabilir.
+                                        Bu konuda sorun yaşanması durumunda kullanıcılarımız Kurumumuz ile iletişime geçebilirler.
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>-->
+                </div>
+            </div>
+
+
+            <div class="row">
+                <div class="col-12">
+                    <p class="text-center">
+                        Kurumumuzun internet adresi "www.bddk.gov.tr"dir. ("www.bddk.org.tr" adresi de kullanılmaya devam etmektedir.)
+                        Kurumumuzun mobil uygulaması bulunmamaktadır.<br />
+                        Kurumumuz hiçbir şekilde telefon, e-posta, internet sitesi veya başka ortamlarda kişisel bilgi talep etmemektedir!
+                    </p>
+
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-light d-block mr-2" data-toggle="modal" data-target=".modalKullanimSartlari">Kullanım Şartları</button>
+
+                        <a href="/Content/docs/bddkImages/KVKK_Aydinlatma_Metni.pdf" target="_blank" class="btn btn-light d-block">
+                            Kişisel Verilerin İşlenmesi ve Korunması
+                        </a>
+                    </div>
+
+
+
+
+
+                    <!-- Modal Kullanım Şartları (Begin) -->
+                    <div class="modal fade modalKullanimSartlari" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title text-center">Kullanım Şartları</h4>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="text-center font-weight-bold">
+                                        BDDK web sitesine hoş geldiniz.<br />
+                                        Bu siteyi kullandığınız takdirde aşağıdaki koşulları kabul etmiş sayılacaksınız.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK web sitesinin yayınlanması, hiçbir kişi ve/veya kuruluşa herhangi bir konuda herhangi bir taahhüdü içermemektedir.
+                                        Sitede yer alan bilgiler, kişi ve kuruluşlara yönelik talimat verilmesi, hukuken onların herhangi bir doğrultuya yönlendirmesi amaçlarını
+                                        ve tebligat niteliğini taşımamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Web sitemizde yayınlanan çalışmalardan, kaynak gösterilmek suretiyle kısmen alıntı yapılabilir ancak bu bilgilerin ticari amaçlarla kullanımı BDDK'nın yazılı iznine tabidir.
+                                    </p>
+                                    <p class="text-justify">
+                                        BDDK, web sitesinde yayınlanan bilgilerin güncel ve doğru bilgilerle yayınlanmasını temin etmek amacıyla elinden gelen çabayı
+                                        göstermekle birlikte, BDDK'nın bu bilgilerin doğruluğu ve tamlığı konusunda açık veya zımni şekilde kefalet veya garanti verdiği yolunda hiçbir taahhüdü bulunmamaktadır.
+                                        Kullanıcılar sisteme girmeleri ile birlikte; BDDK tarafından yayınlanan bilgilerin kullanımı sonucunda doğrudan veya dolaylı bir kayıp veya zarar doğması halinde,
+                                        bu durumun BDDK'na hiçbir borç, sorumluluk veya mükellefiyet yüklemeyeceğini açık olarak kabul etmiş sayılırlar.
+                                    </p>
+                                    <p class="text-justify">
+                                        Sitede yer alan bütün metinler ve/veya hizmetler, önceden kullanıcılara bildirimde bulunmaksızın BDDK tarafından değiştirilebilir.
+                                        BDDK web sitesi ön bilgi verilmeden kullanım dışı bırakılabilir. BDDK web sitesinde yayınlanmış bilgiler, ya da bilgilere dayanılarak
+                                        yapılan işlemlerden veya siteye ulaşılamamasından doğan veya doğacak zarar ve/veya kayıplardan dolayı sorumluluk kabul etmez.
+                                    </p>
+                                    <p class="text-justify">
+                                        Site özenle hazırlanılmış olmasına rağmen, site ziyaretçileri; sitedeki bilgilerin, konuyla ilgili profesyonel danışmanlığın yerini alacağını düşünmemelidirler.
+                                        Bu nedenle, sitede yer alan bilgileri herhangi bir şekil ve surette kullanmadan önce, konuyla ilgili profesyonel danışmanınızla görüşmenizi tavsiye ederiz.
+                                    </p>
+                                    <p class="text-justify">
+                                        İnsan hataları, teknik veya diğer faktörler nedeniyle hata veya bilgi eksikliği/yanlışlığının veya güncellik yitirmesinin vuku bulabileceği tabiidir.
+                                        BDDK, sistemde yer alan bilgilerdeki hata ve eksikliklerden hiçbir şekilde sorumlu bulunmamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Bu site BDDK'na ait olup site içerisindeki bilgilerin bir kısmı Kurum, bir kısmı da diğer kaynaklardan sağlanarak Kurum tarafından yayınlanmaktadır.
+                                        Sitemizden bağlantı yapılarak ulaşılan diğer sitelerdeki bilgiler, ilgili kuruluşlar tarafından yayınlanmakta olup, BDDK'nu bağlamamaktadır.
+                                    </p>
+                                    <p class="text-justify">
+                                        Kurumumuz web sitesi Temmuz 2018 itibarıyla güncellenmiştir. Bu tarihten öncesine ait duyurularda güncel olmayan linkler yer alabilir.
+                                        Bu konuda sorun yaşanması durumunda kullanıcılarımız Kurumumuz ile iletişime geçebilirler.
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+        
+    </footer>
+
+
+
+
+</body>
+</html>

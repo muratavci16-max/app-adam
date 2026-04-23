@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, LogIn, UserPlus, Mail, Lock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/Toast'
+import { resolveRedirect } from '@/lib/auth-redirect'
 
 interface AuthClientProps {
   mode: 'giris' | 'kayit'
@@ -18,22 +19,31 @@ export default function AuthClient({ mode }: AuthClientProps) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const trimmedEmail = email.trim()
+    if (password.trim().length === 0) {
+      showToast('Geçerli bir şifre giriniz.', 'error')
+      return
+    }
+
     setLoading(true)
 
     try {
       if (mode === 'giris') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        const { error } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password })
         if (error) {
           showToast(error.message === 'Invalid login credentials' ? 'E-posta veya şifre hatalı.' : error.message, 'error')
         } else {
           showToast('Giriş başarılı!', 'success')
-          router.push('/hesaplamarim')
+          const target = resolveRedirect(searchParams.get('redirect'))
+          router.push(target)
         }
       } else {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const { error } = await supabase.auth.signUp({ email: trimmedEmail, password })
         if (error) {
           showToast(error.message, 'error')
         } else {

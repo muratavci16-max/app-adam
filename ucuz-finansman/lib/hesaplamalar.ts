@@ -5,8 +5,12 @@ export const AYLAR = [
   'Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'
 ]
 
-export const tarihStr = (ay: number, yil: number): string =>
-  AYLAR[ay - 1] + ' ' + yil
+export const tarihStr = (ay: number, yil: number): string => {
+  if (!Number.isInteger(ay) || ay < 1 || ay > 12) {
+    throw new RangeError(`tarihStr: ay must be between 1 and 12, got ${ay}`)
+  }
+  return AYLAR[ay - 1] + ' ' + yil
+}
 
 export function addAy(ay: number, yil: number, n: number): { ay: number; yil: number } {
   const t = yil * 12 + ay - 1 + n
@@ -18,21 +22,77 @@ export function sonrakiAy(ay: number, yil: number): { ay: number; yil: number } 
 }
 
 // ─── SAYISAL FORMAT ────────────────────────────────────────────
-// ÖNEMLİ: number inputlardan doğrudan parseFloat kullan (ondalık nokta)
+// ÖNEMLİ: number inputlardan doğrudan parse et (ondalık nokta)
 // text inputlardan (TL tutarları) Türkçe binlik ayracı temizle
+//
+// STRICT parsing: geçersiz / belirsiz girdilerde NaN döner.
+// Böylece çağıran taraf 0 ile geçersiz girdi arasındaki farkı ayırt edebilir.
 export function parseInput(value: string, isNumberInput: boolean): number {
-  if (isNumberInput) return parseFloat(value) || 0
-  const v = value.replace(/\./g, '').replace(',', '.')
-  return parseFloat(v) || 0
+  if (typeof value !== 'string') return NaN
+  const trimmed = value.trim()
+  if (trimmed === '') return NaN
+
+  // Yalnızca ASCII 0-9 ve ayraçlar (. , - +) kabul edilir.
+  // Bu, Arabic-Indic rakamları, emoji vs. non-ASCII karakterleri reddeder.
+  // Ayrıca "Infinity", "NaN", "12abc34" gibi kısmi/özel parse girdileri de reddedilir.
+  if (isNumberInput) {
+    // number-mode: <input type="number"> zaten "." ondalık ayraçla gelir.
+    // Strict: sadece [+-]?[0-9]+(\.[0-9]+)? formatı kabul.
+    if (!/^[+-]?(\d+(\.\d+)?|\.\d+)$/.test(trimmed)) return NaN
+    const n = Number(trimmed)
+    if (!Number.isFinite(n)) return NaN
+    return n
+  }
+
+  // text-mode (Türkçe): binlik ayracı ".", ondalık ayracı ","
+  //   "1.000,50"  → 1000.5  (geçerli)
+  //   "1000"      → 1000    (geçerli)
+  //   "1.5"       → NaN     (belirsiz: binlik mi ondalık mı?)
+  //   "0.50"      → NaN     (aynı)
+  //   "1,000.50"  → NaN     (karışık format)
+  //
+  // Kural: "." yalnızca binlik ayracı olarak, 3'lü gruplarla kullanılabilir.
+  // En fazla bir "," olabilir ve o ondalık kısımdan önce gelir.
+  // Kabul edilen kalıplar:
+  //   [+-]?\d{1,3}(\.\d{3})*(,\d+)?
+  //   [+-]?\d+(,\d+)?
+  if (!/^[+-]?(\d{1,3}(\.\d{3})+|\d+)(,\d+)?$/.test(trimmed)) return NaN
+  const normalized = trimmed.replace(/\./g, '').replace(',', '.')
+  const n = Number(normalized)
+  if (!Number.isFinite(n)) return NaN
+  return n
 }
 
 export function formatTL(n: number): string {
-  if (isNaN(n)) return '—'
-  return Math.round(n).toLocaleString('tr-TR') + ' ₺'
+  if (!isFinite(n) || isNaN(n)) return '—'
+  // "Sıfırdan uzağa yuvarla" (round half away from zero):
+  //   JS'in Math.round(-0.5) → 0; biz -1 istiyoruz.
+  //   Math.round(-0.4) → 0 (bu zaten doğru).
+  let rounded = Math.sign(n) * Math.round(Math.abs(n))
+  // Signed zero'yu pozitife normalize et: -0 → 0
+  if (rounded === 0) rounded = 0
+  return rounded.toLocaleString('tr-TR') + ' ₺'
 }
 
 export function formatTL2(n: number): string {
-  return n.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
+  if (!isFinite(n) || isNaN(n)) return '—'
+  // Aynı mantık: −0 → 0 normalize.
+  const v = n === 0 ? 0 : n
+  return v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺'
+}
+
+// Yüzde formatı — 2 ondalık, tr-TR locale (virgül), geçersiz/absürd değerlerde "—"
+export function formatPct(n: number, decimals = 2): string {
+  if (!isFinite(n) || isNaN(n)) return '—'
+  if (Math.abs(n) > 999) return '—'
+  // Küçük negatifler (−0.0001) decimals'a yuvarlayınca "−0,00" üretir; bunu sıfıra normalize et.
+  const factor = Math.pow(10, decimals)
+  let rounded = Math.round(n * factor) / factor
+  if (rounded === 0) rounded = 0  // signed-zero nötralize
+  return '%' + rounded.toLocaleString('tr-TR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })
 }
 
 // ─── TASARRUF FİNANSMANI ───────────────────────────────────────
@@ -80,6 +140,20 @@ export function tasarrufHesapla(p: TasarrufParams): TasarrufSonuc {
     teslimatPct, odemeTuru, artisOrani, artisSikligi,
     baslangicAy, baslangicYil
   } = p
+
+  // Geçersiz/sıfır/negatif basTaksit: sonsuz döngüyü engellemek için erken çık.
+  if (!Number.isFinite(basTaksit) || basTaksit <= 0) {
+    return {
+      rows: [],
+      toplamTaksit: 0,
+      hizmetToplam: 0,
+      toplamOdeme: 0,
+      teslimVadeNo: null,
+      teslimAy: null,
+      teslimYil: null,
+      vade: 0,
+    }
+  }
 
   const hizmetToplam = tutar * hizmetOranPct / 100
   const kalan0 = tutar - pesinat
@@ -210,26 +284,91 @@ export function krediHesapla(p: KrediParams): KrediSonuc {
 
 // ─── IRR HESAPLAMA (Newton-Raphson) ────────────────────────────
 
+// NPV hesaplayıcı (calcIRR'in içinde kullanılıyor)
+function npvAt(cashflows: number[], r: number): number {
+  let npv = 0
+  for (let t = 0; t < cashflows.length; t++) {
+    npv += cashflows[t] / Math.pow(1 + r, t)
+  }
+  return npv
+}
+
+// Newton-Raphson IRR — step clamping ve yakınsama kontrolü ile
 export function calcIRR(
   cashflows: number[],
   guess = 0.01,
-  maxIter = 1000,
+  maxIter = 500,
   tol = 1e-8
 ): number {
   let r = guess
   for (let i = 0; i < maxIter; i++) {
+    // Güvenli aralık: r > -0.99 olmalı
+    if (r <= -0.99) r = -0.9
     let npv = 0, dnpv = 0
     for (let t = 0; t < cashflows.length; t++) {
       const disc = Math.pow(1 + r, t)
-      npv  += cashflows[t] / disc
-      dnpv -= t * cashflows[t] / (disc * (1 + r))
+      npv += cashflows[t] / disc
+      if (t > 0) dnpv -= t * cashflows[t] / (disc * (1 + r))
     }
-    if (Math.abs(dnpv) < 1e-14) break
-    const rNew = r - npv / dnpv
-    if (Math.abs(rNew - r) < tol) { r = rNew; break }
+    if (!isFinite(npv) || !isFinite(dnpv) || Math.abs(dnpv) < 1e-14) return NaN
+    let step = npv / dnpv
+    // Aşırı adımları frenle (Newton'un ıraksamasını önler)
+    if (Math.abs(step) > 0.5) step = Math.sign(step) * 0.5
+    const rNew = r - step
+    if (Math.abs(rNew - r) < tol) return rNew
     r = rNew
   }
-  return r
+  // Yakınsamadıysa NaN döndür
+  return NaN
+}
+
+// Bisection yöntemiyle IRR — Newton başarısız olursa yedek.
+// Arama aralığı genişletilebilir: IRR çok yüksek (>500%/ay) olabilir.
+function calcIRRBisection(cashflows: number[], lo = -0.9, hi = 5, maxIter = 200, tol = 1e-8): number {
+  let fLo = npvAt(cashflows, lo)
+  let fHi = npvAt(cashflows, hi)
+  if (!isFinite(fLo) || !isFinite(fHi)) return NaN
+  // Uçlarda işaret değişimi yoksa hi'yi katlayarak kök ara.
+  // (Bazı agresif finansmanlarda IRR 1000%'yi aşabilir.)
+  let expandTries = 0
+  while (fLo * fHi > 0 && expandTries < 40) {
+    hi = hi * 2 + 1
+    fHi = npvAt(cashflows, hi)
+    if (!isFinite(fHi)) return NaN
+    expandTries++
+  }
+  if (fLo * fHi > 0) return NaN
+  for (let i = 0; i < maxIter; i++) {
+    const mid = (lo + hi) / 2
+    const fMid = npvAt(cashflows, mid)
+    if (!isFinite(fMid)) return NaN
+    if (Math.abs(fMid) < tol || (hi - lo) / 2 < tol) return mid
+    if (fLo * fMid < 0) { hi = mid; fHi = fMid }
+    else { lo = mid; fLo = fMid }
+  }
+  return (lo + hi) / 2
+}
+
+// Sağlam IRR — birden fazla başlangıç noktası + bisection fallback.
+// Boş / tek-elemanlı / tamamen sıfır cashflow için NaN döner.
+export function robustIRR(cashflows: number[]): number {
+  if (!Array.isArray(cashflows) || cashflows.length < 2) return NaN
+  // Tamamen sıfır (veya hiç sayısal olmayan) cashflow ⇒ IRR tanımsız.
+  let hasPositive = false
+  let hasNegative = false
+  for (const cf of cashflows) {
+    if (!Number.isFinite(cf)) return NaN
+    if (cf > 0) hasPositive = true
+    else if (cf < 0) hasNegative = true
+  }
+  if (!hasPositive || !hasNegative) return NaN
+
+  for (const g of [0.005, 0.02, 0.05, 0.001, 0.1, -0.005]) {
+    const r = calcIRR(cashflows, g)
+    if (isFinite(r) && !isNaN(r) && r > -0.99) return r
+  }
+  // Newton yakınsamadıysa bisection dene
+  return calcIRRBisection(cashflows)
 }
 
 // ─── KARŞILAŞTIRMA HESAPLAMA ───────────────────────────────────
@@ -269,8 +408,12 @@ export interface KarsilastirmaSonuc {
   irrAylikPct: number
   irrYillik: number
   teslimVadeNo: number | null
-  teslimAy: number          // otomatik hesaplanan teslimat ayı
-  rows: KarsilastirmaRow[]  // karşılaştırmalı ödeme planı
+  teslimAy: number                // otomatik hesaplanan teslimat ayı
+  // Teslim eşiği detayları — Yön. m. 21/2-a + m. 21/3 (see lib/hesaplamalar.ts teslim block)
+  tasarrufEsikAyi: number         // "tasarruf %40" şartını karşılayan ilk ay
+  sureEsikAyi: number             // m. 21/3 indirimli süre eşiği (floor=5)
+  bagliyayanEsik: 'tasarruf' | 'sure' | 'her-ikisi'
+  rows: KarsilastirmaRow[]        // karşılaştırmalı ödeme planı
   // Kredi alternatifi
   birikilenToplam: number
   krediIhtiyaci: number
@@ -287,11 +430,13 @@ export interface KarsilastirmaSonuc {
 
 export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc {
   const {
-    tutar, pesinat, orgPct, taksit0, takTuru,
+    tutar, pesinat, taksit0, takTuru,
     artisAy, yeniTaksit, krFaizAylik, mevduatYillik
   } = p
 
-  const orgBedeli = tutar * orgPct / 100
+  // orgPct'yi [0, 100] aralığına sıkıştır: negatif indirim veya %1000 gibi absürd değerleri engeller.
+  const orgPctClamped = Math.max(0, Math.min(100, Number.isFinite(p.orgPct) ? p.orgPct : 0))
+  const orgBedeli = tutar * orgPctClamped / 100
   const kalanBorcBaslangic = tutar - pesinat
 
   const getTaksit = (ay: number): number => {
@@ -303,45 +448,83 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   let kalan = kalanBorcBaslangic
   let vade = 0
   for (let t = 1; t <= 600 && kalan > 0.01; t++) {
-    kalan -= Math.min(getTaksit(t), kalan)
+    const tak = getTaksit(t)
+    if (!Number.isFinite(tak) || tak <= 0) break
+    kalan -= Math.min(tak, kalan)
     vade = t
   }
 
-  // Teslimat ayını otomatik hesapla:
-  // Hizmet bedeli HARİÇ — peşinat + taksitler ≥ tutar×%40 olan ilk ay, minimum 6. ay
-  const teslimatEsik = tutar * 0.40
+  /**
+   * Teslim (tahsisat) tarihi hesabı — müşteri-bazlı TF sözleşmesi.
+   *
+   * Mevzuat: BDDK, Tasarruf Finansman Şirketlerinin Kuruluş ve Faaliyet Esasları
+   * Hakkında Yönetmelik, MADDE 21.
+   *   - m. 21/2-a: tahsisat için hem "sözleşme tutarının %40'ı kadar tasarruf"
+   *                hem "sözleşme süresinin 2/5'i" birlikte aranır.
+   *   - m. 21/3  : süre (2/5) şartı, peşinat/toplam oranı nispetinde azaltılabilir;
+   *                koşul: sözleşmeden ≥150 gün geçmiş ve ≥5 tasarruf ödemesi yapılmış.
+   *                ("nispetinde" = orantılı → süre × (1 − peşinat/toplam)).
+   *                Bu zemin ay-5 taban olarak uygulanır (aylık ödeme takviminde
+   *                150. gün ≈ 5. ay).
+   *   - m. 21/3 son cümle: ara dönem ek ödemeler %40 hesabına sayılmaz;
+   *                bu yolla tahsisat öne çekilemez → taksit input tooltip'i ile
+   *                kullanıcıya ayrıca bildirilir.
+   *
+   * Kaynak dosyalar (repo): docs/regulations/09-yonetmelik-38500-konsolide.pdf
+   *                         docs/regulations/03-yonetmelik-degisiklik-20250530.html
+   *                         (güncel metin: 30.05.2025 RG 32915).
+   *
+   * En iyi-hal (best case) modelleniyor: 150 gün + 5 ödeme tamamlanmış
+   * varsayımıyla m. 21/3 indirimi uygulanır. Çekilişli sözleşmeler bu hesapta
+   * yok — YasalBilgiPaneli içindeki bilgi notu ile ayrıca belirtilir.
+   */
+  // ── Tasarruf eşiği (m. 21/2-a "tasarruf" ayağı) ───────────────────────────
+  // peşinat + Σ taksit ≥ sözleşme_tutarı × 0.40 olan ilk ay.
+  const tasarrufEsikTutari = tutar * 0.40
   let kumulatif = pesinat
   let tempKalan = kalanBorcBaslangic
-  let autoTeslimAy = 0
+  let tasarrufEsikAyi = 0
   for (let t = 1; t <= Math.max(vade, 600); t++) {
     const tak = Math.min(getTaksit(t), tempKalan)
     tempKalan -= tak
     kumulatif += tak
-    if (autoTeslimAy === 0 && kumulatif >= teslimatEsik) {
-      autoTeslimAy = t
+    if (tasarrufEsikAyi === 0 && kumulatif >= tasarrufEsikTutari) {
+      tasarrufEsikAyi = t
       break
     }
     if (tempKalan <= 0.005) break
   }
-  const teslimAy = Math.max(autoTeslimAy || vade, 6)
+  // Eğer tutar hiç karşılanamıyorsa (taksit + peşinat < %40 × tutar), vade'ye düşsün
+  if (tasarrufEsikAyi === 0) tasarrufEsikAyi = vade
 
-  // Nakit akışı (IRR için)
-  const cashflows = new Array(vade + 1).fill(0)
-  cashflows[0] = -(pesinat + orgBedeli)
-  let kalanCF = kalanBorcBaslangic
-  for (let t = 1; t <= vade; t++) {
-    const tak = Math.min(getTaksit(t), kalanCF)
-    kalanCF -= tak
-    cashflows[t] = t === teslimAy ? tutar - tak : -tak
-  }
+  // ── Süre eşiği (m. 21/2-a "süre" ayağı + m. 21/3 indirimi) ────────────────
+  const pesinatRatio = tutar > 0 ? pesinat / tutar : 0
+  // Üst sınır: peşinat ≥ tutar durumunda oranı 1'e clamp (indirim tam).
+  const clampedRatio = Math.min(Math.max(pesinatRatio, 0), 1)
+  // m. 21/3: ay-5 tabanı (150 gün + 5 ödeme). Vade < 5 ise vade tabana çıkar.
+  const FLOOR_MONTH = 5
+  const baseDurationGate = Math.ceil(vade * 0.40)
+  const reducedDurationGate = Math.max(
+    Math.min(FLOOR_MONTH, vade),
+    Math.ceil(vade * 0.40 * (1 - clampedRatio)),
+  )
+  const sureEsikAyi = reducedDurationGate
 
-  // IRR (birden fazla başlangıç noktası dene)
-  let irrAylik = calcIRR(cashflows, 0.005)
-  if (isNaN(irrAylik) || irrAylik <= -1) irrAylik = calcIRR(cashflows, 0.02)
-  if (isNaN(irrAylik) || irrAylik <= -1) irrAylik = calcIRR(cashflows, 0.001)
+  // ── Teslim = her iki eşiğin geç olanı (m. 21/2-a "ve" bağlayıcısı) ────────
+  let teslimAy = Math.max(tasarrufEsikAyi, sureEsikAyi)
+  if (teslimAy > vade) teslimAy = vade
 
-  const irrAylikPct = isNaN(irrAylik) ? NaN : irrAylik * 100
-  const irrYillik = isNaN(irrAylik) ? NaN : (Math.pow(1 + irrAylik, 12) - 1) * 100
+  // Hangi eşik bağlayıcı oldu?
+  let bagliyayanEsik: 'tasarruf' | 'sure' | 'her-ikisi'
+  if (tasarrufEsikAyi === sureEsikAyi) bagliyayanEsik = 'her-ikisi'
+  else if (teslimAy === sureEsikAyi) bagliyayanEsik = 'sure'
+  else bagliyayanEsik = 'tasarruf'
+
+  // Geriye uyumluluk: eski adıyla da dışarı veriyoruz (silinebilir)
+  const autoTeslimAy = teslimAy
+
+  // Geriye uyumluluk için placeholder (ileride kaldırılabilir)
+  const cashflows: number[] = []
 
   // TF toplam ödeme
   let tfToplam = pesinat + orgBedeli
@@ -353,11 +536,11 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   }
 
   // Alternatif: Mevduat + Kredi
-  // Birikim teslimAy-1'e kadar çalışır; teslimAy'da ilk kredi ödemesi yapılır
+  // Birikim teslimAy-1'e kadar çalışır; teslimAy'da ilk kredi ödemesi yapılır.
   const mevduatAylik = Math.pow(1 + mevduatYillik / 100, 1/12) - 1
   let birikim = pesinat + orgBedeli
   let kalanAlt = kalanBorcBaslangic
-  const altFaizArr: number[] = new Array(teslimAy + 1).fill(0)
+  const altFaizArr: number[] = new Array(Math.max(teslimAy + 1, vade + 1)).fill(0)
   for (let t = 1; t <= teslimAy - 1; t++) {
     const faiz = birikim * mevduatAylik
     altFaizArr[t] = faiz
@@ -368,18 +551,28 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   }
   const birikilenToplam = birikim
   const krediIhtiyaci = Math.max(0, tutar - birikilenToplam)
+
+  // kalanVade: teslim ayı dahil teslimat sonrası kaç taksit kaldığı.
+  // rows[t=teslimAy..vade] için post-delivery row count = vade - teslimAy + 1.
+  // Bu sayı kalanVade'ye eşit olmalı ki "post-delivery altTaksit toplamı == krToplam".
+  const autoKalanVade = vade > 0 && teslimAy > 0
+    ? Math.max(0, vade - teslimAy + 1)
+    : 0
   const kalanVade = (p.kalanVadeOverride && p.kalanVadeOverride > 0)
     ? p.kalanVadeOverride
-    : Math.max(0, vade - teslimAy)
+    : autoKalanVade
 
-  const r = krFaizAylik / 100
+  // Kredi tarafı: krediHesapla fonksiyonunu doğrudan kullan (annüite formülü orada)
   let krTaksit = 0, krToplam = 0, krFaizToplam = 0
   if (krediIhtiyaci > 0 && kalanVade > 0) {
-    krTaksit = r === 0
-      ? krediIhtiyaci / kalanVade
-      : krediIhtiyaci * r * Math.pow(1+r, kalanVade) / (Math.pow(1+r, kalanVade) - 1)
-    krToplam = krTaksit * kalanVade
-    krFaizToplam = krToplam - krediIhtiyaci
+    const krediSonuc = krediHesapla({
+      tutar: krediIhtiyaci,
+      vadeAy: kalanVade,
+      aylikFaizPct: krFaizAylik,
+    })
+    krTaksit = krediSonuc.aylikTaksit
+    krToplam = krediSonuc.toplamOdeme
+    krFaizToplam = krediSonuc.toplamFaiz
   }
 
   let altToplam = pesinat + orgBedeli
@@ -391,12 +584,26 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
   }
   altToplam += krToplam
 
-  // Karşılaştırmalı ödeme planı tablosu için satırlar
-  // altKumul: teslimat öncesi → gerçek mevduat bakiyesi (yatırım + faiz kümülatif)
-  //           teslimat ayı ve sonrası → kümülatif kredi ödemesi
+  // Eşdeğer Banka Faizi: Alternatif senaryo (mevduat+kredi) ile TF'yi eşit maliyete getiren banka oranı
+  const preDeliveryOutflow = altToplam - krToplam
+  const targetKrToplam = tfToplam - preDeliveryOutflow
+  let esdegerAylik: number
+  if (krediIhtiyaci <= 0 || kalanVade <= 0 || targetKrToplam <= 0) {
+    esdegerAylik = NaN
+  } else {
+    const targetKrTaksit = targetKrToplam / kalanVade
+    const eqCashflows = [-krediIhtiyaci, ...Array(kalanVade).fill(targetKrTaksit)]
+    esdegerAylik = robustIRR(eqCashflows)
+  }
+  const irrAylikPct = !isFinite(esdegerAylik) || isNaN(esdegerAylik) ? NaN : esdegerAylik * 100
+  const irrYillik = !isFinite(esdegerAylik) || isNaN(esdegerAylik) ? NaN : (Math.pow(1 + esdegerAylik, 12) - 1) * 100
+
+  // Karşılaştırmalı ödeme planı tablosu için satırlar.
+  // Post-delivery satırlar: ay ∈ [teslimAy, vade] → adet = vade - teslimAy + 1 = kalanVade.
+  // Her post-delivery satırda altTaksit = krTaksit → post-delivery toplam = krTaksit * kalanVade = krToplam.
   const rows: KarsilastirmaRow[] = []
   let tfKumul = pesinat + orgBedeli
-  let birikimForRows = pesinat + orgBedeli  // mevduat bakiyesi (faiz dahil)
+  let birikimForRows = pesinat + orgBedeli
   let altKumul = 0
   let kalanTFRows = kalanBorcBaslangic
   let kalanAltRows = kalanBorcBaslangic
@@ -408,14 +615,12 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
     let altTak: number
     let altFaizRow: number
     if (t < teslimAy) {
-      // Teslimat öncesi: TF ile aynı taksit mevduata yatırılır; bakiye faizle büyür
       altTak = Math.min(getTaksit(t), kalanAltRows)
       kalanAltRows = Math.max(0, kalanAltRows - altTak)
-      altFaizRow = altFaizArr[t]
-      birikimForRows += altFaizRow + altTak   // = birikimForRows * (1+rate) + altTak
+      altFaizRow = altFaizArr[t] || 0
+      birikimForRows += altFaizRow + altTak
       altKumul = birikimForRows
     } else {
-      // Teslimat ayı ve sonrası: kredi taksiti ödenir
       altTak = krTaksit > 0 ? krTaksit : 0
       altFaizRow = 0
       altKumul += altTak
@@ -424,13 +629,16 @@ export function karsilastirmaHesapla(p: KarsilastirmaParams): KarsilastirmaSonuc
     rows.push({ ay: t, tfTaksit: tfTak, tfKumul, altTaksit: altTak, altFaiz: altFaizRow, altKumul, isTeslim: t === teslimAy })
   }
 
-  const tfDahaAvantajli = !isNaN(irrAylikPct) && irrAylikPct < krFaizAylik
+  // Verdict: TL bazlı (toplam maliyet karşılaştırması)
   const fark = Math.abs(tfToplam - altToplam)
   const krDahaUcuz = altToplam < tfToplam
+  const tfDahaAvantajli = tfToplam < altToplam
 
   return {
     vade, cashflows, tfToplam, orgBedeli, irrAylikPct, irrYillik,
-    teslimVadeNo: teslimAy, teslimAy, rows,
+    teslimVadeNo: teslimAy, teslimAy,
+    tasarrufEsikAyi, sureEsikAyi, bagliyayanEsik,
+    rows,
     birikilenToplam, krediIhtiyaci, kalanVade,
     krTaksit, krToplam, krFaizToplam, altToplam,
     fark, tfDahaAvantajli, krDahaUcuz

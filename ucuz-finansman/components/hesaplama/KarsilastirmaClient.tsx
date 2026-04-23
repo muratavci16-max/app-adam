@@ -1,56 +1,152 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { Fragment, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { BarChart2, TrendingUp, Building2, AlertTriangle } from 'lucide-react'
-import { karsilastirmaHesapla, formatTL, parseInput } from '@/lib/hesaplamalar'
+import { karsilastirmaHesapla, formatTL, formatPct, parseInput } from '@/lib/hesaplamalar'
+import { numericOnlyBeforeInput } from '@/lib/input-filter'
+import { useNumericInputState } from '@/lib/useNumericInputState'
+import { useIntRangeInput } from '@/lib/useIntRangeInput'
 import type { KarsilastirmaParams, KarsilastirmaSonuc } from '@/lib/hesaplamalar'
+import {
+  handleTutarChange as handleTutarChangePure,
+  handleTaksitChange as handleTaksitChangePure,
+  handlePesinatChange as handlePesinatChangePure,
+  handleMonthsChange as handleMonthsChangePure,
+  handleVarlikTuruChange as handleVarlikTuruChangePure,
+  getMaxMonths,
+  DEFAULT_VARLIK,
+  type KarsilastirmaFormState,
+  type VarlikTuru,
+} from '@/lib/karsilastirma-state'
+import { parseKarsilastirmaUrl, resolveInitialState } from '@/lib/url-params'
 import { StatCard } from '@/components/ui/Card'
 import AdBanner from '@/components/ui/AdBanner'
+import YasalBilgiPaneli from './YasalBilgiPaneli'
 
 // SSR hatası almamak için dinamik import
 const KarsilastirmaChart = dynamic(() => import('./KarsilastirmaChart'), { ssr: false })
 
-const DEFAULT: KarsilastirmaParams = {
-  tutar: 2_000_000,
-  pesinat: 400_000,
+// "Other" params — non-form-state fields needed by karsilastirmaHesapla
+interface OtherParams {
+  orgPct: number
+  krFaizAylik: number
+  mevduatYillik: number
+  takTuru: 'sabit' | 'artisli'
+  artisAy: number
+  yeniTaksit: number
+  kalanVadeOverride?: number
+}
+
+const DEFAULT_FORM: {
+  tutar: number
+  pesinat: number
+  taksit: number
+  months: number
+  varlikTuru: VarlikTuru
+} = {
+  tutar: 1_800_000,
+  pesinat: 300_000,
+  taksit: 60_000,
+  months: 25,
+  varlikTuru: DEFAULT_VARLIK,
+}
+
+const DEFAULT_OTHER: OtherParams = {
   orgPct: 8.5,
-  taksit0: 60_000,
+  krFaizAylik: 2.49,
+  mevduatYillik: 40,
   takTuru: 'sabit',
   artisAy: 0,
   yeniTaksit: 0,
-  krFaizAylik: 2.49,
-  mevduatYillik: 40,
 }
 
 export default function KarsilastirmaClient() {
   const searchParams = useSearchParams()
 
-  const [params, setParams] = useState<KarsilastirmaParams>(() => ({
-    tutar: parseFloat(searchParams.get('tutar') ?? '') || DEFAULT.tutar,
-    pesinat: parseFloat(searchParams.get('pesinat') ?? '') || DEFAULT.pesinat,
-    orgPct: parseFloat(searchParams.get('org_pct') ?? '') || DEFAULT.orgPct,
-    taksit0: parseFloat(searchParams.get('taksit') ?? '') || DEFAULT.taksit0,
-    takTuru: 'sabit',
-    artisAy: 0,
-    yeniTaksit: 0,
-    krFaizAylik: parseFloat(searchParams.get('kr_faiz') ?? '') || DEFAULT.krFaizAylik,
-    mevduatYillik: parseFloat(searchParams.get('mevduat_y') ?? '') || DEFAULT.mevduatYillik,
-  }))
+  // Next.js returns ReadonlyURLSearchParams; wrap it in a fresh URLSearchParams
+  // so the pure `parseKarsilastirmaUrl` (which expects URLSearchParams) is happy.
+  const spSnapshot = useMemo(
+    () => new URLSearchParams(searchParams?.toString() ?? ''),
+    // snapshot once at mount — initial-state resolution only uses mount-time URL.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
+
+  // Initial form state: URL-derived, with defaults as fallback.
+  const [formState, setFormState] = useState<KarsilastirmaFormState>(() => {
+    const urlInput = parseKarsilastirmaUrl(spSnapshot)
+    return resolveInitialState(urlInput, DEFAULT_FORM)
+  })
+
+  // "Other" params — non-form-state fields used by karsilastirmaHesapla.
+  const [otherParams, setOtherParams] = useState<OtherParams>(() => {
+    const sp = spSnapshot
+    const urlInput = parseKarsilastirmaUrl(sp)
+    // Legacy URL keys (org_pct, kr_faiz, mevduat_y) are not covered by
+    // parseKarsilastirmaUrl; read those directly as a best-effort fallback.
+    const orgPctLegacy = parseFloat(sp.get('org_pct') ?? '')
+    const krFaizLegacy = parseFloat(sp.get('kr_faiz') ?? '')
+    const mevduatLegacy = parseFloat(sp.get('mevduat_y') ?? '')
+    return {
+      orgPct:
+        urlInput.orgPct !== undefined
+          ? urlInput.orgPct
+          : Number.isFinite(orgPctLegacy) && orgPctLegacy > 0
+          ? orgPctLegacy
+          : DEFAULT_OTHER.orgPct,
+      krFaizAylik:
+        urlInput.krFaiz !== undefined
+          ? urlInput.krFaiz
+          : Number.isFinite(krFaizLegacy) && krFaizLegacy > 0
+          ? krFaizLegacy
+          : DEFAULT_OTHER.krFaizAylik,
+      mevduatYillik:
+        urlInput.mevduatYillik !== undefined
+          ? urlInput.mevduatYillik
+          : Number.isFinite(mevduatLegacy) && mevduatLegacy > 0
+          ? mevduatLegacy
+          : DEFAULT_OTHER.mevduatYillik,
+      takTuru: DEFAULT_OTHER.takTuru,
+      artisAy: DEFAULT_OTHER.artisAy,
+      yeniTaksit: DEFAULT_OTHER.yeniTaksit,
+    }
+  })
 
   const [kalanVadeStr, setKalanVadeStr] = useState<string>('')
   const userEditedKalanVade = useRef(false)
 
   const [sonuc, setSonuc] = useState<KarsilastirmaSonuc | null>(null)
 
+  // Merge formState + otherParams → KarsilastirmaParams for computation.
+  const params: KarsilastirmaParams = useMemo(
+    () => ({
+      tutar: formState.tutar,
+      pesinat: formState.pesinat,
+      taksit0: formState.taksit,
+      orgPct: otherParams.orgPct,
+      krFaizAylik: otherParams.krFaizAylik,
+      mevduatYillik: otherParams.mevduatYillik,
+      takTuru: otherParams.takTuru,
+      artisAy: otherParams.artisAy,
+      yeniTaksit: otherParams.yeniTaksit,
+      kalanVadeOverride: otherParams.kalanVadeOverride,
+    }),
+    [formState, otherParams],
+  )
+
   const hesapla = useCallback(() => {
     try {
       setSonuc(karsilastirmaHesapla(params))
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, [params])
 
-  useEffect(() => { hesapla() }, [hesapla])
+  useEffect(() => {
+    hesapla()
+  }, [hesapla])
 
   // Sync kalanVadeStr from auto-calc when user hasn't overridden
   useEffect(() => {
@@ -59,20 +155,55 @@ export default function KarsilastirmaClient() {
     }
   }, [sonuc])
 
-  const set = (key: keyof KarsilastirmaParams, val: string | number) => {
-    setParams(prev => ({ ...prev, [key]: val }))
+  // --- Form handlers route through the pure state-machine module ---
+  const onTutarChange = (val: number) => {
+    setFormState(prev => handleTutarChangePure(prev, val))
+  }
+
+  const onTaksitChange = (val: number) => {
+    setFormState(prev => handleTaksitChangePure(prev, val))
+  }
+
+  const onPesinatChange = (val: number) => {
+    setFormState(prev => handlePesinatChangePure(prev, val))
+  }
+
+  const onMonthsChange = (val: number) => {
+    setFormState(prev => handleMonthsChangePure(prev, val))
+  }
+
+  const onVarlikTuruChange = (val: VarlikTuru) => {
+    setFormState(prev => handleVarlikTuruChangePure(prev, val))
+  }
+
+  const maxMonths = getMaxMonths(formState.varlikTuru)
+
+  // Display-state hooks: keep the text the user typed stable during typing.
+  const tutarInput = useNumericInputState(formState.tutar, onTutarChange)
+  const pesinatInput = useNumericInputState(formState.pesinat, onPesinatChange)
+  const taksitInput = useNumericInputState(formState.taksit, onTaksitChange)
+  const monthsInput = useIntRangeInput(formState.months, onMonthsChange, { min: 1, max: maxMonths })
+
+  const VARLIK_OPTIONS: Array<{ value: VarlikTuru; label: string }> = [
+    { value: 'konut', label: 'Konut' },
+    { value: 'isyeri', label: 'İş Yeri' },
+    { value: 'tasit', label: 'Taşıt' },
+  ]
+
+  const setOther = <K extends keyof OtherParams>(key: K, val: OtherParams[K]) => {
+    setOtherParams(prev => ({ ...prev, [key]: val }))
   }
 
   const handleKalanVadeChange = (val: string) => {
     setKalanVadeStr(val)
     const n = parseInt(val) || 0
     userEditedKalanVade.current = n > 0
-    setParams(prev => ({ ...prev, kalanVadeOverride: n > 0 ? n : undefined }))
+    setOtherParams(prev => ({ ...prev, kalanVadeOverride: n > 0 ? n : undefined }))
   }
 
   const resetKalanVade = () => {
     userEditedKalanVade.current = false
-    setParams(prev => ({ ...prev, kalanVadeOverride: undefined }))
+    setOtherParams(prev => ({ ...prev, kalanVadeOverride: undefined }))
   }
 
   const inputClass = "w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all bg-white"
@@ -85,7 +216,7 @@ export default function KarsilastirmaClient() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-2.5 mb-2">
             <BarChart2 className="w-5 h-5 text-purple-300" />
-            <span className="text-xs font-semibold text-purple-300 uppercase tracking-wide">IRR Analizi</span>
+            <span className="text-xs font-semibold text-purple-300 uppercase tracking-wide">Maliyet Karşılaştırma Analizi</span>
           </div>
           <h1 className="text-white text-xl sm:text-2xl font-extrabold tracking-tight">Karşılaştırma Analizi</h1>
           <p className="text-purple-200 text-sm mt-1">Tasarruf Finansmanı vs Banka Kredisi — Gerçek maliyet karşılaştırması</p>
@@ -107,61 +238,118 @@ export default function KarsilastirmaClient() {
               </h2>
               <div className="space-y-3.5">
                 <div>
+                  <label className={labelClass}>Finansman Konusu</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {VARLIK_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => onVarlikTuruChange(opt.value)}
+                        className={`py-2 rounded-xl text-xs font-semibold border transition-all ${
+                          formState.varlikTuru === opt.value
+                            ? 'bg-success-50 border-success-300 text-success-700'
+                            : 'bg-white border-neutral-200 text-neutral-500 hover:border-neutral-300'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
                   <label className={labelClass}>Toplam Finansman Tutarı</label>
                   <div className="relative">
-                    <input type="text" className={inputClass} value={params.tutar.toLocaleString('tr-TR')}
-                      onChange={e => set('tutar', parseInput(e.target.value, false))} />
+                    <input type="text" inputMode="decimal" onBeforeInput={numericOnlyBeforeInput} className={inputClass} {...tutarInput} />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                   </div>
                 </div>
                 <div>
                   <label className={labelClass}>Peşinat</label>
                   <div className="relative">
-                    <input type="text" className={inputClass} value={params.pesinat.toLocaleString('tr-TR')}
-                      onChange={e => set('pesinat', parseInput(e.target.value, false))} />
+                    <input type="text" inputMode="decimal" onBeforeInput={numericOnlyBeforeInput} className={inputClass} {...pesinatInput} />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                   </div>
                 </div>
                 <div>
-                  <label className={labelClass}>Organizasyon / Hizmet Ücreti</label>
+                  <label
+                    className={labelClass}
+                    title="Mevzuatta 'organizasyon ücreti' olarak geçer; bazı şirketler 'hizmet bedeli' de diyebilir (Kanun 6361 m. 3/j). Ödenen organizasyon ücreti, 14 gün içinde cayma halinde iade edilir (Kanun 6361 m. 39/A fıkra 3)."
+                  >
+                    Organizasyon Ücreti
+                  </label>
                   <div className="relative">
-                    <input type="number" step="0.1" className={inputClass} value={params.orgPct}
-                      onChange={e => set('orgPct', parseFloat(e.target.value) || 0)} />
+                    <input type="number" step="0.1" className={inputClass} value={otherParams.orgPct}
+                      onChange={e => setOther('orgPct', parseFloat(e.target.value) || 0)} />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
                   </div>
                 </div>
-                <div>
-                  <label className={labelClass}>Taksit Türü</label>
-                  <div className="flex gap-2">
-                    {(['sabit', 'artisli'] as const).map(t => (
-                      <button key={t} type="button"
-                        onClick={() => set('takTuru', t)}
-                        className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${params.takTuru === t ? 'bg-success-50 border-success-300 text-success-700' : 'bg-white border-neutral-200 text-neutral-500'}`}>
-                        {t === 'sabit' ? 'Sabit' : 'Artışlı'}
-                      </button>
-                    ))}
+                {false && (
+                  <div>
+                    <label className={labelClass}>Taksit Türü</label>
+                    <div className="flex gap-2">
+                      {(['sabit', 'artisli'] as const).map(t => (
+                        <button key={t} type="button"
+                          onClick={() => setOther('takTuru', t)}
+                          className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all ${otherParams.takTuru === t ? 'bg-success-50 border-success-300 text-success-700' : 'bg-white border-neutral-200 text-neutral-500'}`}>
+                          {t === 'sabit' ? 'Sabit' : 'Artışlı'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 <div>
-                  <label className={labelClass}>Başlangıç Taksit</label>
+                  <label
+                    className={labelClass}
+                    title="Planınızın dışında ara dönemlerde ek ödeme yapmanız tahsisat (teslim) tarihini öne çekmez. Tahsisat için yalnızca taahhüt ettiğiniz tasarruf planı dikkate alınır (Yönetmelik m. 21/3)."
+                  >
+                    Başlangıç Taksit <span className="text-neutral-400 font-normal" aria-hidden>ⓘ</span>
+                  </label>
                   <div className="relative">
-                    <input type="text" className={inputClass} value={params.taksit0.toLocaleString('tr-TR')}
-                      onChange={e => set('taksit0', parseInput(e.target.value, false))} />
+                    <input type="text" inputMode="decimal" onBeforeInput={numericOnlyBeforeInput} className={inputClass} {...taksitInput} />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                   </div>
                 </div>
-                {params.takTuru === 'artisli' && (
+                <div>
+                  <label className={labelClass}>
+                    Vade (Ay)
+                    {!monthsInput.isValid && (
+                      <span className="ml-1.5 text-[10px] text-red-500 font-normal">— geçersiz (1-{maxMonths})</span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={maxMonths}
+                      value={monthsInput.value}
+                      onChange={monthsInput.onChange}
+                      onFocus={monthsInput.onFocus}
+                      onBlur={monthsInput.onBlur}
+                      className={
+                        monthsInput.isValid
+                          ? inputClass
+                          : "w-full border border-red-300 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-red-600 focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400 transition-all bg-red-50/50"
+                      }
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">ay</span>
+                  </div>
+                  <p className="text-[10px] text-neutral-400 mt-1">
+                    Mevzuat üst sınırı: {maxMonths} ay (Yön. m. 22/3)
+                  </p>
+                </div>
+                {false && otherParams.takTuru === 'artisli' && (
                   <div className="grid grid-cols-2 gap-3 bg-amber-50 p-3 rounded-xl">
                     <div>
                       <label className={labelClass}>Artış Başlangıç Ayı</label>
-                      <input type="number" className={inputClass} value={params.artisAy}
-                        onChange={e => set('artisAy', parseInt(e.target.value) || 0)} />
+                      <input type="number" className={inputClass} value={otherParams.artisAy}
+                        onChange={e => setOther('artisAy', parseInt(e.target.value) || 0)} />
                     </div>
                     <div>
                       <label className={labelClass}>Yeni Taksit</label>
                       <div className="relative">
-                        <input type="text" className={inputClass} value={params.yeniTaksit.toLocaleString('tr-TR')}
-                          onChange={e => set('yeniTaksit', parseInput(e.target.value, false))} />
+                        <input type="text" className={inputClass} value={Math.round(otherParams.yeniTaksit).toLocaleString('tr-TR')}
+                          onChange={e => setOther('yeniTaksit', parseInput(e.target.value, false))} />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                       </div>
                     </div>
@@ -173,8 +361,15 @@ export default function KarsilastirmaClient() {
                     <p className="text-sm font-extrabold text-primary-900 mt-0.5">
                       {sonuc.teslimAy}. Ay
                     </p>
-                    <p className="text-xs text-primary-500 mt-0.5">
-                      Min. 6. ay · Tutarın %40'ına ulaşıldığında (hizmet bedeli hariç)
+                    <p className="text-xs text-primary-700 mt-0.5">
+                      {sonuc.bagliyayanEsik === 'tasarruf'
+                        ? `Tasarruf %40 şartı ${sonuc.tasarrufEsikAyi}. ayda sağlanıyor; süre şartı daha önce karşılanmış.`
+                        : sonuc.bagliyayanEsik === 'sure'
+                        ? `Süre şartı ${sonuc.sureEsikAyi}. ayda sağlanıyor; tasarruf %40 şartı daha önce (${sonuc.tasarrufEsikAyi}. ay) karşılanmış.`
+                        : `Her iki şart da ${sonuc.teslimAy}. ayda karşılanıyor.`}
+                    </p>
+                    <p className="text-[10px] text-primary-500 mt-1 leading-relaxed">
+                      Mevzuat: hem tasarrufun %40&apos;ı hem sözleşme süresinin %40&apos;ı birlikte aranır; süre şartı peşinat oranı ile azaltılabilir (Yön. m. 21/2-a, 21/3). En erken 5. aydan itibaren.
                     </p>
                   </div>
                 )}
@@ -191,16 +386,16 @@ export default function KarsilastirmaClient() {
                 <div>
                   <label className={labelClass}>Banka Aylık Faiz Oranı</label>
                   <div className="relative">
-                    <input type="number" step="0.01" className={inputClass} value={params.krFaizAylik}
-                      onChange={e => set('krFaizAylik', parseFloat(e.target.value) || 0)} />
+                    <input type="number" step="0.01" className={inputClass} value={otherParams.krFaizAylik}
+                      onChange={e => setOther('krFaizAylik', parseFloat(e.target.value) || 0)} />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
                   </div>
                 </div>
                 <div>
                   <label className={labelClass}>Alternatif Mevduat Getirisi (Yıllık)</label>
                   <div className="relative">
-                    <input type="number" step="0.5" className={inputClass} value={params.mevduatYillik}
-                      onChange={e => set('mevduatYillik', parseFloat(e.target.value) || 0)} />
+                    <input type="number" step="0.5" className={inputClass} value={otherParams.mevduatYillik}
+                      onChange={e => setOther('mevduatYillik', parseFloat(e.target.value) || 0)} />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
                   </div>
                   <p className="text-xs text-neutral-400 mt-1">Tasarruf alternatifinizin getirisi</p>
@@ -233,44 +428,60 @@ export default function KarsilastirmaClient() {
           {/* RIGHT — Sonuçlar */}
           {sonuc && (
             <div className="space-y-5">
-              {/* Verdict */}
-              {!isNaN(sonuc.irrAylikPct) && (
-                <div className={`flex items-center gap-4 p-5 rounded-2xl border-2 ${sonuc.tfDahaAvantajli ? 'bg-success-50 border-success-300' : 'bg-blue-50 border-blue-300'}`}>
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${sonuc.tfDahaAvantajli ? 'bg-success-100' : 'bg-blue-100'}`}>
-                    {sonuc.tfDahaAvantajli ? <TrendingUp className="w-6 h-6 text-success-600" /> : <Building2 className="w-6 h-6 text-blue-600" />}
-                  </div>
-                  <div>
-                    <p className={`text-base font-extrabold ${sonuc.tfDahaAvantajli ? 'text-success-800' : 'text-blue-800'}`}>
-                      {sonuc.tfDahaAvantajli
-                        ? '✓ Tasarruf Finansmanı Daha Avantajlı'
-                        : '✓ Banka Kredisi Daha Uygun'}
-                    </p>
-                    <p className={`text-sm mt-0.5 ${sonuc.tfDahaAvantajli ? 'text-success-600' : 'text-blue-600'}`}>
-                      {sonuc.krDahaUcuz
-                        ? `Banka alternatifiniz ${formatTL(sonuc.fark)} daha ucuz`
-                        : `TF sistemi ${formatTL(sonuc.fark)} daha avantajlı`
-                      }
-                    </p>
-                  </div>
+              {/* Verdict — etkin faiz vs banka faizi (rate-bazlı) */}
+              <div className={`flex items-center gap-4 p-5 rounded-2xl border-2 ${sonuc.tfDahaAvantajli ? 'bg-success-50 border-success-300' : 'bg-blue-50 border-blue-300'}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${sonuc.tfDahaAvantajli ? 'bg-success-100' : 'bg-blue-100'}`}>
+                  {sonuc.tfDahaAvantajli ? <TrendingUp className="w-6 h-6 text-success-600" /> : <Building2 className="w-6 h-6 text-blue-600" />}
                 </div>
-              )}
+                <div>
+                  <p className={`text-base font-extrabold ${sonuc.tfDahaAvantajli ? 'text-success-800' : 'text-blue-800'}`}>
+                    {sonuc.tfDahaAvantajli
+                      ? '✓ Tasarruf Finansmanı Daha Avantajlı'
+                      : '✓ Banka Kredisi Daha Uygun'}
+                  </p>
+                  <p className={`text-sm mt-0.5 ${sonuc.tfDahaAvantajli ? 'text-success-600' : 'text-blue-600'}`}>
+                    {sonuc.krDahaUcuz
+                      ? `Mevduat+kredi alternatifi ${formatTL(sonuc.fark)} daha az ödeme ile bitiriyor`
+                      : `TF sistemi ${formatTL(sonuc.fark)} daha az ödeme ile bitiriyor`
+                    }
+                  </p>
+                  <p className="text-xs mt-0.5 text-neutral-500">
+                    TF maliyet oranı (referans) <strong>{formatPct(sonuc.irrAylikPct)}</strong> · banka efektif faiz <strong>{formatPct(otherParams.krFaizAylik)}</strong>
+                  </p>
+                </div>
+              </div>
 
-              {/* IRR & stats */}
+              {/* Ana karşılaştırma (TL) + ikincil (maliyet oranları) */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <StatCard
-                  label="TF Efektif Faiz (IRR)"
-                  value={isNaN(sonuc.irrAylikPct) ? '—' : `%${sonuc.irrAylikPct.toFixed(2)}`}
-                  sub="Aylık"
-                  color={sonuc.tfDahaAvantajli ? 'green' : 'amber'}
+                  label="TF Toplam Maliyet"
+                  value={formatTL(sonuc.tfToplam)}
+                  color={sonuc.tfDahaAvantajli ? 'green' : 'blue'}
                 />
                 <StatCard
-                  label="IRR Yıllık Bileşik"
-                  value={isNaN(sonuc.irrYillik) ? '—' : `%${sonuc.irrYillik.toFixed(1)}`}
-                  sub="vs banka faizi"
-                  color={sonuc.tfDahaAvantajli ? 'green' : 'amber'}
+                  label="Kredi Alt. Toplam"
+                  value={formatTL(sonuc.altToplam)}
+                  sub={
+                    isFinite(sonuc.fark)
+                      ? `${sonuc.krDahaUcuz ? '−' : '+'}${formatTL(sonuc.fark)}`
+                      : '—'
+                  }
+                  color={sonuc.krDahaUcuz ? 'green' : 'indigo'}
                 />
-                <StatCard label="TF Toplam Maliyet" value={formatTL(sonuc.tfToplam)} color="blue" />
-                <StatCard label="Kredi Alt. Toplam" value={formatTL(sonuc.altToplam)} color="indigo" />
+                <StatCard
+                  label="TF Aylık Maliyet Oranı (referans)"
+                  value={formatPct(sonuc.irrAylikPct)}
+                  sub={`vs banka ${formatPct(otherParams.krFaizAylik)}`}
+                  color="amber"
+                  tooltip="Bu oran yalnızca banka kredisi faiz eşdeğeri referans amacıyla hesaplanmıştır; TF sözleşmesi mevzuat gereği faizsiz finansman esaslıdır (Kanun 6361 m. 3/l, m. 39/B fıkra 3)."
+                />
+                <StatCard
+                  label="TF Yıllık Maliyet Oranı (referans)"
+                  value={formatPct(sonuc.irrYillik)}
+                  sub="Bileşik"
+                  color="amber"
+                  tooltip="Bu oran yalnızca banka kredisi faiz eşdeğeri referans amacıyla hesaplanmıştır; TF sözleşmesi mevzuat gereği faizsiz finansman esaslıdır (Kanun 6361 m. 3/l, m. 39/B fıkra 3)."
+                />
               </div>
 
               {/* Detaylar */}
@@ -285,11 +496,11 @@ export default function KarsilastirmaClient() {
                     {[
                       ['Vade', `${sonuc.vade} ay`],
                       ['Teslimat Ayı', `${sonuc.teslimAy}. ay`],
-                      ['Peşinat', formatTL(params.pesinat)],
+                      ['Peşinat', formatTL(formState.pesinat)],
                       ['Org. Bedeli', formatTL(sonuc.orgBedeli)],
                       ['Toplam Maliyet', formatTL(sonuc.tfToplam)],
-                      ['IRR (Aylık)', !isFinite(sonuc.irrAylikPct) || isNaN(sonuc.irrAylikPct) || Math.abs(sonuc.irrAylikPct) > 999 ? '—' : `%${sonuc.irrAylikPct.toFixed(2)}`],
-                      ['IRR (Yıllık)', !isFinite(sonuc.irrYillik) || isNaN(sonuc.irrYillik) || Math.abs(sonuc.irrYillik) > 999 ? '—' : `%${sonuc.irrYillik.toFixed(2)}`],
+                      ['TF Aylık Maliyet Oranı (referans)', formatPct(sonuc.irrAylikPct)],
+                      ['TF Yıllık Maliyet Oranı (referans)', formatPct(sonuc.irrYillik)],
                     ].map(([k, v]) => (
                       <div key={k} className="flex items-center justify-between text-xs">
                         <span className="text-neutral-500">{k}</span>
@@ -346,9 +557,9 @@ export default function KarsilastirmaClient() {
                     <tbody>
                       {/* ── AY 1: 3 başlangıç satırı (TF tarafı ayrıntılı; alt taraf ay 1'de toplu mevduata girer) ── */}
                       {[
-                        { label: 'Peşinat',    tf: params.pesinat,               tfK: params.pesinat },
-                        { label: 'Org. Bedeli',tf: sonuc.orgBedeli,              tfK: params.pesinat + sonuc.orgBedeli },
-                        { label: '',           tf: sonuc.rows[0]?.tfTaksit ?? 0, tfK: sonuc.rows[0]?.tfKumul ?? params.pesinat + sonuc.orgBedeli },
+                        { label: 'Peşinat',    tf: formState.pesinat,               tfK: formState.pesinat },
+                        { label: 'Org. Bedeli',tf: sonuc.orgBedeli,                 tfK: formState.pesinat + sonuc.orgBedeli },
+                        { label: '',           tf: sonuc.rows[0]?.tfTaksit ?? 0,    tfK: sonuc.rows[0]?.tfKumul ?? formState.pesinat + sonuc.orgBedeli },
                       ].map((r, i) => (
                         <tr key={`init-${i}`} className="border-b border-neutral-50 hover:bg-neutral-50/60">
                           <td className="px-4 py-2 bg-neutral-50/60">
@@ -370,7 +581,7 @@ export default function KarsilastirmaClient() {
                         if (row.isTeslim) {
                           // Teslimat ayı: 3 alt satır (Biriken Tutar / Çekilen Kredi / 1. Taksit)
                           return (
-                            <>
+                            <Fragment key={`t-${row.ay}`}>
                               {/* Alt-satır 1: Biriken mevduat tutarı */}
                               <tr key={`t-${row.ay}-1`} className="bg-amber-50/80 border-b border-amber-100">
                                 <td rowSpan={3} className="px-4 py-2 align-middle bg-amber-50 border-r border-amber-100">
@@ -410,11 +621,11 @@ export default function KarsilastirmaClient() {
                                 <td className="px-4 py-2 text-right text-neutral-300">—</td>
                                 <td className="px-4 py-2 text-right text-blue-700 font-semibold">{Math.round(row.altKumul).toLocaleString('tr-TR')} ₺</td>
                               </tr>
-                            </>
+                            </Fragment>
                           )
                         }
-                        // Normal satır (teslimat öncesi → mevduat; teslimat sonrası → kredi)
-                        const isPreDelivery = row.altFaiz > 0
+                        // Normal satır: teslimat öncesi ise mevduatta (ay < teslimAy); sonrası kredi
+                        const isPreDelivery = row.ay < sonuc.teslimAy
                         return (
                           <tr key={row.ay} className="border-b border-neutral-50 hover:bg-neutral-50/60">
                             <td className="px-4 py-2 bg-neutral-50/40">
@@ -466,6 +677,9 @@ export default function KarsilastirmaClient() {
                   Karar vermeden önce ilgili firmadan resmi teklif alınız.
                 </p>
               </div>
+
+              {/* Yasal Bilgilendirme — cayma, mevduat sigortası, sözleşme tipi */}
+              <YasalBilgiPaneli />
 
               <AdBanner placement="table_below" />
             </div>

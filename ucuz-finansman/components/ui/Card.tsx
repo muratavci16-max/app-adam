@@ -1,3 +1,4 @@
+import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CardProps {
@@ -26,6 +27,7 @@ interface StatCardProps {
   sub?: string
   color?: 'blue' | 'green' | 'indigo' | 'amber' | 'red'
   className?: string
+  tooltip?: string
 }
 
 const colorMap = {
@@ -36,10 +38,16 @@ const colorMap = {
   red:    'bg-red-50      text-red-700',
 }
 
-export function StatCard({ label, value, sub, color = 'blue', className }: StatCardProps) {
+export function StatCard({ label, value, sub, color = 'blue', className, tooltip }: StatCardProps) {
   return (
-    <div className={cn('rounded-xl p-4 border', colorMap[color], 'border-transparent', className)}>
-      <p className="text-xs font-medium opacity-75 mb-1">{label}</p>
+    <div
+      className={cn('rounded-xl p-4 border', colorMap[color], 'border-transparent', className)}
+      title={tooltip}
+    >
+      <p className="text-xs font-medium opacity-75 mb-1 flex items-center gap-1">
+        <span>{label}</span>
+        {tooltip && <Info className="w-3 h-3 opacity-60 shrink-0" aria-label="Bilgi" />}
+      </p>
       <p className="text-xl font-extrabold tracking-tight">{value}</p>
       {sub && <p className="text-xs opacity-60 mt-0.5">{sub}</p>}
     </div>

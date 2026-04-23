@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Menu, X, TrendingUp, Calculator, BarChart2, Home, User, LogOut, ChevronDown, Coins } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
@@ -20,6 +20,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [user, setUser] = useState<SupabaseUser | null>(null)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then((res) => setUser(res.data.user))
@@ -28,6 +29,17 @@ export default function Header() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!userMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [userMenuOpen])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -76,7 +88,7 @@ export default function Header() {
           {/* Right side */}
           <div className="ml-auto flex items-center gap-2">
             {user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[0.8rem] font-medium text-neutral-600 hover:bg-neutral-100 transition-all"

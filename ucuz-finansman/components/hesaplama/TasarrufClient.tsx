@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { TrendingUp, Download, Save, Info, ChevronDown, ChevronUp, Gift } from 'lucide-react'
-import { tasarrufHesapla, formatTL, formatTL2, parseInput } from '@/lib/hesaplamalar'
+import { TrendingUp, Info, ChevronDown, ChevronUp, Gift } from 'lucide-react'
+import { tasarrufHesapla, formatTL, formatTL2 } from '@/lib/hesaplamalar'
+import { numericOnlyBeforeInput } from '@/lib/input-filter'
+import { useNumericInputState } from '@/lib/useNumericInputState'
 import type { TasarrufParams, TasarrufSonuc } from '@/lib/hesaplamalar'
 import { StatCard } from '@/components/ui/Card'
 import AdBanner from '@/components/ui/AdBanner'
@@ -28,9 +30,13 @@ export default function TasarrufClient() {
   const searchParams = useSearchParams()
 
   const [params, setParams] = useState<TasarrufParams>(() => {
-    const tutar = parseFloat(searchParams.get('tutar') ?? '') || DEFAULT_PARAMS.tutar
-    const pesinat = parseFloat(searchParams.get('pesinat') ?? '') || DEFAULT_PARAMS.pesinat
-    const taksit = parseFloat(searchParams.get('taksit') ?? '') || DEFAULT_PARAMS.basTaksit
+    const parseUrlNonNeg = (raw: string | null, fallback: number): number => {
+      const n = parseFloat(raw ?? '')
+      return Number.isFinite(n) && n >= 0 ? n : fallback
+    }
+    const tutar = parseUrlNonNeg(searchParams.get('tutar'), DEFAULT_PARAMS.tutar)
+    const pesinat = parseUrlNonNeg(searchParams.get('pesinat'), DEFAULT_PARAMS.pesinat)
+    const taksit = parseUrlNonNeg(searchParams.get('taksit'), DEFAULT_PARAMS.basTaksit)
     return { ...DEFAULT_PARAMS, tutar, pesinat, basTaksit: taksit }
   })
 
@@ -45,6 +51,16 @@ export default function TasarrufClient() {
 
   const set = (key: keyof TasarrufParams, val: string | number) => {
     setParams(prev => ({ ...prev, [key]: val }))
+  }
+
+  // Display-state hooks for TL inputs — keep user-typed text stable during typing.
+  const tutarInput = useNumericInputState(params.tutar, val => set('tutar', val))
+  const pesinatInput = useNumericInputState(params.pesinat, val => set('pesinat', val))
+  const basTaksitInput = useNumericInputState(params.basTaksit, val => set('basTaksit', val))
+
+  const clamp = (n: number, min: number, max: number): number => {
+    if (!Number.isFinite(n)) return min
+    return Math.max(min, Math.min(max, n))
   }
 
   const inputClass = "w-full border border-neutral-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-neutral-800 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-primary-400 transition-all bg-white"
@@ -84,9 +100,10 @@ export default function TasarrufClient() {
                   <div className="relative">
                     <input
                       type="text"
+                      inputMode="decimal"
+                      onBeforeInput={numericOnlyBeforeInput}
                       className={inputClass}
-                      value={params.tutar.toLocaleString('tr-TR')}
-                      onChange={e => set('tutar', parseInput(e.target.value, false))}
+                      {...tutarInput}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                   </div>
@@ -98,9 +115,10 @@ export default function TasarrufClient() {
                   <div className="relative">
                     <input
                       type="text"
+                      inputMode="decimal"
+                      onBeforeInput={numericOnlyBeforeInput}
                       className={inputClass}
-                      value={params.pesinat.toLocaleString('tr-TR')}
-                      onChange={e => set('pesinat', parseInput(e.target.value, false))}
+                      {...pesinatInput}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                   </div>
@@ -112,9 +130,10 @@ export default function TasarrufClient() {
                   <div className="relative">
                     <input
                       type="text"
+                      inputMode="decimal"
+                      onBeforeInput={numericOnlyBeforeInput}
                       className={inputClass}
-                      value={params.basTaksit.toLocaleString('tr-TR')}
-                      onChange={e => set('basTaksit', parseInput(e.target.value, false))}
+                      {...basTaksitInput}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">₺</span>
                   </div>
@@ -128,9 +147,11 @@ export default function TasarrufClient() {
                       <input
                         type="number"
                         step="0.1"
+                        min={0}
+                        max={100}
                         className={inputClass}
                         value={params.hizmetOranPct}
-                        onChange={e => set('hizmetOranPct', parseFloat(e.target.value) || 0)}
+                        onChange={e => set('hizmetOranPct', clamp(parseFloat(e.target.value) || 0, 0, 100))}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
                     </div>
@@ -140,9 +161,11 @@ export default function TasarrufClient() {
                     <div className="relative">
                       <input
                         type="number"
+                        min={0}
+                        max={60}
                         className={inputClass}
                         value={params.hizmetVade}
-                        onChange={e => set('hizmetVade', parseInt(e.target.value) || 0)}
+                        onChange={e => set('hizmetVade', clamp(parseInt(e.target.value) || 0, 0, 60))}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">ay</span>
                     </div>
@@ -160,9 +183,11 @@ export default function TasarrufClient() {
                   <div className="relative">
                     <input
                       type="number"
+                      min={0}
+                      max={100}
                       className={inputClass}
                       value={params.teslimatPct}
-                      onChange={e => set('teslimatPct', parseFloat(e.target.value) || 0)}
+                      onChange={e => set('teslimatPct', clamp(parseFloat(e.target.value) || 0, 0, 100))}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
                   </div>
@@ -198,9 +223,11 @@ export default function TasarrufClient() {
                         <input
                           type="number"
                           step="0.5"
+                          min={0}
+                          max={50}
                           className={inputClass}
                           value={params.artisOrani}
-                          onChange={e => set('artisOrani', parseFloat(e.target.value) || 0)}
+                          onChange={e => set('artisOrani', clamp(parseFloat(e.target.value) || 0, 0, 50))}
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">%</span>
                       </div>
@@ -210,9 +237,11 @@ export default function TasarrufClient() {
                       <div className="relative">
                         <input
                           type="number"
+                          min={1}
+                          max={60}
                           className={inputClass}
                           value={params.artisSikligi}
-                          onChange={e => set('artisSikligi', parseInt(e.target.value) || 1)}
+                          onChange={e => set('artisSikligi', clamp(parseInt(e.target.value) || 1, 1, 60))}
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400">ay</span>
                       </div>
@@ -227,7 +256,7 @@ export default function TasarrufClient() {
                     <select
                       className={inputClass}
                       value={params.baslangicAy}
-                      onChange={e => set('baslangicAy', parseInt(e.target.value))}
+                      onChange={e => set('baslangicAy', clamp(parseInt(e.target.value), 1, 12))}
                     >
                       {AYLAR_TR.map((a, i) => <option key={i+1} value={i+1}>{a}</option>)}
                     </select>
@@ -237,7 +266,7 @@ export default function TasarrufClient() {
                     <select
                       className={inputClass}
                       value={params.baslangicYil}
-                      onChange={e => set('baslangicYil', parseInt(e.target.value))}
+                      onChange={e => set('baslangicYil', clamp(parseInt(e.target.value), 2020, 2060))}
                     >
                       {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                     </select>

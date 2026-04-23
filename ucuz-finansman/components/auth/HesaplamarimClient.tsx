@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { BarChart2, TrendingUp, Calculator, Trash2, ExternalLink, Plus, BookmarkCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { formatTL } from '@/lib/hesaplamalar'
+import { formatTL, formatPct } from '@/lib/hesaplamalar'
 import type { SavedPlan } from '@/types'
 import { showToast } from '@/components/ui/Toast'
 
@@ -25,7 +25,7 @@ export default function HesaplamarimClient() {
     supabase.auth.getUser().then((res) => {
       const data = res.data
       if (!data.user) {
-        router.push('/auth/giris')
+        router.push('/auth/giris?redirect=/hesaplamarim')
         return
       }
       setUser({ email: data.user.email })
@@ -106,7 +106,7 @@ export default function HesaplamarimClient() {
                         {plan.result_snapshot.toplamOdeme && <span>Toplam: <strong>{formatTL(plan.result_snapshot.toplamOdeme)}</strong></span>}
                         {plan.result_snapshot.aylikTaksit && <span>Taksit: <strong>{formatTL(plan.result_snapshot.aylikTaksit)}</strong></span>}
                         {plan.result_snapshot.irrAylikPct !== undefined && (
-                          <span>IRR: <strong>%{plan.result_snapshot.irrAylikPct.toFixed(2)}/ay</strong></span>
+                          <span>IRR: <strong>{formatPct(plan.result_snapshot.irrAylikPct)}/ay</strong></span>
                         )}
                       </div>
                     )}
