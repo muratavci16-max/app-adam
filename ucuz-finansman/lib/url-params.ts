@@ -14,6 +14,11 @@ import {
   type PrimaryField,
   type VarlikTuru,
 } from './karsilastirma-state'
+import type {
+  OptimizerFormState,
+  OptimizerMarketState,
+} from './optimizer-state'
+import type { OptimizeCase } from './tf-optimize'
 
 export interface KarsilastirmaUrlInput {
   tutar?: number
@@ -156,4 +161,120 @@ export function resolveInitialState(
     primaryField,
     varlikTuru,
   }
+}
+
+// ─── Optimizer URL helpers ─────────────────────────────────────────────────
+// Deep-linkable state for /optimizasyon. Separate from the Karşılaştırma
+// helpers above because the optimizer has a different state shape
+// (optimizeFor instead of primaryField; one field is always undefined).
+
+export interface OptimizerUrlInput {
+  mode?: OptimizeCase
+  tutar?: number
+  pesinat?: number
+  taksit?: number
+  orgPct?: number
+  krFaiz?: number
+  mevduatYillik?: number
+  varlikTuru?: VarlikTuru
+}
+
+function isOptimizeCase(v: unknown): v is OptimizeCase {
+  return v === 'tutar' || v === 'taksit' || v === 'pesinat'
+}
+
+/**
+ * Parse optimizer URL params. Mode defaults to 'taksit' when absent or
+ * invalid (matches the in-app default).
+ *
+ * If the URL carries a value for the field that IS the derived output
+ * (e.g. ?mode=taksit&taksit=60000), the value is discarded — mode wins.
+ */
+export function parseOptimizerUrl(
+  searchParams: URLSearchParams,
+): OptimizerUrlInput {
+  const out: OptimizerUrlInput = {}
+
+  const rawMode = searchParams.get('mode')
+  out.mode = isOptimizeCase(rawMode) ? rawMode : 'taksit'
+
+  // Read the three value fields but drop whichever one is the derived output.
+  const tutar = readNonNegative(searchParams, 'tutar')
+  const pesinat = readNonNegative(searchParams, 'pesinat')
+  const taksit = readNonNegative(searchParams, 'taksit')
+  if (tutar !== undefined && out.mode !== 'tutar') out.tutar = tutar
+  if (pesinat !== undefined && out.mode !== 'pesinat') out.pesinat = pesinat
+  if (taksit !== undefined && out.mode !== 'taksit') out.taksit = taksit
+
+  const orgPct = readNonNegative(searchParams, 'orgPct')
+  if (orgPct !== undefined) out.orgPct = orgPct
+
+  // Accept both 'krFaiz' (canonical) and 'kr_faiz' (legacy hero form).
+  const krFaiz = readNonNegative(searchParams, 'krFaiz')
+    ?? readNonNegative(searchParams, 'kr_faiz')
+  if (krFaiz !== undefined) out.krFaiz = krFaiz
+
+  // Accept both 'mevduatYillik' and 'mevduat_y' (legacy hero form).
+  const mevduatYillik = readNonNegative(searchParams, 'mevduatYillik')
+    ?? readNonNegative(searchParams, 'mevduat_y')
+  if (mevduatYillik !== undefined) out.mevduatYillik = mevduatYillik
+
+  const rawVarlik = searchParams.get('varlikTuru')
+  if (isVarlikTuru(rawVarlik)) out.varlikTuru = rawVarlik
+
+  return out
+}
+
+/**
+ * Build initial OptimizerFormState + market state from URL params + defaults.
+ * The derived field (per mode) is forced to `undefined` regardless of URL.
+ */
+export function resolveOptimizerInitialState(
+  urlInput: OptimizerUrlInput,
+  defaults: {
+    orgPct: number
+    krFaizAylik: number
+    mevduatYillik: number
+    varlikTuru?: VarlikTuru
+  },
+): { form: OptimizerFormState; market: OptimizerMarketState } {
+  const mode: OptimizeCase = urlInput.mode ?? 'taksit'
+  const varlikTuru: VarlikTuru =
+    urlInput.varlikTuru ?? defaults.varlikTuru ?? DEFAULT_VARLIK
+
+  const form: OptimizerFormState = {
+    optimizeFor: mode,
+    tutar: mode === 'tutar' ? undefined : urlInput.tutar,
+    pesinat: mode === 'pesinat' ? undefined : urlInput.pesinat,
+    taksit: mode === 'taksit' ? undefined : urlInput.taksit,
+    varlikTuru,
+  }
+
+  const market: OptimizerMarketState = {
+    orgPct: urlInput.orgPct ?? defaults.orgPct,
+    krFaizAylik: urlInput.krFaiz ?? defaults.krFaizAylik,
+    mevduatYillik: urlInput.mevduatYillik ?? defaults.mevduatYillik,
+  }
+
+  return { form, market }
+}
+
+/**
+ * Serialize the optimizer state back to URL params — useful for the hero CTA
+ * and for "push to /karsilastirma" integration in OptionCard.
+ */
+export function serializeOptimizerState(
+  form: OptimizerFormState,
+  market: OptimizerMarketState,
+): URLSearchParams {
+  const sp = new URLSearchParams()
+  sp.set('mode', form.optimizeFor)
+  if (form.optimizeFor !== 'tutar' && form.tutar != null) sp.set('tutar', String(form.tutar))
+  if (form.optimizeFor !== 'pesinat' && form.pesinat != null) sp.set('pesinat', String(form.pesinat))
+  if (form.optimizeFor !== 'taksit' && form.taksit != null) sp.set('taksit', String(form.taksit))
+  sp.set('orgPct', String(market.orgPct))
+  sp.set('krFaiz', String(market.krFaizAylik))
+  sp.set('mevduatYillik', String(market.mevduatYillik))
+  sp.set('varlikTuru', form.varlikTuru)
+  return sp
 }
